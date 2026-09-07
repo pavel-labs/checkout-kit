@@ -1,4 +1,4 @@
-# Payment Gateway
+# Checkout kit
 
 An embeddable checkout. Every payment integration behind it is a plugin.
 
