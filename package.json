@@ -1,12 +1,12 @@
 {
-  "name": "payment-gateway",
+  "name": "checkout-kit",
   "private": true,
   "version": "0.0.0",
   "license": "Apache-2.0",
   "author": "themafia98",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/payment-gateway.git"
+    "url": "git+https://github.com/themafia98/checkout-kit.git"
   },
   "type": "module",
   "workspaces": [

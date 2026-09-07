@@ -8,7 +8,7 @@
   "author": "themafia98",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/payment-gateway.git",
+    "url": "git+https://github.com/themafia98/checkout-kit.git",
     "directory": "packages/provider-bank-transfer"
   },
   "sideEffects": false,
