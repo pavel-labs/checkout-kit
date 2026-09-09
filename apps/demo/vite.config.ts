@@ -9,7 +9,9 @@ export default defineConfig(({ command }) => ({
   // Prod build is deployed under a sub-path on GitHub Pages, but the dev server
   // must serve from root: MSW registers its worker at `/mockServiceWorker.js`
   // and needs a root scope to intercept `/api/*` requests.
-  base: command === 'build' ? '/checkout-kit/' : '/',
+  //
+  // The documentation site owns the root of the Pages site; the demo sits under /demo/ of it.
+  base: command === 'build' ? '/checkout-kit/demo/' : '/',
   plugins: [tailwindcss(), tanstackRouter({ target: 'react', autoCodeSplitting: true }), react()],
   resolve: {
     // Workspace packages are consumed through their real exports map, not a path alias:

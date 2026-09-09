@@ -1,0 +1,22 @@
+/*
+ * The site wears the kit's own accent. The same ramp as packages/ui/styles/tokens.css, so the
+ * documentation and the thing it documents do not look like two products.
+ */
+
+:root {
+  --vp-c-brand-1: #7621b8;
+  --vp-c-brand-2: #922ce0;
+  --vp-c-brand-3: #aa3bff;
+  --vp-c-brand-soft: rgb(170 59 255 / 14%);
+}
+
+.dark {
+  --vp-c-brand-1: #c689ff;
+  --vp-c-brand-2: #b862ff;
+  --vp-c-brand-3: #aa3bff;
+}
+
+:root {
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #aa3bff, #c689ff);
+}

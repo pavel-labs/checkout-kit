@@ -8,6 +8,31 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
     />
     <title>checkout-kit</title>
+    <script>
+      // Deep links into this SPA are served by the site's single 404.html, which cannot render
+      // them itself and so encodes the route into a query on this page. Put it back before the
+      // router looks. See scripts/compose-pages.mjs.
+      //
+      // Query parameters matter here: a bank returns the shopper to /payment/return?... and the
+      // engine reads those.
+      ;(function (location) {
+        if (location.search[1] !== '/') return
+
+        var route = location.search
+          .slice(1)
+          .split('&')
+          .map(function (part) {
+            return part.replace(/~and~/g, '&')
+          })
+          .join('?')
+
+        window.history.replaceState(
+          null,
+          '',
+          location.pathname.slice(0, -1) + route + location.hash,
+        )
+      })(window.location)
+    </script>
   </head>
   <body>
     <div id="root" class="ck-root"></div>

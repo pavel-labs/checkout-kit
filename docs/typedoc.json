@@ -14,5 +14,6 @@
   "parametersFormat": "table",
   "interfacePropertiesFormat": "table",
   "propertyMembersFormat": "table",
-  "enumMembersFormat": "table"
+  "enumMembersFormat": "table",
+  "disableSources": true
 }

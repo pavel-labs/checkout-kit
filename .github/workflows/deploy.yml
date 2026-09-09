@@ -36,24 +36,42 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build (with in-browser mock backend)
+      # The docs site has its own install: TypeDoc needs typescript@6 and this repository is
+      # on 7, so it cannot be a workspace without resolving the wrong compiler.
+      - name: Install the docs site
+        run: npm run docs:ci
+
+      # Builds the packages first, which is also what the API reference is generated from.
+      - name: Build the demo (with in-browser mock backend)
         run: npm run build:mock
 
-      # GitHub Pages has no SPA server rewrite: serve index.html for deep links too.
-      - name: SPA fallback
-        run: cp apps/demo/dist/index.html apps/demo/dist/404.html
+      - name: Generate the API reference
+        run: npm run docs:api
+
+      - name: Build the documentation site
+        run: npm run docs:build
+
+      # Composes site/ - docs at the root, demo under /demo/ - and puts the deep-link redirect
+      # into the one 404.html Pages will serve. It fails if either half is missing.
+      - name: Compose the Pages artifact
+        run: node scripts/compose-pages.mjs
 
       - name: Verify Pages artifact
         shell: bash
         run: |
-          test -s apps/demo/dist/index.html
-          test -s apps/demo/dist/404.html
-          test -n "$(find apps/demo/dist/assets -type f -print -quit)"
+          test -s site/index.html
+          test -s site/404.html
+          test -s site/ru/index.html
+          test -s site/api/index.html
+          test -s site/demo/index.html
+          grep -q 'checkout-kit/demo/' site/404.html
+          test -n "$(find site/assets -type f -print -quit)"
+          test -n "$(find site/demo/assets -type f -print -quit)"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: apps/demo/dist
+          path: site
 
   deploy:
     name: Deploy to GitHub Pages
