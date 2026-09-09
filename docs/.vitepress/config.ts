@@ -72,6 +72,19 @@ const guideSidebar = (): DefaultTheme.SidebarItem[] => [
     ],
   },
   {
+    text: 'Using the plugins',
+    items: [
+      { text: 'Which one do I need?', link: '/plugins/' },
+      { text: 'Setting up your environment', link: '/plugins/setup' },
+      { text: 'Card processor', link: '/plugins/psp' },
+      { text: 'Acquiring bank', link: '/plugins/acquiring' },
+      { text: 'Hosted payment page', link: '/plugins/hosted-page' },
+      { text: 'Hosted card fields', link: '/plugins/hosted-fields' },
+      { text: 'Wallet', link: '/plugins/wallet' },
+      { text: 'Bank transfer', link: '/plugins/bank-transfer' },
+    ],
+  },
+  {
     text: 'Building an integration',
     items: [
       { text: 'Writing a payment plugin', link: '/plugin-authoring' },
@@ -106,6 +119,19 @@ const ruSidebar = (): DefaultTheme.SidebarItem[] => [
       { text: 'Архитектура', link: '/ru/architecture' },
       { text: 'Как внедрить', link: '/ru/adopting' },
       { text: 'UI-кит', link: '/ru/ui' },
+    ],
+  },
+  {
+    text: 'Как пользоваться плагинами',
+    items: [
+      { text: 'Какой мне нужен?', link: '/ru/plugins/' },
+      { text: 'Настройка окружения', link: '/ru/plugins/setup' },
+      { text: 'Карточный процессинг', link: '/ru/plugins/psp' },
+      { text: 'Банк-эквайер', link: '/ru/plugins/acquiring' },
+      { text: 'Платёжная страница банка', link: '/ru/plugins/hosted-page' },
+      { text: 'Хостед-поля', link: '/ru/plugins/hosted-fields' },
+      { text: 'Кошелёк', link: '/ru/plugins/wallet' },
+      { text: 'Банковский перевод', link: '/ru/plugins/bank-transfer' },
     ],
   },
   {

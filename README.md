@@ -221,6 +221,9 @@ Every doc exists in English and Russian, except the bank simulator's notes.
 - **Architecture** ([English](./docs/architecture.md) / [Русский](./docs/ru/architecture.md)) —
   what the pieces are, how a payment flows through them, and why the seams are where they
   are.
+- **Using the payment plugins** ([English](./docs/plugins/index.md) / [Русский](./docs/ru/plugins/index.md)) —
+  one page per plugin: which to pick, what your backend must provide, how to set it up, and
+  what usually goes wrong.
 - **Writing a payment plugin** ([English](./docs/plugin-authoring.md) / [Русский](./docs/ru/plugin-authoring.md)) —
   the contract, the rules that types cannot enforce, and the suite a plugin must pass.
 - **The UI kit** ([English](./docs/ui.md) / [Русский](./docs/ru/ui.md)) — theming through
