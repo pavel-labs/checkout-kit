@@ -1,0 +1,32 @@
+/*
+ * The page around the checkout. The checkout itself brings its own stylesheet and asks for
+ * nothing here - this is only the frame it sits in, which is the point: the kit does not own
+ * your page.
+ */
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  background: #16151c;
+  color: #ebe9ef;
+  font-family: system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background: #f6f5f8;
+    color: #16151c;
+  }
+}
+
+.note {
+  margin: 0;
+  color: var(--ck-text-muted);
+  font-size: var(--ck-font-size-sm);
+  line-height: 1.45;
+}
+
+.note code {
+  font-family: var(--ck-font-mono);
+  font-size: 0.9em;
+}

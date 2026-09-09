@@ -13,8 +13,11 @@ import type { StripeConfig } from '../providers/stripe'
 const realProviderBaseUrl = import.meta.env.VITE_REAL_PROVIDER_API_BASE_URL
 const realApiRoot = realProviderBaseUrl?.replace(/\/$/, '')
 
-const runtime = createBrowserRuntime({
-  returnPath: '/payment/return',
+/** Where a provider that takes the whole tab sends the shopper back. */
+export const RETURN_PATH = '/payment/return'
+
+export const runtime = createBrowserRuntime({
+  returnPath: RETURN_PATH,
   sdk: {
     adapters: [{ sdk: 'mock-wallet', request: async () => ({ walletToken: 'mock-wallet-token' }) }],
   },
