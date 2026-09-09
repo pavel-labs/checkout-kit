@@ -68,6 +68,34 @@ The semantic tier is what the rules read: `--ck-accent`, `--ck-surface{,-raised,
 scales for space (`--ck-space-1…12`), type (`--ck-font-size-xs…2xl`), radius, control
 heights, focus ring and motion. The primitive tier underneath (`--ck-p-*`) is the raw ramps.
 
+One of them is worth knowing about by name. `--ck-scrim` is what the sticky action bar fades
+into. The kit does not own your page, so it cannot know your real background; it defaults to
+something close to the theme's and you override it if yours is not:
+
+```css
+.ck-root {
+  --ck-scrim: #fff;
+}
+```
+
+**From JavaScript**, when your brand lives in a token pipeline rather than a stylesheet.
+`appearanceToStyle()` returns the same custom properties you would have written by hand -
+it is a typed door into them, not a second theming system:
+
+```tsx
+import { appearanceToStyle } from '@checkout-kit/ui'
+
+;<CheckoutRoot theme="auto" style={appearanceToStyle({ accent: '#0a7', radius: 8 })}>
+```
+
+Numbers are taken as pixels, strings as written. Anything the type does not cover is still
+one line of CSS on `.ck-root`.
+
+**Density.** `data-ck-density="compact"` tightens the gaps and the control heights, for a
+checkout embedded in someone else's page or running in a WebView. `<CheckoutRoot density="compact">`
+sets it. The minimum tap target deliberately does not move: a cramped layout is a design
+choice, a target too small to hit is not.
+
 **Light and dark.** Dark is the default. Set `data-ck-theme="light"` for light, or
 `data-ck-theme="auto"` to follow the system. Only the semantic tier is redefined, so a light
 theme is the same brand rather than a second one.
@@ -97,6 +125,10 @@ those three.
 
 ## The components
 
+You can see all of it: the deployed demo has a
+[`/gallery`](https://themafia98.github.io/checkout-kit/gallery) route with every component on
+one page and live controls for the theme, the platform, the density and the accent.
+
 **Form.** `Field` is the one to know. It gives a control an id, points the label at it, and
 names the hint and the error in `aria-describedby`. Every input in the kit goes through it,
 which is why no screen has to remember to do it.
@@ -108,7 +140,44 @@ which is why no screen has to remember to do it.
 ```
 
 `FieldGroup` is a `<fieldset>` for fields that ask one question together, like a billing
-address, and `FieldRow` pairs two short ones side by side once there is room for both.
+address, and `FieldRow` pairs two short ones side by side once there is room for both - and
+lines their controls up even when only one of them carries a hint.
+
+Beyond `Input` there is `Select`, `Textarea` and `Checkbox`. `Checkbox` does not go through
+`Field`, because its label belongs beside the box rather than above it; it takes its own
+`label`, `description` and `error`. It is the control a checkout cannot do without - accepting
+terms, saving a card, billing-same-as-shipping.
+
+**Address and contact.** `AddressFields` and `ContactFields`. The reason they exist is
+`autocomplete`: every token they set is one a browser actually recognises, and a single wrong
+one silently turns filling off for the entire form. The country list is yours - the kit ships
+no data - and `autoCompleteSection` keeps a billing and a shipping address filling separately.
+
+**Money.** Amounts cross the wire in minor units, and `formatMoney` in `@checkout-kit/core`
+turns them into what a shopper reads. It asks `Intl` how many minor units a currency has
+rather than carrying a table, which is the part hand-rolled formatters get wrong - JPY has
+none, KWD has three. `<Money amount={1999} currency="USD" />` renders it with tabular figures.
+
+`OrderSummary` puts that together: line items, adjustments and a total. It does no pricing.
+Subtotals, tax and discounts arrive already worked out, because where the rounding happens is
+your tax logic's business and never the checkout's.
+
+**The rest of a real checkout.** `PromoCodeInput` (an input with an inline apply button, and
+not a nested `<form>`), `SavedInstrumentList` (built on `OptionCard`; an expired card is shown
+and disabled rather than hidden, because a shopper looking for it needs to see why it is not
+there), `ExpressCheckout` (a slot row plus a rule - every wallet mandates its own button, so
+you bring the one their SDK gives you), `TrustStrip`, `Steps`, `Skeleton` / `SkeletonText`,
+`Countdown` (for `action.expiresAt`, silent while it runs and announced only when it expires),
+`CopyButton`, `Disclosure`, `Divider`, `Panel` and `Receipt`.
+
+`Dialog` is a real `<dialog>` opened with `showModal()`, which is why there is no focus-trap
+code in the kit: the browser already moves focus in, keeps Tab inside, makes the rest of the
+page inert, closes on Escape and restores focus on the way out. `variant="sheet"` slides it up
+from the bottom edge, which is the shape a phone expects and the part a thumb can reach.
+
+`ValidationSummary` is the counterpart to `Field`'s deliberately polite errors. Because those
+do not interrupt, a long form has nothing to say how many problems there were on submit; this
+takes focus, counts them, and links each one to the field it came from.
 
 **Card entry.** `CardNumberInput`, `ExpiryInput`, `CvcInput`, `CardholderInput`, laid out by
 `CardFields`. They format as you type without throwing the caret to the end, group the
