@@ -1,6 +1,6 @@
 # The checkout in a native app
 
-> Русская версия: [webview.ru.md](./webview.ru.md)
+> Русская версия: [ru/webview.md](./ru/webview.md)
 
 The same web checkout, opened in a WebView, with the native app around it.
 `@checkout-kit/webview-bridge` is the contract between the two.

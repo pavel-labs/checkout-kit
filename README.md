@@ -209,34 +209,34 @@ would. CI runs both.
 
 Every doc exists in English and Russian, except the bank simulator's notes.
 
-- **Architecture** ([English](./docs/architecture.md) / [Русский](./docs/architecture.ru.md)) —
+- **Architecture** ([English](./docs/architecture.md) / [Русский](./docs/ru/architecture.md)) —
   what the pieces are, how a payment flows through them, and why the seams are where they
   are.
-- **Writing a payment plugin** ([English](./docs/plugin-authoring.md) / [Русский](./docs/plugin-authoring.ru.md)) —
+- **Writing a payment plugin** ([English](./docs/plugin-authoring.md) / [Русский](./docs/ru/plugin-authoring.md)) —
   the contract, the rules that types cannot enforce, and the suite a plugin must pass.
-- **The UI kit** ([English](./docs/ui.md) / [Русский](./docs/ui.ru.md)) — theming through
+- **The UI kit** ([English](./docs/ui.md) / [Русский](./docs/ru/ui.md)) — theming through
   tokens, the components, what the kit does for accessibility and what is left to you.
-- **Integrating a real payment SDK** ([English](./docs/integrations.md) / [Русский](./docs/integrations.ru.md)) —
+- **Integrating a real payment SDK** ([English](./docs/integrations.md) / [Русский](./docs/ru/integrations.md)) —
   Stripe, Adyen, Braintree, Checkout.com, PayPal, Apple and Google Pay, Klarna: what each
   hands you and which action it becomes.
-- **The checkout in a native app** ([English](./docs/webview.md) / [Русский](./docs/webview.ru.md)) —
+- **The checkout in a native app** ([English](./docs/webview.md) / [Русский](./docs/ru/webview.md)) —
   the WebView bridge, the PAYMENT_* contract, navigation rules and returning from a bank.
-- **Practical questions** ([English](./docs/adopting.md) / [Русский](./docs/adopting.ru.md)) —
+- **Practical questions** ([English](./docs/adopting.md) / [Русский](./docs/ru/adopting.md)) —
   size, server rendering, screen readers, translation, and which browsers it drops.
-- **The backend a plugin talks to** ([English](./docs/backend.md) / [Русский](./docs/backend.ru.md)) —
+- **The backend a plugin talks to** ([English](./docs/backend.md) / [Русский](./docs/ru/backend.md)) —
   the half this repository does not have: what your API must expose, why the plugin cannot
   call a provider directly, and a worked example.
-- **Real providers, mapped onto the contract** ([English](./docs/real-world-providers.md) / [Русский](./docs/real-world-providers.ru.md)) —
+- **Real providers, mapped onto the contract** ([English](./docs/real-world-providers.md) / [Русский](./docs/ru/real-world-providers.md)) —
   what Stripe, Adyen, PayPal, Apple Pay and a bank acquirer return, and which action a
   plugin produces for each.
 - **Integration guides by region** — [Europe](./docs/providers/europe.md)
-  ([ru](./docs/providers/europe.ru.md)), [the Americas](./docs/providers/americas.md)
-  ([ru](./docs/providers/americas.ru.md)), [Asia](./docs/providers/asia.md)
-  ([ru](./docs/providers/asia.ru.md)): the providers people actually use there, the local
+  ([ru](./docs/ru/providers/europe.md)), [the Americas](./docs/providers/americas.md)
+  ([ru](./docs/ru/providers/americas.md)), [Asia](./docs/providers/asia.md)
+  ([ru](./docs/ru/providers/asia.md)): the providers people actually use there, the local
   payment methods, and the banks.
-- **Iframes and 3-D Secure** ([English](./docs/iframe.md) / [Русский](./docs/iframe.ru.md)) —
+- **Iframes and 3-D Secure** ([English](./docs/iframe.md) / [Русский](./docs/ru/iframe.md)) —
   how an embedded bank page is sandboxed and secured.
-- **Security headers on the challenge page** ([English](./docs/security-headers.md) / [Русский](./docs/security-headers.ru.md)) —
+- **Security headers on the challenge page** ([English](./docs/security-headers.md) / [Русский](./docs/ru/security-headers.md)) —
   every header the bank simulator sends, one by one.
 - **Mock payment API** ([English](./packages/testing/README.md) / [Русский](./packages/testing/README.ru.md)) —
   endpoints, the payment state machine, test cards, and why a retried request must not

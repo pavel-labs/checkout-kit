@@ -1,6 +1,6 @@
 # Practical questions
 
-> Русская версия: [adopting.ru.md](./adopting.ru.md)
+> Русская версия: [ru/adopting.md](./ru/adopting.md)
 
 The things a team asks before putting a checkout in their app: how big is it, does it render
 on the server, what does it say to a screen reader, what language does it speak, and which

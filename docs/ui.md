@@ -1,6 +1,6 @@
 # The UI kit
 
-> Русская версия: [ui.ru.md](./ui.ru.md)
+> Русская версия: [ru/ui.md](./ru/ui.md)
 
 `@checkout-kit/ui` is the visible half of the checkout: the fields a shopper types a card
 into, the screens a payment moves through, and the tokens that make it look like your

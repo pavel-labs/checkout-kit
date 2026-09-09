@@ -1,6 +1,6 @@
 # Writing a payment plugin
 
-> Русская версия: [plugin-authoring.ru.md](./plugin-authoring.ru.md)
+> Русская версия: [ru/plugin-authoring.md](./ru/plugin-authoring.md)
 
 A plugin is the only place that knows how one payment provider talks. Everything else — the
 engine, the form, the action screen, the result pages — is written once and reused by every

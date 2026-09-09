@@ -12,7 +12,7 @@ export interface SectionHeadingProps {
   className?: string
 }
 
-/** The title of a group, and the optional line under it. Shared by <Section> and <Panel>. */
+/** The title of a group, and the optional line under it. Shared by `<Section>` and `<Panel>`. */
 export const SectionHeading = ({
   children,
   description,
@@ -45,7 +45,7 @@ export const Section = ({
   headingLevel,
   className,
 }: SectionProps): ReactElement => {
-  // A <section> is only a landmark once it has a name, so the id is worth the hook.
+  // A `<section>` is only a landmark once it has a name, so the id is worth the hook.
   const headingId = useId()
 
   return (

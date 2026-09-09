@@ -9,7 +9,7 @@ export interface ErrorTextProps {
 
 /**
  * The payment-level error, and the only alert on the page. Field errors are polite - see
- * <Field> - so a decline interrupts and a typo does not.
+ * `<Field>` - so a decline interrupts and a typo does not.
  */
 export const ErrorText = ({ children, id, className }: ErrorTextProps): ReactElement | null =>
   children ? (
@@ -24,7 +24,7 @@ export interface StatusTextProps {
   className?: string
 }
 
-/** Static outcome wording. The live region belongs to <PaymentStatus>, not to this. */
+/** Static outcome wording. The live region belongs to `<PaymentStatus>`, not to this. */
 export const StatusText = ({
   children,
   tone = 'neutral',

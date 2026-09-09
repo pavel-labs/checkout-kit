@@ -1,6 +1,6 @@
 # Как написать платёжный плагин
 
-> English version: [plugin-authoring.md](./plugin-authoring.md)
+> English version: [plugin-authoring.md](../plugin-authoring.md)
 
 Плагин — единственное место, которое знает, как разговаривает конкретный платёжный
 провайдер. Всё остальное — движок, форма, экран аутентификации, страницы результата —
@@ -214,10 +214,10 @@ describeProviderContract({
 
 ## Разобранные примеры
 
-[Настоящие провайдеры на нашем контракте](./real-world-providers.ru.md) показывают, что
+[Настоящие провайдеры на нашем контракте](./real-world-providers.md) показывают, что
 возвращают Stripe, Adyen, PayPal, кошельки и банковский эквайринг и какое действие под это
-собрать. Дальше — гайды по регионам: [Европа](./providers/europe.ru.md),
-[Америка](./providers/americas.ru.md), [Азия](./providers/asia.ru.md).
+собрать. Дальше — гайды по регионам: [Европа](./providers/europe.md),
+[Америка](./providers/americas.md), [Азия](./providers/asia.md).
 
 ## Регистрация
 

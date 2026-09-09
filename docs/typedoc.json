@@ -1,0 +1,18 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],
+  "tsconfig": "./tsconfig.typedoc.json",
+  "readme": "none",
+  "githubPages": false,
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "hideGenerator": true,
+  "sort": ["kind", "alphabetical"],
+  "outputFileStrategy": "members",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "interfacePropertiesFormat": "table",
+  "propertyMembersFormat": "table",
+  "enumMembersFormat": "table"
+}

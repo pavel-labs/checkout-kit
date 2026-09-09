@@ -1,6 +1,6 @@
 # The Americas: providers and banks
 
-> Русская версия: [americas.ru.md](./americas.ru.md)
+> Русская версия: [ru/providers/americas.md](../ru/providers/americas.md)
 
 Read [Real providers, mapped onto the contract](../real-world-providers.md) first.
 

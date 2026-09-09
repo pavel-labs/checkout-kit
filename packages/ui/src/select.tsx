@@ -8,9 +8,9 @@ export interface SelectOption {
 }
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  /** Usually comes from <Field>, along with the id and the described-by. */
+  /** Usually comes from `<Field>`, along with the id and the described-by. */
   invalid?: boolean
-  /** Rendered as <option>s. Pass children instead when you need <optgroup>. */
+  /** Rendered as `<option>`s. Pass children instead when you need `<optgroup>`. */
   options?: readonly SelectOption[]
   /** A disabled, selected first option: the "Country" a native select cannot express. */
   placeholder?: string
@@ -20,7 +20,7 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 /**
- * A real <select>, so the shopper gets the platform's own picker - the wheel on iOS, the
+ * A real `<select>`, so the shopper gets the platform's own picker - the wheel on iOS, the
  * dropdown on Android - rather than a listbox drawn in JavaScript.
  */
 export const Select = ({

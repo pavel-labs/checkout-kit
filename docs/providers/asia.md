@@ -1,6 +1,6 @@
 # Asia: providers and banks
 
-> Русская версия: [asia.ru.md](./asia.ru.md)
+> Русская версия: [ru/providers/asia.md](../ru/providers/asia.md)
 
 Read [Real providers, mapped onto the contract](../real-world-providers.md) first.
 

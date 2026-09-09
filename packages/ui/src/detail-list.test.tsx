@@ -5,7 +5,7 @@ import { DetailItem, DetailList } from './detail-list'
 afterEach(cleanup)
 
 describe('DetailList', () => {
-  // A <dl> is what pairs a name with its value for a screen reader. A pile of <div>s
+  // A `<dl>` is what pairs a name with its value for a screen reader. A pile of `<div>`s
   // reads as one run-on sentence.
   it('pairs each name with its value as a description list', () => {
     const { container } = render(

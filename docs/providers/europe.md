@@ -1,6 +1,6 @@
 # Europe: providers and banks
 
-> Русская версия: [europe.ru.md](./europe.ru.md)
+> Русская версия: [ru/providers/europe.md](../ru/providers/europe.md)
 
 Read [Real providers, mapped onto the contract](../real-world-providers.md) first. It
 explains the five action kinds and the rule that a plugin never holds a secret key.

@@ -1,6 +1,6 @@
 # Архитектура
 
-> English version: [architecture.md](./architecture.md)
+> English version: [architecture.md](../architecture.md)
 
 ## Идея
 
@@ -208,7 +208,7 @@ apps/
 **У `PaymentActionKind: 'poll'` нет браузерного раннера.** `@checkout-kit/runtime-browser`
 регистрирует `redirect`, `collect_fields`, `sdk_handoff` и `display`. Ни один из поставляемых
 плагинов не объявляет `poll` в `capabilities.actions`, поэтому `assertCovers` не срабатывает —
-но автор плагина, идущий по таблице действий в [plugin-authoring.ru.md](./plugin-authoring.ru.md),
+но автор плагина, идущий по таблице действий в [plugin-authoring.md](./plugin-authoring.md),
 получит исключение на старте. Платежи, которые завершаются позже, делаются через `display` плюс
 собственный поллинг движка; у голого действия `poll` пути через браузерный рантайм сегодня нет.
 
@@ -218,8 +218,8 @@ apps/
 
 ## Что почитать дальше
 
-- **[Как написать платёжный плагин](./plugin-authoring.ru.md)** — контракт с другой стороны.
-- **[Iframe и 3-D Secure](./iframe.ru.md)** — как изолирована встроенная страница банка.
-- **[Security-заголовки](./security-headers.ru.md)** — каждый заголовок симулятора банка.
-- **[Мок платёжного API](../packages/testing/README.ru.md)** — эндпоинты, машина состояний,
+- **[Как написать платёжный плагин](./plugin-authoring.md)** — контракт с другой стороны.
+- **[Iframe и 3-D Secure](./iframe.md)** — как изолирована встроенная страница банка.
+- **[Security-заголовки](./security-headers.md)** — каждый заголовок симулятора банка.
+- **[Мок платёжного API](../../packages/testing/README.md)** — эндпоинты, машина состояний,
   тестовые карты, идемпотентность.

@@ -1,6 +1,6 @@
 # Real providers, mapped onto the contract
 
-> Русская версия: [real-world-providers.ru.md](./real-world-providers.ru.md)
+> Русская версия: [ru/real-world-providers.md](./ru/real-world-providers.md)
 
 The six plugins in this repository are modelled on real integrations. This page shows the
 real ones: what Stripe, Adyen, PayPal, Apple Pay, Google Pay and a bank acquirer return, and

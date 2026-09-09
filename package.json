@@ -28,6 +28,10 @@
     "release": "npm run build:packages && changeset publish",
     "preview": "npm run preview -w @checkout-kit/demo",
     "preview:mock": "npm run preview:mock -w @checkout-kit/demo",
+    "docs:api": "npm --prefix docs run api",
+    "docs:dev": "npm --prefix docs run dev",
+    "docs:build": "npm --prefix docs run build",
+    "docs:preview": "npm --prefix docs run preview",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -37,7 +41,8 @@
     "lint:fix": "oxlint --fix-dangerously",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "purity": "node scripts/check-core-purity.mjs"
+    "purity": "node scripts/check-core-purity.mjs",
+    "docs:install": "npm --prefix docs install"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

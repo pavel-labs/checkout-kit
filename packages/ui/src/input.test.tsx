@@ -18,7 +18,7 @@ describe('Input', () => {
     expect(screen.getByLabelText('Card number').getAttribute('aria-invalid')).toBe('true')
   })
 
-  // <Field> passes `aria-invalid: undefined` whenever it has no error. Spreading props after
+  // `<Field>` passes `aria-invalid: undefined` whenever it has no error. Spreading props after
   // the attribute let that undefined win, and the control silently claimed to be valid.
   it('stays invalid when a caller also passes an undefined aria-invalid', () => {
     render(<Input aria-label="Card number" invalid aria-invalid={undefined} />)

@@ -21,7 +21,7 @@ const defaultHeading = (count: number): string =>
 
 /**
  * Every problem on the form, each linked to its field. Per-field errors are deliberately
- * polite - see <Field> - so without this, nothing says how many there were on submit.
+ * polite - see `<Field>` - so without this, nothing says how many there were on submit.
  */
 export const ValidationSummary = ({
   problems,

@@ -1,6 +1,6 @@
 # Security-заголовки challenge-страницы
 
-> English version: [security-headers.md](./security-headers.md)
+> English version: [security-headers.md](../security-headers.md)
 
 Когда браузер просит у сервера страницу, сервер присылает не только HTML. Вместе с
 ним идёт короткий список **заголовков ответа** — это маленькие «правила», которые
@@ -392,7 +392,7 @@ flowchart TD
 ## Где это в коде
 
 Всё это задаётся в одной функции:
-[`apps/bank-sim/src/acs/lib.ts`](../apps/bank-sim/src/acs/lib.ts) → `securityHeaders(nonce)`.
+[`apps/bank-sim/src/acs/lib.ts`](../../apps/bank-sim/src/acs/lib.ts) → `securityHeaders(nonce)`.
 
 Хотите увидеть вживую? Откройте challenge-страницу в DevTools браузера → вкладка
 **Network** → кликните на запрос → **Headers**. Все правила выше будут в разделе

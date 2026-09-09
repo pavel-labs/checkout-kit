@@ -20,7 +20,7 @@ export interface PromoCodeInputProps {
 }
 
 /**
- * A code and the button that redeems it. Not a <form> - it sits inside the checkout's own,
+ * A code and the button that redeems it. Not a `<form>` - it sits inside the checkout's own,
  * and nested forms are invalid HTML - so Enter is handled directly.
  */
 export const PromoCodeInput = ({

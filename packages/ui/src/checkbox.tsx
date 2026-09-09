@@ -5,7 +5,7 @@ export interface CheckboxProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'type' | 'children'
 > {
-  /** Beside the box, not above it, which is why this does not go through <Field>. */
+  /** Beside the box, not above it, which is why this does not go through `<Field>`. */
   label: ReactNode
   description?: ReactNode
   /** Its presence is what marks the control invalid. */
