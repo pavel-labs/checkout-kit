@@ -1,6 +1,6 @@
 # Iframes and 3-D Secure
 
-> Русская версия: [iframe.ru.md](./iframe.ru.md)
+> Русская версия: [ru/iframe.md](./ru/iframe.md)
 
 An `<iframe>` shows one web page inside another. 3-D Secure uses this: the bank's
 challenge page is loaded inside our checkout page. That sounds simple, but the

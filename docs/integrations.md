@@ -1,6 +1,6 @@
 # Integrating a real payment SDK
 
-> Русская версия: [integrations.ru.md](./integrations.ru.md)
+> Русская версия: [ru/integrations.md](./ru/integrations.md)
 
 How each popular provider maps onto the contract, in one place so they can be compared. Read
 [Writing a payment plugin](./plugin-authoring.md) first for what `confirm`, `resume`, an

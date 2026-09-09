@@ -1,6 +1,6 @@
 # Чекаут в нативном приложении
 
-> English version: [webview.md](./webview.md)
+> English version: [webview.md](../webview.md)
 
 Тот же веб-чекаут, открытый в WebView, с нативным приложением вокруг.
 `@checkout-kit/webview-bridge` — контракт между ними.
@@ -66,7 +66,7 @@ const policy = createNavigationPolicy({
 />
 ```
 
-Целый экран лежит в [`examples/react-native-checkout`](../examples/react-native-checkout).
+Целый экран лежит в [`examples/react-native-checkout`](../../examples/react-native-checkout).
 
 ## Сообщения
 

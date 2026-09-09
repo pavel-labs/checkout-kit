@@ -36,7 +36,7 @@ describe('Section', () => {
     expect(screen.getByRole('heading', { level: 3, name: 'Billing address' })).toBeDefined()
   })
 
-  // A <section> is only a landmark once something names it, which is what lets a screen
+  // A `<section>` is only a landmark once something names it, which is what lets a screen
   // reader list the parts of a checkout and jump between them.
   it('becomes a named landmark when it has a title', () => {
     render(

@@ -10,7 +10,7 @@ export interface DisclosureProps {
 }
 
 /**
- * A real <details>: "What is a CVC?", "Why do you need my address?". Native, so the open
+ * A real `<details>`: "What is a CVC?", "Why do you need my address?". Native, so the open
  * state, the keyboard and find-in-page are the browser's.
  */
 export const Disclosure = ({

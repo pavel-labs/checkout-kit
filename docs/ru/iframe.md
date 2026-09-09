@@ -1,6 +1,6 @@
 # Iframe и 3-D Secure
 
-> English version: [iframe.md](./iframe.md)
+> English version: [iframe.md](../iframe.md)
 
 `<iframe>` показывает одну веб-страницу внутри другой. 3-D Secure так и работает:
 страница банка грузится внутри нашей страницы оплаты. Звучит просто, но как только
@@ -97,7 +97,7 @@ OTP и passkeys.
 В проекте: `apps/bank-sim/src/acs/lib.ts` (`securityHeaders`).
 
 > Подробный разбор каждого заголовка простыми словами:
-> [security-headers.ru.md](./security-headers.ru.md).
+> [security-headers.md](./security-headers.md).
 
 | Заголовок                                           | Что делает                                                          | Альтернатива                                |
 | --------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------- |
@@ -171,8 +171,8 @@ first-party, и правила смягчаются.
   его `sandbox`/`referrerpolicy`, две формы (iframe и redirect) и слушатель
   `message` с проверкой origin.
 - Встроенный "банк": `apps/bank-sim/src/acs/` - отдельный https-сервер, который ставит заголовки выше
-  и в режиме redirect делает `302` на `/3ds/return`. См. [apps/bank-sim/README.md](../apps/bank-sim/README.md).
-- Общая картина платежей: [architecture.ru.md](./architecture.ru.md).
+  и в режиме redirect делает `302` на `/3ds/return`. См. [apps/bank-sim/README.md](../../apps/bank-sim/README.md).
+- Общая картина платежей: [architecture.md](./architecture.md).
 
 ---
 

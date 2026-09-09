@@ -1,6 +1,6 @@
 # Security headers on the challenge page
 
-> Русская версия: [security-headers.ru.md](./security-headers.ru.md)
+> Русская версия: [ru/security-headers.md](./ru/security-headers.md)
 
 When your browser asks a web server for a page, the server does not only send back
 the HTML. It also sends a short list of **response headers** — little "rules" that

@@ -1,6 +1,6 @@
 # The backend a plugin talks to
 
-> Русская версия: [backend.ru.md](./backend.ru.md)
+> Русская версия: [ru/backend.md](./ru/backend.md)
 
 Everything in this repository runs in the browser. That is deliberate for a demo, and it is
 the one thing you cannot copy into production: a plugin has no secrets, so it cannot talk to

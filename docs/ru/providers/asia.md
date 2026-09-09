@@ -1,8 +1,8 @@
 # Азия: провайдеры и банки
 
-> English version: [asia.md](./asia.md)
+> English version: [asia.md](../../providers/asia.md)
 
-Сначала прочитайте [Настоящие провайдеры на нашем контракте](../real-world-providers.ru.md).
+Сначала прочитайте [Настоящие провайдеры на нашем контракте](../real-world-providers.md).
 
 ## Как устроен регион
 

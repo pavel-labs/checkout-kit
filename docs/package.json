@@ -1,0 +1,20 @@
+{
+  "name": "@checkout-kit/docs",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The documentation site: the guides in docs/, plus an API reference generated from the packages' published declarations.",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "api": "node generate-api.mjs"
+  },
+  "devDependencies": {
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.13.0",
+    "typedoc-vitepress-theme": "^1.1.4",
+    "typescript": "~6.0.0",
+    "vitepress": "^1.6.4"
+  }
+}

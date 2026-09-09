@@ -1,6 +1,6 @@
 # Architecture
 
-> Русская версия: [architecture.ru.md](./architecture.ru.md)
+> Русская версия: [ru/architecture.md](./ru/architecture.md)
 
 ## The idea
 

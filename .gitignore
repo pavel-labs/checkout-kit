@@ -41,3 +41,12 @@ apps/bank-sim/certs/
 
 # TanStack Router plugin cache
 .tanstack/
+
+# The docs site: its own install, its build output, and the API reference, which is
+# generated from the packages' declarations by `npm run docs:api`.
+docs/node_modules
+docs/.vitepress/dist
+docs/.vitepress/cache
+docs/api
+
+/site

@@ -26,7 +26,7 @@ describe('ErrorText', () => {
 })
 
 describe('StatusText', () => {
-  // Deliberately silent: <PaymentStatus> owns the live region, and two of them would
+  // Deliberately silent: `<PaymentStatus>` owns the live region, and two of them would
   // talk over each other.
   it('says nothing to a screen reader on its own', () => {
     render(<StatusText>Paid on 3 March</StatusText>)

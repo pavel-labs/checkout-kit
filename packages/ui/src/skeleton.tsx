@@ -11,7 +11,7 @@ export interface SkeletonProps {
 
 /**
  * A placeholder for something still loading. Always `aria-hidden`: the wait is announced
- * once by whatever owns it - <SkeletonText>, or your own `aria-busy` - not per box.
+ * once by whatever owns it - `<SkeletonText>`, or your own `aria-busy` - not per box.
  */
 export const Skeleton = ({ width, height, radius, className }: SkeletonProps): ReactElement => (
   <span

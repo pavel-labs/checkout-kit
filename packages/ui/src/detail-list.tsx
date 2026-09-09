@@ -9,7 +9,7 @@ export interface DetailListProps {
 /**
  * A list of name/value lines: an invoice, a receipt, a summary of a transaction.
  *
- * Named for the `<dl>` it renders, not for the `<details>` element - that one is <Disclosure>.
+ * Named for the `<dl>` it renders, not for the `<details>` element - that one is `<Disclosure>`.
  */
 export const DetailList = ({ children, className }: DetailListProps): ReactElement => (
   <dl className={cx('ck-details', className)}>{children}</dl>

@@ -18,7 +18,7 @@ export interface DialogProps {
 }
 
 /**
- * A real <dialog>, opened with `showModal()`. That is why there is no focus-trap code here:
+ * A real `<dialog>`, opened with `showModal()`. That is why there is no focus-trap code here:
  * focus, Tab, inertness, Escape and focus restore are all the browser's.
  */
 export const Dialog = ({
