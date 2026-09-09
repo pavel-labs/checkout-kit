@@ -52,12 +52,17 @@ export const App = () => {
   return (
     <main>
       <h1>Checkout Kit mock React example</h1>
-      <p>One React checkout, six mock protocols, plus optional real Stripe, Adyen and PayPal adapters.</p>
+      <p>
+        One React checkout, six mock protocols, plus optional real Stripe, Adyen and PayPal
+        adapters.
+      </p>
       <nav aria-label="Payment providers">
         {providers.map(([id, label]) => (
           <button
             key={id}
-            disabled={isBusy || (['stripe', 'adyen', 'paypal'].includes(id) && !realProvidersEnabled)}
+            disabled={
+              isBusy || (['stripe', 'adyen', 'paypal'].includes(id) && !realProvidersEnabled)
+            }
             onClick={() => void pay(id)}
           >
             {label}

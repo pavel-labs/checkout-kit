@@ -52,10 +52,5 @@
     "tsdown": "^0.16.5",
     "typescript": "~7.0.2",
     "vitest": "^5.0.0"
-  },
-  "msw": {
-    "workerDirectory": [
-      "examples\\react\\public"
-    ]
   }
 }

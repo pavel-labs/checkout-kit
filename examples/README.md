@@ -2,12 +2,12 @@
 
 Four things, each answering a different question about the library.
 
-| Folder                                          | Question it answers                                             | Needs credentials? |
-| ------------------------------------------------ | ----------------------------------------------------------------- | ------------------- |
-| [`react/`](./react/)                             | What does a checkout screen using this library look like?         | No — mock backend    |
-| [`providers/`](./providers/)                     | How do I map Stripe/Adyen/PayPal onto the plugin contract?        | No — reads source    |
-| [`server/`](./server/)                           | What does the backend behind those three adapters do?             | Yes, to run it       |
-| [`react-native-checkout/`](./react-native-checkout/) | How does a native app host the same checkout?                  | No — reads source    |
+| Folder                                               | Question it answers                                        | Needs credentials? |
+| ---------------------------------------------------- | ---------------------------------------------------------- | ------------------ |
+| [`react/`](./react/)                                 | What does a checkout screen using this library look like?  | No — mock backend  |
+| [`providers/`](./providers/)                         | How do I map Stripe/Adyen/PayPal onto the plugin contract? | No — reads source  |
+| [`server/`](./server/)                               | What does the backend behind those three adapters do?      | Yes, to run it     |
+| [`react-native-checkout/`](./react-native-checkout/) | How does a native app host the same checkout?              | No — reads source  |
 
 ## Start here: the mock browser demo
 

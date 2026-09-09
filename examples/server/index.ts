@@ -27,7 +27,13 @@ type AdyenRecord = {
   refusalReason?: string
   refusalReasonCode?: string
 }
-type PayPalRecord = { id: string; amount: number; currency: string; status: string; approveUrl?: string }
+type PayPalRecord = {
+  id: string
+  amount: number
+  currency: string
+  status: string
+  approveUrl?: string
+}
 
 const adyenRecords = new Map<string, AdyenRecord>()
 const paypalRecords = new Map<string, PayPalRecord>()
@@ -83,7 +89,8 @@ const readJson = async (req: IncomingMessage): Promise<Record<string, any>> => {
 }
 
 const plan = (planId: unknown) => {
-  if (typeof planId !== 'string' || !(planId in plans)) throw new Error(`Unknown plan: ${String(planId)}`)
+  if (typeof planId !== 'string' || !(planId in plans))
+    throw new Error(`Unknown plan: ${String(planId)}`)
   return plans[planId as PlanId]
 }
 
@@ -137,38 +144,47 @@ const handleStripe = async (req: IncomingMessage, res: ServerResponse, path: str
   }
   if (!match) return false
   const intentId = match[1]
-  if (req.method === 'GET' && !match[2]) return json(res, 200, stripeDto(await getStripe().paymentIntents.retrieve(intentId)))
+  if (req.method === 'GET' && !match[2])
+    return json(res, 200, stripeDto(await getStripe().paymentIntents.retrieve(intentId)))
   if (req.method !== 'POST') return false
-  if (match[2] === 'cancel') return json(res, 200, stripeDto(await getStripe().paymentIntents.cancel(intentId)))
+  if (match[2] === 'cancel')
+    return json(res, 200, stripeDto(await getStripe().paymentIntents.cancel(intentId)))
   const body = await readJson(req)
   const card = body.card
-  const paymentMethod = (body.paymentMethodId
-    ? { payment_method: body.paymentMethodId }
-    : {
-        payment_method_data: {
-          type: 'card' as const,
-          card: {
-            number: card.number,
-            exp_month: Number(card.exp.slice(0, 2)),
-            exp_year: Number(`20${card.exp.slice(-2)}`),
-            cvc: card.cvc,
+  const paymentMethod = (
+    body.paymentMethodId
+      ? { payment_method: body.paymentMethodId }
+      : {
+          payment_method_data: {
+            type: 'card' as const,
+            card: {
+              number: card.number,
+              exp_month: Number(card.exp.slice(0, 2)),
+              exp_year: Number(`20${card.exp.slice(-2)}`),
+              cvc: card.cvc,
+            },
           },
-        },
-      }) as Stripe.PaymentIntentConfirmParams
+        }
+  ) as Stripe.PaymentIntentConfirmParams
   return json(
     res,
     200,
     stripeDto(
-      await getStripe().paymentIntents.confirm(intentId, {
-        ...paymentMethod,
-        return_url: returnUrl,
-      }, { idempotencyKey: req.headers['idempotency-key'] as string | undefined }),
+      await getStripe().paymentIntents.confirm(
+        intentId,
+        {
+          ...paymentMethod,
+          return_url: returnUrl,
+        },
+        { idempotencyKey: req.headers['idempotency-key'] as string | undefined },
+      ),
     ),
   )
 }
 
 const handleAdyen = async (req: IncomingMessage, res: ServerResponse, path: string) => {
   const detailsMatch = path.match(/^\/adyen\/payments\/([^/]+)\/details$/)
+  const cancelMatch = path.match(/^\/adyen\/payments\/([^/]+)\/cancel$/)
   const actionMatch = path.match(/^\/adyen\/payments\/([^/]+)$/)
   if (req.method === 'POST' && path === '/adyen/payments/sessions') {
     const body = await readJson(req)
@@ -185,7 +201,9 @@ const handleAdyen = async (req: IncomingMessage, res: ServerResponse, path: stri
   }
   if (req.method === 'GET' && actionMatch) {
     const record = adyenRecords.get(actionMatch[1])
-    return record ? json(res, 200, adyenDto(record)) : json(res, 404, { message: 'Payment not found.' })
+    return record
+      ? json(res, 200, adyenDto(record))
+      : json(res, 404, { message: 'Payment not found.' })
   }
   if (req.method === 'POST' && detailsMatch) {
     const record = adyenRecords.get(detailsMatch[1])
@@ -195,13 +213,15 @@ const handleAdyen = async (req: IncomingMessage, res: ServerResponse, path: stri
     Object.assign(record, { resultCode: response.resultCode, action: response.action ?? null })
     return json(res, 200, adyenDto(record))
   }
-  if (!actionMatch || req.method !== 'POST') return false
-  const record = adyenRecords.get(actionMatch[1])
-  if (!record) return json(res, 404, { message: 'Payment not found.' })
-  if (path.endsWith('/cancel')) {
+  if (req.method === 'POST' && cancelMatch) {
+    const record = adyenRecords.get(cancelMatch[1])
+    if (!record) return json(res, 404, { message: 'Payment not found.' })
     record.resultCode = 'Cancelled'
     return json(res, 200, adyenDto(record))
   }
+  if (!actionMatch || req.method !== 'POST') return false
+  const record = adyenRecords.get(actionMatch[1])
+  if (!record) return json(res, 404, { message: 'Payment not found.' })
   const body = await readJson(req)
   const response = await getAdyen().PaymentsApi.payments(
     {
@@ -231,7 +251,14 @@ const handlePayPal = async (req: IncomingMessage, res: ServerResponse, path: str
     const response = await getPayPal().createOrder({
       body: {
         intent: CheckoutPaymentIntent.Capture,
-        purchaseUnits: [{ amount: { currencyCode: selectedPlan.currency.toUpperCase(), value: (selectedPlan.amount / 100).toFixed(2) } }],
+        purchaseUnits: [
+          {
+            amount: {
+              currencyCode: selectedPlan.currency.toUpperCase(),
+              value: (selectedPlan.amount / 100).toFixed(2),
+            },
+          },
+        ],
         applicationContext: { returnUrl, cancelUrl: returnUrl },
       },
       paypalRequestId: req.headers['idempotency-key'] as string | undefined,
@@ -244,7 +271,8 @@ const handlePayPal = async (req: IncomingMessage, res: ServerResponse, path: str
       amount: selectedPlan.amount,
       currency: selectedPlan.currency.toUpperCase(),
       status: order.status ?? 'CREATED',
-      approveUrl: order.links?.find((link) => link.rel === 'payer-action' || link.rel === 'approve')?.href,
+      approveUrl: order.links?.find((link) => link.rel === 'payer-action' || link.rel === 'approve')
+        ?.href,
     }
     paypalRecords.set(record.id, record)
     return json(res, 200, paypalDto(record))
@@ -281,7 +309,10 @@ const server = createServer(async (req, res) => {
       (await handlePayPal(req, res, path))
     if (!handled && !res.writableEnded) json(res, 404, { message: 'Route not found.' })
   } catch (cause) {
-    if (!res.writableEnded) json(res, 500, { message: cause instanceof Error ? cause.message : 'Payment request failed.' })
+    if (!res.writableEnded)
+      json(res, 500, {
+        message: cause instanceof Error ? cause.message : 'Payment request failed.',
+      })
   }
 })
 

@@ -2,3 +2,4 @@ dist
 node_modules
 apps/demo/src/routeTree.gen.ts
 apps/demo/public/mockServiceWorker.js
+examples/react/public/mockServiceWorker.js

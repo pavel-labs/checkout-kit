@@ -41,6 +41,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # `tsc -b` covers the packages, the apps and examples/providers. The browser and server
+      # examples have their own tsconfigs and are only reached through this script.
+      - name: Typecheck the examples
+        run: npm run examples:typecheck
+
       - name: Unit tests and plugin contract
         run: npm run test
 

@@ -207,8 +207,8 @@ describeProviderContract({
 
 The official server SDKs installed for the real-provider examples are:
 
-| SDK                         | Server example                                                   | Provider adapter |
-| --------------------------- | ---------------------------------------------------------------- | ---------------- |
-| `stripe`                    | [`stripe-payment-intent.ts`](../server/stripe-payment-intent.ts) | `./stripe`       |
-| `@adyen/api-library`        | [`adyen-payment.ts`](../server/adyen-payment.ts)                 | `./adyen`        |
-| `@paypal/paypal-server-sdk` | [`paypal-order.ts`](../server/paypal-order.ts)                   | `./paypal`       |
+| SDK                         | Server handler                                     | Provider adapter |
+| --------------------------- | -------------------------------------------------- | ---------------- |
+| `stripe`                    | `handleStripe` in [`index.ts`](../server/index.ts) | `./stripe`       |
+| `@adyen/api-library`        | `handleAdyen` in [`index.ts`](../server/index.ts)  | `./adyen`        |
+| `@paypal/paypal-server-sdk` | `handlePayPal` in [`index.ts`](../server/index.ts) | `./paypal`       |
