@@ -5,12 +5,30 @@
   gap: var(--ck-gap);
 }
 
+/* The title and its optional line, kept together so the section's gap does not split them. */
+.ck-section__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-1);
+  min-inline-size: 0;
+}
+
 .ck-section__title {
   margin: 0;
   color: var(--ck-text);
   font-size: var(--ck-font-size-lg);
   font-weight: var(--ck-weight-medium);
   line-height: var(--ck-line-tight);
+  letter-spacing: var(--ck-tracking-tight);
+  text-wrap: balance;
+}
+
+.ck-section__description {
+  margin: 0;
+  color: var(--ck-text-muted);
+  font-size: var(--ck-font-size-sm);
+  line-height: var(--ck-line-normal);
+  text-wrap: pretty;
 }
 
 .ck-checkout {
@@ -119,12 +137,39 @@
   border: 1px solid var(--ck-border);
   border-radius: var(--ck-radius);
   background: var(--ck-surface-sunken);
-  box-shadow: var(--ck-shadow-md);
+  box-shadow: var(--ck-highlight), var(--ck-shadow-md);
   padding: var(--ck-space-5);
+  transition:
+    opacity var(--ck-duration-normal) var(--ck-ease-standard),
+    transform var(--ck-duration-normal) var(--ck-ease-standard);
+}
+
+/* Settles in rather than appearing, for a summary that arrives once a plan is picked.
+   The duration tokens are zeroed under reduced motion, so this needs no guard. */
+@starting-style {
+  .ck-panel {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
 }
 
 @container ck (min-width: 34rem) {
   .ck-panel {
     padding: var(--ck-space-6);
   }
+}
+
+/* The title on one side, a total or an edit link on the other. */
+.ck-panel__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ck-space-4);
+}
+
+.ck-panel__aside {
+  flex: 0 0 auto;
+  color: var(--ck-text-muted);
+  font-size: var(--ck-font-size-sm);
+  font-variant-numeric: tabular-nums;
 }

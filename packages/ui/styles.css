@@ -17,3 +17,5 @@
 @import './styles/forms.css' layer(checkout);
 @import './styles/controls.css' layer(checkout);
 @import './styles/payment.css' layer(checkout);
+@import './styles/surfaces.css' layer(checkout);
+@import './styles/feedback.css' layer(checkout);

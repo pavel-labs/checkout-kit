@@ -1,0 +1,162 @@
+/*
+ * Waiting, reassurance, and the things a checkout says when it is not asking for money:
+ * skeletons, countdowns, trust lines, validation summaries and the state icons.
+ */
+
+.ck-skeleton {
+  display: block;
+  inline-size: var(--ck-skeleton-width, 100%);
+  block-size: var(--ck-skeleton-height, 1em);
+  border-radius: var(--ck-skeleton-radius, var(--ck-radius-xs));
+  background: var(--ck-surface);
+  /* The sweep, not the box, is what reads as "still working". */
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ck-text) 8%, transparent) 50%,
+    transparent 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 60% 100%;
+  animation: ck-shimmer 1.4s var(--ck-ease-standard) infinite;
+}
+
+@keyframes ck-shimmer {
+  from {
+    background-position: -80% 0;
+  }
+  to {
+    background-position: 180% 0;
+  }
+}
+
+/* A sweep across the screen is exactly what this setting is asking us not to do. */
+@media (prefers-reduced-motion: reduce) {
+  .ck-skeleton {
+    background-image: none;
+    animation: ck-pulse 1.6s ease-in-out infinite;
+  }
+}
+
+.ck-skeleton-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-2);
+}
+
+.ck-countdown {
+  margin: 0;
+  color: var(--ck-text-muted);
+  font-size: var(--ck-font-size-sm);
+  /* Or the line jitters once a second as the digits change width. */
+  font-variant-numeric: tabular-nums;
+  line-height: var(--ck-line-normal);
+}
+
+.ck-countdown--urgent {
+  color: var(--ck-warning);
+}
+
+.ck-countdown--expired {
+  color: var(--ck-danger);
+}
+
+.ck-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ck-space-2);
+  margin: 0;
+  color: var(--ck-text-subtle);
+  font-size: var(--ck-font-size-xs);
+  line-height: var(--ck-line-normal);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.ck-trust__icon {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.ck-validation-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-2);
+  border: 1px solid var(--ck-danger-border);
+  border-radius: var(--ck-radius-small);
+  background: var(--ck-danger-surface);
+  padding: var(--ck-space-4);
+}
+
+.ck-validation-summary:focus-visible {
+  outline: var(--ck-focus-ring-width) solid var(--ck-focus-ring-color);
+  outline-offset: var(--ck-focus-ring-offset);
+}
+
+/* It takes focus on arrival to be read out; it is not a control, so it is not ringed for it. */
+.ck-validation-summary:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.ck-validation-summary__heading {
+  margin: 0;
+  color: var(--ck-danger);
+  font-size: var(--ck-font-size-sm);
+  font-weight: var(--ck-weight-semibold);
+}
+
+.ck-validation-summary__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-1);
+  margin: 0;
+  padding-inline-start: var(--ck-space-5);
+  color: var(--ck-text);
+  font-size: var(--ck-font-size-sm);
+  line-height: var(--ck-line-normal);
+}
+
+.ck-validation-summary__link {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+
+.ck-validation-summary__link:focus-visible {
+  outline: var(--ck-focus-ring-width) solid var(--ck-focus-ring-color);
+  outline-offset: var(--ck-focus-ring-offset);
+}
+
+.ck-icon {
+  inline-size: 3rem;
+  block-size: 3rem;
+}
+
+.ck-icon__ring {
+  opacity: 0.28;
+}
+
+/* The one moment worth animating: the tick is drawn on rather than switched on. */
+.ck-icon--success .ck-icon__mark,
+.ck-icon--failure .ck-icon__mark {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: ck-draw var(--ck-duration-normal) var(--ck-ease-standard) 60ms forwards;
+}
+
+@keyframes ck-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The duration tokens are zeroed under reduced motion, but a dash offset of 40 would then
+   never animate away and the mark would simply be missing. */
+@media (prefers-reduced-motion: reduce) {
+  .ck-icon--success .ck-icon__mark,
+  .ck-icon--failure .ck-icon__mark {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+}

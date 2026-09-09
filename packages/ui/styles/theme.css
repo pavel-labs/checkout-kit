@@ -17,6 +17,11 @@
   --ck-danger: var(--ck-p-danger-700);
   --ck-success: var(--ck-p-success-700);
 
+  --ck-highlight: none;
+  --ck-shadow-sm: 0 1px 2px rgb(16 12 24 / 6%);
+  --ck-shadow-md: 0 6px 20px rgb(16 12 24 / 10%);
+  --ck-shadow-lg: 0 20px 56px rgb(16 12 24 / 16%);
+
   color-scheme: light;
 }
 
@@ -35,6 +40,11 @@
     --ck-text-subtle: var(--ck-p-neutral-400);
     --ck-danger: var(--ck-p-danger-700);
     --ck-success: var(--ck-p-success-700);
+
+    --ck-highlight: none;
+    --ck-shadow-sm: 0 1px 2px rgb(16 12 24 / 6%);
+    --ck-shadow-md: 0 6px 20px rgb(16 12 24 / 10%);
+    --ck-shadow-lg: 0 20px 56px rgb(16 12 24 / 16%);
 
     color-scheme: light;
   }
@@ -100,6 +110,21 @@
     --ck-text-muted: var(--ck-text);
     --ck-focus-ring-width: 3px;
   }
+}
+
+/*
+ * Density. An embedded checkout, or one in a WebView, has less room to spend than a page of
+ * its own - and CSS cannot see the difference, so the host says which it is.
+ *
+ * The tap target is deliberately left alone: a cramped layout is a design choice, a target
+ * too small to hit is not.
+ */
+.ck-root[data-ck-density='compact'] {
+  --ck-p-unit: 0.22rem;
+  --ck-control-height-md: clamp(2.5rem, 2.2rem + 1vw, 2.875rem);
+  --ck-control-height-lg: clamp(2.75rem, 2.4rem + 1.2vw, 3.125rem);
+  --ck-section-gap: var(--ck-space-4);
+  --ck-radius-lg: 12px;
 }
 
 /* A finger is not a mouse pointer. */

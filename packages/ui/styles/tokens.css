@@ -103,6 +103,9 @@
 
   --ck-line-tight: 1.2;
   --ck-line-normal: 1.45;
+
+  /* Headings only. Body text at these sizes reads worse tightened. */
+  --ck-tracking-tight: -0.01em;
   --ck-weight-regular: 400;
   --ck-weight-medium: 500;
   --ck-weight-semibold: 600;
@@ -131,6 +134,12 @@
   --ck-shadow-sm: 0 1px 2px rgb(0 0 0 / 24%);
   --ck-shadow-md: 0 8px 24px rgb(0 0 0 / 32%);
   --ck-shadow-lg: 0 24px 64px rgb(0 0 0 / 40%);
+
+  /* A one-pixel catch of light along a raised top edge. It is the difference between a dark
+     surface that looks drawn and one that looks like a flat rectangle; on a light theme the
+     same trick is invisible, so it is turned off there rather than faked. */
+  --ck-highlight: inset 0 1px 0 rgb(255 255 255 / 7%);
+
   --ck-z-sticky: 10;
 
   /* Platforms disagree about this; see the platform block below. */
