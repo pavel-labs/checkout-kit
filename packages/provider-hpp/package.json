@@ -1,7 +1,6 @@
 {
   "name": "@checkout-kit/provider-hpp",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "Payment plugin for a hosted payment page: the shopper pays on the bank site and the merchant never sees a card.",
   "license": "Apache-2.0",
@@ -32,6 +31,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
     "exports": {
       ".": "./dist/index.mjs",
       "./package.json": "./package.json"

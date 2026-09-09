@@ -186,11 +186,14 @@ stops at "the money moved or it did not". The rest is your backend's.
 
 Apache-2.0. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
 
-Nothing here is published to npm yet, and every package is still marked private. The
-release plumbing exists so that publishing is a decision rather than a project, but one
-thing has to be true first: **all six plugins are written against a mock backend.** They
-demonstrate the contract; none of them has taken a real payment. Read them as a reference
-implementation, not as an integration you can install and charge a card with.
+The packages are published **privately**, to GitHub Packages under the `@checkout-kit` scope.
+Installing them needs read access to this repository — see [Releasing](./RELEASING.md). Nothing
+goes to npmjs.com.
+
+That is deliberate: **all six plugins are written against a mock backend, and none of them has
+taken a real payment.** They demonstrate the contract. Read them as a reference implementation,
+not as an integration you can install and charge a card with — which is also why they are not
+offered to strangers yet.
 
 ## Repository layout
 

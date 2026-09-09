@@ -1,7 +1,6 @@
 {
   "name": "@checkout-kit/webview-bridge",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "The contract between a checkout running in a WebView and the native app hosting it.",
   "license": "Apache-2.0",
@@ -40,6 +39,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
     "exports": {
       ".": "./dist/index.mjs",
       "./host": "./dist/host/index.mjs",

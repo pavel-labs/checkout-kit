@@ -1,7 +1,6 @@
 {
   "name": "@checkout-kit/provider-hosted-fields",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "Payment plugin for hosted card fields: the provider renders the inputs in its own frame and hands back a token.",
   "license": "Apache-2.0",
@@ -32,6 +31,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
     "exports": {
       ".": "./dist/index.mjs",
       "./package.json": "./package.json"

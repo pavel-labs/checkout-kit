@@ -1,7 +1,6 @@
 {
   "name": "@checkout-kit/provider-psp",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "Payment plugin for a Stripe-shaped PSP: JSON API, idempotency header, 3-D Secure 2 challenge.",
   "license": "Apache-2.0",
@@ -32,6 +31,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
     "exports": {
       ".": "./dist/index.mjs",
       "./package.json": "./package.json"

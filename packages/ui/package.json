@@ -1,7 +1,6 @@
 {
   "name": "@checkout-kit/ui",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "The checkout's visual kit: a handful of themable components and one small stylesheet, with no framework asked of the consumer.",
   "license": "Apache-2.0",
@@ -45,6 +44,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
     "exports": {
       ".": "./dist/index.mjs",
       "./card": "./dist/card/index.mjs",
