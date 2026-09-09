@@ -4,6 +4,13 @@
   gap: var(--ck-space-2);
 }
 
+/* Label and hint travel together: they are what a control is introduced by. */
+.ck-field__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-1);
+}
+
 .ck-field__label {
   color: var(--ck-text);
   font-size: var(--ck-font-size-sm);
@@ -60,6 +67,22 @@
   .ck-fieldset__row {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+/*
+ * Two fields side by side rarely carry the same parts: one has a hint, the other does not.
+ * Letting the label-and-hint block stretch pushes both controls to the bottom of the taller
+ * one, so the inputs line up whatever is written above them.
+ */
+.ck-fieldset__row > .ck-field,
+.ck-card-fields__row > .ck-field {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+}
+
+.ck-fieldset__row > .ck-field > .ck-field__header,
+.ck-card-fields__row > .ck-field > .ck-field__header {
+  align-content: start;
 }
 
 .ck-fieldset__legend {

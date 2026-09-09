@@ -17,6 +17,7 @@
   --ck-danger: var(--ck-p-danger-700);
   --ck-success: var(--ck-p-success-700);
 
+  --ck-scrim: var(--ck-p-neutral-0);
   --ck-highlight: none;
   --ck-shadow-sm: 0 1px 2px rgb(16 12 24 / 6%);
   --ck-shadow-md: 0 6px 20px rgb(16 12 24 / 10%);
@@ -41,6 +42,7 @@
     --ck-danger: var(--ck-p-danger-700);
     --ck-success: var(--ck-p-success-700);
 
+    --ck-scrim: var(--ck-p-neutral-0);
     --ck-highlight: none;
     --ck-shadow-sm: 0 1px 2px rgb(16 12 24 / 6%);
     --ck-shadow-md: 0 6px 20px rgb(16 12 24 / 10%);

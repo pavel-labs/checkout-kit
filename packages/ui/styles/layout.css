@@ -100,7 +100,7 @@
   /* Clears the home indicator on a phone; zero everywhere else. */
   padding-block: var(--ck-space-4);
   padding-block-end: max(var(--ck-space-4), var(--ck-safe-block-end));
-  background: linear-gradient(to bottom, transparent, var(--ck-p-neutral-1000) 40%);
+  background: linear-gradient(to bottom, transparent, var(--ck-scrim) 40%);
 }
 
 .ck-payment-button__amount {

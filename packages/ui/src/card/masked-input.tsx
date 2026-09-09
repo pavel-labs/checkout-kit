@@ -14,6 +14,10 @@ export interface MaskedInputProps extends Omit<InputProps, 'onChange' | 'value' 
 /**
  * A digits-only input that reformats as you type without throwing the caret to the end.
  * Position is tracked by how many digits precede it, since the separators move.
+ *
+ * `onChange` reports the formatted string, but what is displayed is formatted from the
+ * digits of whatever it is given - so a value restored from a draft, or set from a raw PAN,
+ * renders grouped straight away instead of snapping into shape on the first keystroke.
  */
 export const MaskedInput = ({
   value,
@@ -66,7 +70,7 @@ export const MaskedInput = ({
     <Input
       {...props}
       ref={setRef}
-      value={value}
+      value={format(onlyDigits(value))}
       onChange={handleChange}
       inputMode="numeric"
       autoComplete={props.autoComplete}
