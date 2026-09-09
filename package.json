@@ -11,7 +11,8 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "examples"
   ],
   "scripts": {
     "dev": "npm run dev -w @checkout-kit/demo",
@@ -31,6 +32,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "npm run test:e2e -w @checkout-kit/demo",
+    "examples:typecheck": "npm run typecheck -w @checkout-kit/examples",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix-dangerously",
     "format": "prettier --write .",
@@ -50,5 +52,10 @@
     "tsdown": "^0.16.5",
     "typescript": "~7.0.2",
     "vitest": "^5.0.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "examples\\react\\public"
+    ]
   }
 }

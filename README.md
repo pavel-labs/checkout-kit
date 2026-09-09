@@ -21,6 +21,22 @@ npm run dev:mock   # the demo checkout, with the mock payment backend
 npm run dev:bank   # the 3-D Secure bank simulator (a second terminal, for the full flow)
 ```
 
+The demo can also send the installed `@checkout-kit/provider-psp` plugin to your real
+payment backend. Point it at your own server (the server owns the Stripe secret key) and
+start the demo with:
+
+```bash
+$env:VITE_PAYMENT_API_BASE_URL='https://localhost:4000/api'
+npm run dev
+```
+
+The existing Card processor tab then exercises the same checkout engine against your API.
+Your server maps `/api/payment-intents` to Stripe PaymentIntents; the browser never receives
+`sk_...`. The plugin sends the idempotency key and reads Stripe's `PaymentIntent.status`,
+`next_action` and `last_payment_error`. This is useful because the application keeps one
+payment flow and one UI while provider-specific API and 3-D Secure details stay in the
+provider package. For a direct Stripe-shaped adapter, see `examples/providers/stripe.ts`.
+
 The bank simulator serves https with a self-signed certificate: open
 `https://localhost:5100/` once and accept it. See
 [its notes](./apps/bank-sim/README.md) for how to generate the certificate.
@@ -123,7 +139,9 @@ implementation, not as an integration you can install and charge a card with.
 An npm workspaces monorepo.
 
 ```text
-examples/        real provider plugins, and a React Native screen
+examples/        real provider plugins (Stripe, Adyen, PayPal), a mock browser demo, a
+                 minimal server for those adapters, and a React Native screen
+                 — start at examples/README.md
 packages/        the checkout packages listed above
 apps/demo/       a checkout that uses them, with its e2e suite
 apps/bank-sim/   the 3-D Secure bank simulator, on its own https origin

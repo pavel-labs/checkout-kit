@@ -55,7 +55,7 @@ const consoleLogger: Logger = {
 }
 
 const pspConfig: PspConfig = {
-  baseUrl: `${BASE_URL}api`,
+  baseUrl: import.meta.env.VITE_PAYMENT_API_BASE_URL ?? `${BASE_URL}api`,
   acsOrigin: ACS_ORIGIN,
 }
 
