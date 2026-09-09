@@ -1,4 +1,4 @@
-import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
+import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { CheckoutProvider } from '@checkout-kit/react'
 import type { CheckoutEngine } from '@checkout-kit/core'
@@ -32,7 +32,14 @@ function RootComponent() {
     <CheckoutProvider engine={checkout}>
       <MerchantProvider value={merchant}>
         <Main>
-          <Merchant />
+          <div className="flex items-baseline justify-between gap-4">
+            <Merchant />
+            {/* The kit's own showcase. Deployed with the demo, so it can be looked at
+                without cloning anything. */}
+            <Link to="/gallery" className="text-sm text-muted underline-offset-2 hover:underline">
+              UI kit
+            </Link>
+          </div>
           <Outlet />
           {import.meta.env.DEV && <TanStackRouterDevtools />}
         </Main>
