@@ -8,12 +8,12 @@ import {
   CardholderInput,
   CardNumberInput,
   CvcInput,
-  Details,
+  DetailList,
   ExpiryInput,
   Field,
   FailureState,
   Input,
-  Item,
+  DetailItem,
   OptionCard,
   OptionCardGroup,
   PaymentButton,
@@ -154,10 +154,10 @@ function StatesPage() {
         </AuthenticationState>
         <SuccessState
           details={
-            <Details>
-              <Item name="Amount" value="$25.00" />
-              <Item name="Transaction ID" value="pi_123" total />
-            </Details>
+            <DetailList>
+              <DetailItem name="Amount" value="$25.00" />
+              <DetailItem name="Transaction ID" value="pi_123" total />
+            </DetailList>
           }
           actions={<Button variant="secondary">Return to store</Button>}
         >
