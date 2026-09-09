@@ -230,6 +230,7 @@
 .ck-tab[aria-selected='true'] {
   background: var(--ck-surface-raised);
   color: var(--ck-text);
+  box-shadow: var(--ck-highlight), var(--ck-shadow-sm);
 }
 
 .ck-tab:focus-visible {

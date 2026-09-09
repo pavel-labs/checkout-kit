@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { Details, Item } from '@checkout-kit/ui'
+import { DetailList, DetailItem, Panel } from '@checkout-kit/ui'
 import type { Plan } from '@/entities/plan'
 import { toInvoice } from '../model/to-invoice'
 import type { CheckoutFormInput } from '../model/schema'
@@ -21,13 +21,12 @@ export const OrderSummary = ({ plans }: OrderSummaryProps) => {
   if (!invoice) return null
 
   return (
-    <div className="ck-panel">
-      <h2 className="ck-section__title">Order summary</h2>
-      <Details>
-        <Item name="Price" value={`${invoice.currency}${invoice.subtotal}`} />
-        {invoice.discount ? <Item name="Discount applied" value={invoice.discount} /> : null}
-        <Item name="Total due" total value={`${invoice.currency}${invoice.total}`} />
-      </Details>
-    </div>
+    <Panel title="Order summary">
+      <DetailList>
+        <DetailItem name="Price" value={`${invoice.currency}${invoice.subtotal}`} />
+        {invoice.discount ? <DetailItem name="Discount applied" value={invoice.discount} /> : null}
+        <DetailItem name="Total due" total value={`${invoice.currency}${invoice.total}`} />
+      </DetailList>
+    </Panel>
   )
 }

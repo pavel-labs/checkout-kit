@@ -18,13 +18,18 @@ export const ErrorText = ({ children, id, className }: ErrorTextProps): ReactEle
     </p>
   ) : null
 
-export interface StatusProps {
+export interface StatusTextProps {
   children: ReactNode
   tone?: 'success' | 'failure' | 'neutral'
   className?: string
 }
 
-export const Status = ({ children, tone = 'neutral', className }: StatusProps): ReactElement => (
+/** Static outcome wording. The live region belongs to <PaymentStatus>, not to this. */
+export const StatusText = ({
+  children,
+  tone = 'neutral',
+  className,
+}: StatusTextProps): ReactElement => (
   <p className={cx('ck-status', tone !== 'neutral' && `ck-status--${tone}`, className)}>
     {children}
   </p>

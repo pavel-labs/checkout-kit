@@ -18,6 +18,8 @@
 
 .ck-item__value {
   text-align: end;
+  /* Prices in a column only line up if the figures are the same width. */
+  font-variant-numeric: tabular-nums;
 }
 
 .ck-item--total .ck-item__name,
@@ -88,6 +90,7 @@
 
 .ck-state__heading {
   margin: 0;
+  letter-spacing: var(--ck-tracking-tight);
   font-size: var(--ck-font-size-xl);
   font-weight: var(--ck-weight-medium);
   line-height: var(--ck-line-tight);
@@ -222,4 +225,87 @@
   align-items: center;
   color: var(--ck-accent);
   font-size: var(--ck-font-size-sm);
+}
+
+/* Money lines up in a column only if the figures are the same width. */
+.ck-money {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ck-order-summary {
+  min-inline-size: 0;
+}
+
+.ck-order-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A rule between the things bought and what they add up to. */
+.ck-order-items:not(:last-child) {
+  padding-block-end: var(--ck-space-4);
+  border-block-end: 1px solid var(--ck-border);
+}
+
+.ck-order-item {
+  display: flex;
+  align-items: start;
+  gap: var(--ck-space-3);
+}
+
+.ck-order-item__media {
+  display: flex;
+  flex: 0 0 auto;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ck-radius-small);
+  background: var(--ck-surface);
+  overflow: hidden;
+}
+
+.ck-order-item__media > img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.ck-order-item__body {
+  display: flex;
+  min-inline-size: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--ck-space-1);
+}
+
+.ck-order-item__name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ck-space-2);
+  color: var(--ck-text);
+  line-height: var(--ck-line-normal);
+}
+
+.ck-order-item__quantity {
+  color: var(--ck-text-muted);
+  font-size: var(--ck-font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-order-item__description {
+  color: var(--ck-text-muted);
+  font-size: var(--ck-font-size-sm);
+  line-height: var(--ck-line-normal);
+  text-wrap: pretty;
+}
+
+.ck-order-item__value {
+  flex: 0 0 auto;
+  text-align: end;
 }

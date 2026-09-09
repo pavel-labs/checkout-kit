@@ -38,18 +38,22 @@ export const Field = ({
 
   return (
     <div className={cx('ck-field', error && 'ck-field--invalid', className)}>
-      <label className="ck-field__label" htmlFor={id}>
-        {label}
-        {!required && optionalText ? (
-          <span className="ck-field__optional"> {optionalText}</span>
-        ) : null}
-      </label>
+      {/* Grouped, so two fields side by side can line their controls up even when only one
+          of them has a hint - see .ck-fieldset__row. */}
+      <div className="ck-field__header">
+        <label className="ck-field__label" htmlFor={id}>
+          {label}
+          {!required && optionalText ? (
+            <span className="ck-field__optional"> {optionalText}</span>
+          ) : null}
+        </label>
 
-      {hint ? (
-        <p className="ck-field__hint" id={hintId}>
-          {hint}
-        </p>
-      ) : null}
+        {hint ? (
+          <p className="ck-field__hint" id={hintId}>
+            {hint}
+          </p>
+        ) : null}
+      </div>
 
       {children({
         id,

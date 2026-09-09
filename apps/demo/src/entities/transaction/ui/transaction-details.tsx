@@ -1,4 +1,4 @@
-import { Details, Item, Status } from '@checkout-kit/ui'
+import { DetailList, DetailItem, Receipt, StatusText } from '@checkout-kit/ui'
 import type { Transaction } from '../model/transaction'
 
 interface IProps {
@@ -7,13 +7,13 @@ interface IProps {
 }
 
 export const TransactionDetails = ({ transaction, errorMessage }: IProps) => (
-  <div className="ck-receipt">
-    <Details>
-      <Item name="Amount" value={transaction.amount} />
-      <Item name="Transaction ID" value={transaction.id} />
-      <Item name="Payment method" value={transaction.paymentMethod} />
-      <Item name="Merchant" value={transaction.merchant} />
-    </Details>
-    {errorMessage ? <Status tone="failure">{errorMessage}</Status> : null}
-  </div>
+  <Receipt>
+    <DetailList>
+      <DetailItem name="Amount" value={transaction.amount} />
+      <DetailItem name="Transaction ID" value={transaction.id} />
+      <DetailItem name="Payment method" value={transaction.paymentMethod} />
+      <DetailItem name="Merchant" value={transaction.merchant} />
+    </DetailList>
+    {errorMessage ? <StatusText tone="failure">{errorMessage}</StatusText> : null}
+  </Receipt>
 )

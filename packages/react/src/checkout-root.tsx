@@ -1,4 +1,4 @@
-import { useSyncExternalStore, type ReactElement, type ReactNode } from 'react'
+import { useSyncExternalStore, type CSSProperties, type ReactElement, type ReactNode } from 'react'
 import { detectPlatform, type Platform } from '@checkout-kit/runtime-browser'
 
 export interface CheckoutRootProps {
@@ -7,6 +7,14 @@ export interface CheckoutRootProps {
   theme?: 'dark' | 'light' | 'auto'
   /** Pin it to override detection. */
   platform?: Platform | 'auto'
+  /**
+   * Custom properties, for a brand that lives in a token pipeline rather than a stylesheet.
+   * `appearanceToStyle()` in @checkout-kit/ui builds one; plain CSS on `.ck-root` still works
+   * and is the shorter path when the brand is already written down in CSS.
+   */
+  style?: CSSProperties
+  /** `compact` tightens the layout - an embedded checkout, or one in a WebView. */
+  density?: 'comfortable' | 'compact'
   className?: string
 }
 
@@ -20,6 +28,8 @@ export const CheckoutRoot = ({
   children,
   theme,
   platform = 'auto',
+  style,
+  density,
   className,
 }: CheckoutRootProps): ReactElement => {
   const detected = useSyncExternalStore(subscribe, detectPlatform, onServer)
@@ -30,6 +40,8 @@ export const CheckoutRoot = ({
       className={className ? `ck-root ${className}` : 'ck-root'}
       data-ck-theme={theme}
       data-ck-platform={resolved ?? undefined}
+      data-ck-density={density}
+      style={style}
     >
       {children}
     </div>

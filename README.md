@@ -37,6 +37,15 @@ Your server maps `/api/payment-intents` to Stripe PaymentIntents; the browser ne
 payment flow and one UI while provider-specific API and 3-D Secure details stay in the
 provider package. For a direct Stripe-shaped adapter, see `examples/providers/stripe.ts`.
 
+There is a second, smaller app under `examples/react`: the same engine and the same UI kit,
+in plain React with no form library, no schema and no router. It is the shorter read of the
+two.
+
+```bash
+npm run dev:react -w @checkout-kit/examples    # the browser example, on the mock backend
+npm run dev:server -w @checkout-kit/examples   # the Stripe / Adyen / PayPal sandbox server
+```
+
 The bank simulator serves https with a self-signed certificate: open
 `https://localhost:5100/` once and accept it. See
 [its notes](./apps/bank-sim/README.md) for how to generate the certificate.
@@ -123,6 +132,50 @@ exactly this and nothing more.
 
 To add an integration of your own, see
 **[Writing a payment plugin](./docs/plugin-authoring.md)**.
+
+## How this compares
+
+The alternatives are Stripe's Payment Element, Adyen's Drop-in and Braintree's Drop-in. They
+are good. If you will only ever have one processor, they are less work than this.
+
+|                       | Payment Element / Drop-in | This kit                       |
+| --------------------- | ------------------------- | ------------------------------ |
+| Processors            | one, theirs               | any, as a plugin               |
+| Where the fields live | their iframe              | your DOM (or their iframe)     |
+| Theming               | a fixed `appearance` API  | CSS variables and your own CSS |
+| Plugin contract       | n/a                       | a test suite you must pass     |
+| Native app            | their SDK                 | a WebView bridge               |
+| Has taken real money  | yes                       | **no**                         |
+
+Three things follow from the first row.
+
+**Adding a processor does not change the core.** Six integration shapes already run behind
+one engine and one UI: a JSON PSP, a form-urlencoded acquirer, a hosted page, hosted fields,
+a wallet SDK and a QR transfer. A seventh is a new package, not a new branch in the engine.
+
+**You own the DOM.** Elements are cross-origin iframes. You style them through a fixed schema
+and stop where it stops. Here the kit renders real elements in your page, inside a `checkout`
+cascade layer, so your CSS wins without a specificity fight. If you want the iframe - to keep
+card data out of your page - `@checkout-kit/provider-hosted-fields` is that. It is your
+choice per provider, not the library's.
+
+**The contract is a test, not a promise.** `@checkout-kit/conformance` is a vitest suite every
+plugin has to pass. It checks that declared instruments are exact both ways, that idempotency
+really replays, that forged evidence is refused, that resuming twice does not charge twice,
+and that no card data appears in anything a plugin returns.
+
+Also: ESM-only, no runtime dependencies, about 22 kB of JS and 6 kB of CSS for one provider.
+
+### What it does not do
+
+**It has never taken a real payment.** All six plugins run against a mock backend. This is
+the honest headline - see the status note below.
+
+**It does not reduce your PCI scope.** Typing a card into your own page is what SAQ A-EP
+means. Hosted fields and the hosted page change that; a UI kit does not.
+
+**It has no server half.** No webhooks, no capture, no refunds, no settlement. The engine
+stops at "the money moved or it did not". The rest is your backend's.
 
 ## Status and licence
 

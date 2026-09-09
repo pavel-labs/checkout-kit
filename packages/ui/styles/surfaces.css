@@ -1,0 +1,241 @@
+/*
+ * Things that sit on top of, or beside, the form: dialogs and sheets, express-checkout rows,
+ * disclosures, promo codes and the step indicator.
+ */
+
+.ck-dialog {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ck-text);
+  /* The element fills the viewport so a click outside the panel is still on the dialog. */
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: hidden;
+}
+
+.ck-dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(2px);
+}
+
+.ck-dialog__panel {
+  display: flex;
+  position: absolute;
+  flex-direction: column;
+  gap: var(--ck-space-4);
+  border: 1px solid var(--ck-border);
+  background: var(--ck-surface-overlay);
+  box-shadow: var(--ck-shadow-lg);
+  padding: var(--ck-space-5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ck-dialog--center .ck-dialog__panel {
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  inline-size: min(100% - var(--ck-space-8), var(--ck-layout-max));
+  max-block-size: min(100% - var(--ck-space-8), 44rem);
+  border-radius: var(--ck-radius-lg);
+}
+
+/* Up from the bottom edge: the shape a phone expects, and the part a thumb reaches. */
+.ck-dialog--sheet .ck-dialog__panel {
+  inset-block-end: 0;
+  inset-inline: 0;
+  inline-size: 100%;
+  max-block-size: 88%;
+  border-inline: 0;
+  border-block-end: 0;
+  border-start-start-radius: var(--ck-radius-lg);
+  border-start-end-radius: var(--ck-radius-lg);
+  padding-block-end: calc(var(--ck-space-5) + var(--ck-safe-block-end));
+}
+
+.ck-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-4);
+}
+
+.ck-dialog__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-3);
+}
+
+.ck-express {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-section-gap);
+}
+
+.ck-express__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-3);
+}
+
+/* Wallet SDKs mandate their own heights, so the row distributes width and nothing else. */
+.ck-express__buttons--row {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.ck-express__buttons--row > * {
+  flex: 1 1 12rem;
+}
+
+.ck-disclosure {
+  border-radius: var(--ck-radius-small);
+  color: var(--ck-text-muted);
+  font-size: var(--ck-font-size-sm);
+}
+
+.ck-disclosure__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--ck-space-2);
+  min-block-size: var(--ck-tap-target);
+  color: var(--ck-text);
+  cursor: pointer;
+  list-style: none;
+  touch-action: manipulation;
+}
+
+.ck-disclosure__summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The kit's own marker, so it turns rather than swaps glyph. */
+.ck-disclosure__summary::before {
+  content: '';
+  flex: 0 0 auto;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-inline-end: 2px solid currentcolor;
+  border-block-end: 2px solid currentcolor;
+  transform: rotate(-45deg);
+  transition: transform var(--ck-duration-fast) var(--ck-ease-standard);
+}
+
+.ck-disclosure[open] > .ck-disclosure__summary::before {
+  transform: rotate(45deg);
+}
+
+.ck-disclosure__summary:focus-visible {
+  outline: var(--ck-focus-ring-width) solid var(--ck-focus-ring-color);
+  outline-offset: var(--ck-focus-ring-offset);
+  border-radius: var(--ck-radius-xs);
+}
+
+.ck-disclosure__content {
+  padding-block: var(--ck-space-2);
+  /* Lines up under the summary text rather than under its marker. */
+  padding-inline-start: calc(var(--ck-space-2) + 0.5rem);
+  line-height: var(--ck-line-normal);
+  text-wrap: pretty;
+}
+
+.ck-promo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-2);
+}
+
+.ck-promo__row {
+  display: flex;
+  align-items: start;
+  gap: var(--ck-space-2);
+}
+
+.ck-promo--applied {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ck-space-3);
+}
+
+.ck-promo__applied {
+  display: flex;
+  align-items: center;
+  gap: var(--ck-space-2);
+  min-inline-size: 0;
+}
+
+.ck-promo__code {
+  font-family: var(--ck-font-mono);
+  font-size: var(--ck-font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.ck-steps__list {
+  display: flex;
+  align-items: center;
+  gap: var(--ck-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ck-steps__list::-webkit-scrollbar {
+  display: none;
+}
+
+.ck-step {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--ck-space-2);
+  color: var(--ck-text-subtle);
+  font-size: var(--ck-font-size-sm);
+}
+
+/* The connector between one step and the next. */
+.ck-step:not(:last-child)::after {
+  content: '';
+  inline-size: var(--ck-space-6);
+  border-block-start: 1px solid var(--ck-border);
+}
+
+.ck-step__marker {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border: 1px solid var(--ck-border-strong);
+  border-radius: var(--ck-radius-full);
+  font-size: var(--ck-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color var(--ck-duration-fast) var(--ck-ease-standard),
+    border-color var(--ck-duration-fast) var(--ck-ease-standard);
+}
+
+.ck-step--done {
+  color: var(--ck-text-muted);
+}
+
+.ck-step--done .ck-step__marker {
+  border-color: var(--ck-accent);
+  background: var(--ck-accent-subtle);
+  color: var(--ck-text);
+}
+
+.ck-step--current {
+  color: var(--ck-text);
+  font-weight: var(--ck-weight-medium);
+}
+
+.ck-step--current .ck-step__marker {
+  border-color: var(--ck-accent);
+  background: var(--ck-accent);
+  color: var(--ck-text-on-accent);
+}

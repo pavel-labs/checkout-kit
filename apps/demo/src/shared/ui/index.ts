@@ -6,16 +6,16 @@
 // leaking into every component.
 export {
   Button,
-  Details,
+  DetailItem,
+  DetailList,
   ErrorText,
   Input,
-  Item,
   Section,
-  Status,
+  StatusText,
   Tab,
   Tabs,
 } from '@checkout-kit/ui'
-export type { ButtonProps, InputProps, ItemProps, TabProps } from '@checkout-kit/ui'
+export type { ButtonProps, DetailItemProps, InputProps, TabProps } from '@checkout-kit/ui'
 
 export * from './containers/center'
 export * from './containers/header'

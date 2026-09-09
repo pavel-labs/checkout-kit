@@ -9,11 +9,13 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   ref?: Ref<HTMLInputElement>
 }
 
+// props first: <Field> passes `aria-invalid: undefined` when there is no error, and a spread
+// after the attribute would let that undefined cancel an explicit `invalid`.
 export const Input = ({ className, invalid, ref, ...props }: InputProps): ReactElement => (
   <input
+    {...props}
     ref={ref}
     className={cx('ck-input', className)}
     aria-invalid={invalid || props['aria-invalid'] || undefined}
-    {...props}
   />
 )

@@ -201,6 +201,22 @@ plugin means trusting its code.
 **No webhooks and no server.** There is no backend to receive them. `poll` covers payments
 that settle later.
 
+## Two loose ends in the vocabulary
+
+Both are declared in the domain and honoured by nothing, and both are worth knowing before
+you write a plugin against them:
+
+**`PaymentActionKind: 'poll'` has no browser runner.** `@checkout-kit/runtime-browser`
+registers `redirect`, `collect_fields`, `sdk_handoff` and `display`. No shipped plugin
+declares `poll` in `capabilities.actions`, so `assertCovers` never fires - but a plugin author
+following the action table in [plugin-authoring.md](./plugin-authoring.md) will get a
+boot-time throw. Payments that settle later are handled by `display` plus the engine's own
+polling; a bare `poll` action has no path through the browser runtime today.
+
+**`ActionSurface: 'popup'` is dead.** It is in the union and in the scripted runners in
+`@checkout-kit/testing`, and nowhere else: no browser runner supports it and no plugin returns
+it.
+
 ## Further reading
 
 - **[Writing a payment plugin](./plugin-authoring.md)** — the contract from the other side.

@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Real credentials. The .env.example templates beside them are the committed half.
+.env
+.env.*
+!.env.example
+!.env.mock
+
 # Playwright
 test-results/
 playwright-report/

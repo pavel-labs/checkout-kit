@@ -4,6 +4,13 @@
   gap: var(--ck-space-2);
 }
 
+/* Label and hint travel together: they are what a control is introduced by. */
+.ck-field__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-1);
+}
+
 .ck-field__label {
   color: var(--ck-text);
   font-size: var(--ck-font-size-sm);
@@ -62,6 +69,19 @@
   }
 }
 
+/* Two fields in a row rarely carry the same parts. Stretching the label-and-hint block
+   pushes both controls to the bottom of the taller one, so the inputs line up. */
+.ck-fieldset__row > .ck-field,
+.ck-card-fields__row > .ck-field {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+}
+
+.ck-fieldset__row > .ck-field > .ck-field__header,
+.ck-card-fields__row > .ck-field > .ck-field__header {
+  align-content: start;
+}
+
 .ck-fieldset__legend {
   padding: 0;
   color: var(--ck-text);
@@ -81,6 +101,7 @@
   color: var(--ck-text);
   font-size: var(--ck-font-size-lg);
   font-weight: var(--ck-weight-medium);
+  letter-spacing: var(--ck-tracking-tight);
 }
 
 .ck-option-group__items {
@@ -109,6 +130,7 @@
 .ck-option:has(.ck-option__input:checked) {
   border-color: var(--ck-accent);
   background: var(--ck-accent-subtle);
+  box-shadow: var(--ck-highlight);
 }
 
 .ck-option:has(.ck-option__input:focus-visible) {
@@ -141,7 +163,9 @@
 }
 
 .ck-option__marker {
+  display: grid;
   flex: 0 0 auto;
+  place-items: center;
   inline-size: 1.25rem;
   block-size: 1.25rem;
   border: 2px solid var(--ck-border-strong);
@@ -149,9 +173,24 @@
   transition: border-color var(--ck-duration-fast) var(--ck-ease-standard);
 }
 
+/* The dot is a pseudo-element rather than a radial-gradient, because a gradient cannot be
+   transitioned and the selection snapped. */
+.ck-option__marker::after {
+  content: '';
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  border-radius: var(--ck-radius-full);
+  background: var(--ck-accent);
+  transform: scale(0);
+  transition: transform var(--ck-duration-fast) var(--ck-ease-standard);
+}
+
 .ck-option:has(.ck-option__input:checked) .ck-option__marker {
   border-color: var(--ck-accent);
-  background: radial-gradient(circle, var(--ck-accent) 0 45%, transparent 46%);
+}
+
+.ck-option:has(.ck-option__input:checked) .ck-option__marker::after {
+  transform: scale(1);
 }
 
 .ck-option__media {
@@ -204,6 +243,7 @@
   font-size: var(--ck-font-size-md);
   /* Clears the sticky action bar when a field near the bottom takes focus. */
   scroll-margin-block: var(--ck-space-10);
+  box-shadow: var(--ck-highlight);
   transition:
     border-color var(--ck-duration-fast) var(--ck-ease-standard),
     background-color var(--ck-duration-fast) var(--ck-ease-standard);
@@ -258,6 +298,11 @@ select.ck-input {
   gap: var(--ck-space-4);
 }
 
+/* A proportional font reflows the groups as they are typed; tabular figures do not. */
+.ck-card-fields .ck-input {
+  font-variant-numeric: tabular-nums;
+}
+
 .ck-card-fields__row {
   display: grid;
   gap: var(--ck-space-4);
@@ -300,4 +345,150 @@ select.ck-input {
   display: flex;
   align-items: center;
   pointer-events: none;
+}
+
+/* A textarea is the one control that must not be locked to the control height. */
+.ck-textarea {
+  block-size: auto;
+  min-block-size: var(--ck-control-height-md);
+  align-items: start;
+  padding-block: var(--ck-space-3);
+  line-height: var(--ck-line-normal);
+  resize: vertical;
+}
+
+.ck-checkbox-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-2);
+}
+
+.ck-checkbox {
+  display: flex;
+  align-items: start;
+  gap: var(--ck-space-3);
+  /* The whole row is the target, not the 20px box. */
+  min-block-size: var(--ck-tap-target);
+  padding-block: var(--ck-space-2);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hidden, not removed: the browser still owns Space, the tab order and the announcement. */
+.ck-checkbox__input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ck-checkbox__box {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  /* Optical: line the box up with the first line of the label, not the top of the row. */
+  margin-block-start: 0.1rem;
+  border: 1px solid var(--ck-border-strong);
+  border-radius: var(--ck-radius-xs);
+  background: var(--ck-surface);
+  color: var(--ck-text-on-accent);
+  transition:
+    background-color var(--ck-duration-fast) var(--ck-ease-standard),
+    border-color var(--ck-duration-fast) var(--ck-ease-standard);
+}
+
+.ck-checkbox__tick {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  /* Drawn on, so the tick reads as an answer rather than appearing from nowhere. */
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  transition: stroke-dashoffset var(--ck-duration-normal) var(--ck-ease-standard);
+}
+
+.ck-checkbox:has(:checked) .ck-checkbox__box {
+  border-color: var(--ck-accent);
+  background: var(--ck-accent);
+}
+
+.ck-checkbox:has(:checked) .ck-checkbox__tick {
+  stroke-dashoffset: 0;
+}
+
+.ck-checkbox:has(:focus-visible) .ck-checkbox__box {
+  outline: var(--ck-focus-ring-width) solid var(--ck-focus-ring-color);
+  outline-offset: var(--ck-focus-ring-offset);
+}
+
+.ck-checkbox:has(:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ck-checkbox-field--invalid .ck-checkbox__box {
+  border-color: var(--ck-danger-border);
+}
+
+.ck-checkbox__body {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--ck-space-1);
+}
+
+.ck-checkbox__label {
+  color: var(--ck-text);
+  font-size: var(--ck-font-size-sm);
+  line-height: var(--ck-line-normal);
+}
+
+.ck-checkbox__description {
+  color: var(--ck-text-muted);
+  font-size: var(--ck-font-size-xs);
+  line-height: var(--ck-line-normal);
+  text-wrap: pretty;
+}
+
+@media (hover: hover) {
+  .ck-checkbox:hover:not(:has(:disabled)) .ck-checkbox__box {
+    border-color: var(--ck-accent);
+  }
+}
+
+.ck-divider {
+  inline-size: 100%;
+  margin: 0;
+  border: 0;
+  border-block-start: 1px solid var(--ck-border);
+}
+
+/* The rule is drawn by the pseudo-elements here, so the label sits in a real gap rather
+   than on top of a line. */
+.ck-divider--labelled {
+  display: flex;
+  align-items: center;
+  gap: var(--ck-space-3);
+  border-block-start: 0;
+}
+
+.ck-divider--labelled::before,
+.ck-divider--labelled::after {
+  content: '';
+  flex: 1 1 0;
+  border-block-start: 1px solid var(--ck-border);
+}
+
+.ck-divider__label {
+  color: var(--ck-text-muted);
+  font-size: var(--ck-font-size-sm);
+  text-transform: lowercase;
+  white-space: nowrap;
 }
