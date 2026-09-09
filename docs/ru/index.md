@@ -14,7 +14,7 @@ hero:
       link: /ru/plugin-authoring
     - theme: alt
       text: Живое демо
-      link: /checkout-kit/demo/
+      link: /demo/
 
 features:
   - title: Провайдер — это плагин

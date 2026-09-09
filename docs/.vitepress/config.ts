@@ -14,8 +14,10 @@ import { defineConfig, type DefaultTheme } from 'vitepress'
 
 const REPO = 'https://github.com/themafia98/checkout-kit'
 
-// GitHub Pages serves this repository at /checkout-kit/, and the demo sits under /demo/ of it.
-const DEMO = '/checkout-kit/demo/'
+// The demo is a sibling of the docs on the same Pages site, not a page of them. Written
+// without the base: VitePress prepends that itself, and spelling it out here produced
+// /checkout-kit/checkout-kit/demo/.
+const DEMO = '/demo/'
 
 // The reference is generated into docs/api by `npm run docs:api`, which also writes one
 // typedoc-sidebar.json per package. It is not committed, so the site still builds without it -
@@ -141,6 +143,10 @@ export default defineConfig({
   base: '/checkout-kit/',
   cleanUrls: false,
   lastUpdated: true,
+
+  // The demo is served from the same site but built separately - there is no page here for
+  // the link checker to find.
+  ignoreDeadLinks: [/^\/demo\/?$/],
 
   markdown: {
     config(md) {
