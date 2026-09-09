@@ -10,23 +10,59 @@ thing that was missing.
 
 ## Before the first release
 
-The scope has to belong to the account that owns the repository — that is how GitHub Packages
-decides who may publish. So, once:
+**The repository stays where it is.** The organisation below owns the _packages_, not the code —
+GitHub Packages decides who may publish from the scope, and the scope is what has to belong to
+an account you control.
 
-1. **Create a GitHub organisation named `checkout-kit`.** Free. This is what makes the
-   `@checkout-kit/*` names work without renaming anything.
-2. **Transfer this repository into it.** Settings → General → Transfer ownership. GitHub keeps
-   redirecting the old URL, so existing clones and links carry on working.
-3. Check that Pages is still enabled afterwards. The documentation site moves to
-   `https://checkout-kit.github.io/checkout-kit/`, which is the URL the docs and the README
-   already point at.
+### 1. Create the organisation
 
-Everything in the repository is already set up for it: the manifests carry
-`publishConfig.registry` and `access: restricted`, and `.npmrc` sends the `@checkout-kit` scope
-to GitHub Packages and nothing else.
+github.com → **+** (top right) → **New organization** → the **Free** plan. Name it exactly
+**`checkout-kit`**, all lowercase: it becomes the `@checkout-kit` scope, and npm scopes cannot
+contain capitals.
+
+Nothing else about it needs configuring, and no repository moves into it.
+
+### 2. Create a token that may publish
+
+The first publish of an organisation-scoped package cannot use a workflow's `GITHUB_TOKEN` —
+that token only has rights over its own repository's owner, and here the owner of the packages
+is the organisation. So, a classic personal access token:
+
+Settings → Developer settings → **Personal access tokens (classic)** → Generate new token.
+Tick **`write:packages`** (which pulls in `read:packages` and `repo`). Copy it once; GitHub will
+not show it again.
+
+If your organisation has SSO enabled, authorise the token for it on the token's page, or every
+publish returns 403.
+
+### 3. Give the workflow the token
+
+This repository → Settings → Secrets and variables → **Actions** → New repository secret, named
+**`PACKAGES_TOKEN`**, with the token as its value.
+
+That is all. The manifests already carry `publishConfig.registry` and `access: restricted`, and
+`.npmrc` sends the `@checkout-kit` scope to GitHub Packages and nothing else.
+
+### After the first publish
+
+Once a package exists under the organisation you can grant this repository access to it —
+organisation → Packages → the package → Settings → Manage Actions access. From then on the
+workflow's own `GITHUB_TOKEN` is enough and the PAT is only a fallback.
 
 Free-plan GitHub Packages allows 500 MB of storage and 1 GB of transfer a month for private
 packages. These are a few tens of kilobytes each, so that is not a constraint.
+
+### The one thing the first publish will tell you
+
+The manifests' `repository` field points at this repository, in a personal account, while the
+packages belong to the organisation. GitHub uses that field to _link_ a package to a repository;
+when it cannot, the package is published to the organisation unlinked, which is fine — the
+organisation is what grants access.
+
+If a publish is ever refused over that mismatch, there are two ways out and neither touches the
+package names: drop the `repository` field from the manifests, or point it at an empty
+repository inside the organisation. Run the workflow with the dry-run box ticked first; it packs
+everything and checks the entry points without sending anything.
 
 ## Cutting a release
 
@@ -58,9 +94,12 @@ The workflow re-runs the whole verification — format, lint, types, tests, puri
 ### Publishing from your machine instead
 
 ```bash
-export NPM_TOKEN=<a personal access token with write:packages>
+export NPM_TOKEN=<the same classic token, with write:packages>
 npm run release
 ```
+
+`.npmrc` reads `NPM_TOKEN`, so nothing else needs configuring — and the token stays in your
+shell rather than in a file.
 
 ## Installing them in another project
 

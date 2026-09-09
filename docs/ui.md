@@ -139,7 +139,7 @@ those three.
 ## The components
 
 You can see all of it in the demo's
-[`/gallery`](https://checkout-kit.github.io/checkout-kit/demo/gallery) route: every component on one
+[`/gallery`](https://themafia98.github.io/checkout-kit/demo/gallery) route: every component on one
 page, with switches for theme, platform, density and accent.
 
 Where the main ones sit on a checkout screen:

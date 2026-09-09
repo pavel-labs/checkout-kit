@@ -2,10 +2,10 @@
 
 An embeddable checkout. Every payment integration behind it is a plugin.
 
-**[Documentation](https://checkout-kit.github.io/checkout-kit/)** ·
-[Русская версия](https://checkout-kit.github.io/checkout-kit/ru/) ·
-[API reference](https://checkout-kit.github.io/checkout-kit/api/) ·
-[Live demo](https://checkout-kit.github.io/checkout-kit/demo/)
+**[Documentation](https://themafia98.github.io/checkout-kit/)** ·
+[Русская версия](https://themafia98.github.io/checkout-kit/ru/) ·
+[API reference](https://themafia98.github.io/checkout-kit/api/) ·
+[Live demo](https://themafia98.github.io/checkout-kit/demo/)
 
 The core is a headless engine. It creates a payment, presents an instrument, runs whatever
 step the provider asks for next, and reports the outcome. It does not know what 3-D Secure
@@ -216,7 +216,7 @@ would. CI runs both.
 ## Architecture and docs
 
 These all read on GitHub, and they are also the
-[documentation site](https://checkout-kit.github.io/checkout-kit/), which adds a sidebar,
+[documentation site](https://themafia98.github.io/checkout-kit/), which adds a sidebar,
 search and a generated API reference.
 
 Every doc exists in English and Russian, except the bank simulator's notes.
