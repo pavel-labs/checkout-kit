@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react'
 import { ActionFrame, type ActionFrameVariant } from '../action-frame'
+import { FailureIcon, NeutralIcon, SuccessIcon } from '../icons'
 import { Spinner } from '../spinner'
 import { PaymentStateScreen } from './payment-state'
 
@@ -50,6 +51,7 @@ export interface SuccessStateProps {
   children?: ReactNode
   details?: ReactNode
   actions?: ReactNode
+  /** Pass `null` for no icon at all. */
   icon?: ReactNode
 }
 
@@ -58,7 +60,7 @@ export const SuccessState = ({
   children,
   details,
   actions,
-  icon,
+  icon = <SuccessIcon />,
 }: SuccessStateProps): ReactElement => (
   <PaymentStateScreen
     heading={heading}
@@ -87,6 +89,7 @@ export interface FailureStateProps {
   children?: ReactNode
   details?: ReactNode
   actions?: ReactNode
+  /** Pass `null` for no icon at all. */
   icon?: ReactNode
 }
 
@@ -102,7 +105,8 @@ export const FailureState = ({
     heading={heading ?? HEADINGS[tone]}
     details={details}
     actions={actions}
-    icon={icon}
+    // Cancelling is not a failure, and a red cross tells the shopper it was.
+    icon={icon === undefined ? tone === 'cancelled' ? <NeutralIcon /> : <FailureIcon /> : icon}
     tone={tone === 'cancelled' ? 'neutral' : 'failure'}
     autoFocus
   >
