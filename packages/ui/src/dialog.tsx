@@ -18,11 +18,8 @@ export interface DialogProps {
 }
 
 /**
- * A real <dialog>, opened with `showModal()`.
- *
- * That one call is why there is no focus-trap code here: the browser already moves focus in,
- * keeps Tab inside, makes the rest of the page inert, closes on Escape and restores focus on
- * the way out. Every hand-written modal gets at least one of those wrong.
+ * A real <dialog>, opened with `showModal()`. That is why there is no focus-trap code here:
+ * focus, Tab, inertness, Escape and focus restore are all the browser's.
  */
 export const Dialog = ({
   open,
@@ -51,11 +48,9 @@ export const Dialog = ({
     <dialog
       ref={ref}
       className={cx('ck-dialog', `ck-dialog--${variant}`, className)}
-      // Without a name a dialog is announced as just "dialog", and the shopper has to go
-      // looking for what it is asking.
+      // Unnamed, it is announced as just "dialog".
       aria-labelledby={title ? headingId : undefined}
-      // Escape fires `cancel` before `close`; refusing it there is what makes a dialog
-      // non-dismissible, and the backdrop click below has to agree with it.
+      // Escape fires `cancel` first; refusing it there is what makes a dialog undismissable.
       onCancel={(event) => {
         if (!dismissible) {
           event.preventDefault()
@@ -68,8 +63,7 @@ export const Dialog = ({
       }}
       onClick={(event) => {
         if (!dismissible) return
-        // The dialog element fills the viewport including its backdrop, so a click that
-        // landed on the element itself - not on the panel inside - is a backdrop click.
+        // The element fills the viewport, so a click on it rather than the panel is the backdrop.
         if (event.target === ref.current) onClose()
       }}
     >

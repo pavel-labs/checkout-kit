@@ -41,10 +41,8 @@ const lineValue = (line: OrderLine, currency: string, locale?: string): ReactNod
   ))
 
 /**
- * What the shopper is about to pay for, and what it adds up to.
- *
- * The kit does no pricing: subtotals, tax and discounts arrive already worked out, because
- * where the rounding happens is your tax logic's business and never the checkout's.
+ * What the shopper is about to pay for, and what it adds up to. No pricing happens here -
+ * where the rounding lands is your tax logic's business, not the checkout's.
  */
 export const OrderSummary = ({
   items = [],

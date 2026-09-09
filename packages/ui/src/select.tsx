@@ -20,8 +20,8 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 /**
- * A real <select>. A listbox drawn in JavaScript loses the platform's own picker - the wheel
- * on iOS, the dropdown on Android - which is the one control a shopper already knows.
+ * A real <select>, so the shopper gets the platform's own picker - the wheel on iOS, the
+ * dropdown on Android - rather than a listbox drawn in JavaScript.
  */
 export const Select = ({
   className,

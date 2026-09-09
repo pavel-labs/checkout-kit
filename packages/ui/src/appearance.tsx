@@ -1,16 +1,11 @@
-// The kit is themed with CSS custom properties, and always will be - this is the typed door
-// into them, for hosts whose brand lives in a design-token pipeline rather than a stylesheet.
-//
-// It writes the same properties you would write by hand. Nothing here is a second theming
-// system: anything not covered is still one line of CSS on `.ck-root`.
+// A typed door into the custom properties, for a brand that lives in a token pipeline rather
+// than a stylesheet. It writes what you would have written by hand; anything not covered here
+// is still one line of CSS on `.ck-root`.
 
 import type { CSSProperties } from 'react'
 
 export interface CheckoutAppearance {
-  /**
-   * The whole brand, in one value. Every hover, pressed, subtle and focus tone is derived
-   * from it in CSS, so they move together and stay in step.
-   */
+  /** The whole brand. Hover, pressed, subtle and focus are derived from it in CSS. */
   accent?: string
   /** Only when your brand's accent is light: what text on top of it should be. */
   accentContrast?: string
@@ -69,14 +64,12 @@ const VARS: Record<
 }
 
 /**
- * Turns an appearance into the custom properties that express it.
- *
  * ```tsx
  * <CheckoutRoot theme="auto" style={appearanceToStyle({ accent: '#0a7', radius: 8 })}>
  * ```
  *
- * `density` is not a property but an attribute - see `appearanceAttributes`, or let
- * `<CheckoutRoot appearance={...}>` apply both.
+ * `density` is an attribute rather than a property - `appearanceToAttributes` returns it, and
+ * `<CheckoutRoot density=...>` takes it directly.
  */
 export const appearanceToStyle = (appearance: CheckoutAppearance): CSSProperties => {
   const style: Record<string, string> = {}

@@ -36,14 +36,14 @@ import {
 } from '@checkout-kit/ui'
 import { RETURN_PATH, runtime } from './mock-checkout'
 
-// One checkout, nine integrations behind it. Everything provider-specific lives in the
-// plugin; this file only ever asks "did the provider want an action, and where does it go?"
+// One checkout, nine integrations behind it. This file only ever asks: did the provider want
+// an action, and where does it go?
 //
-// Deliberately plain React: no form library, no validation schema, no router. The demo in
-// apps/ has all three. This is here to show what the kit alone is worth.
+// Plain React on purpose - no form library, no schema, no router. The demo in apps/ has all
+// three; this shows what the kit alone is worth.
 
-// The mock backend's own catalogue - see packages/testing/src/backend/data.ts. Amounts are
-// minor units everywhere in the kit, so 2500 is $25.00.
+// From the mock backend's catalogue (packages/testing/src/backend/data.ts). Minor units
+// everywhere in the kit, so 2500 is $25.00.
 const PLAN = { id: '1id', name: 'Monthly plan', amount: 2500, currency: 'USD' }
 
 const REAL_PROVIDERS = ['stripe', 'adyen', 'paypal']
@@ -98,13 +98,12 @@ export const App = () => {
   const [cvc, setCvc] = useState('123')
   const [holder, setHolder] = useState('Mock Shopper')
 
-  // One key per attempt, so a submit that slips past every guard is a no-op at the provider
-  // rather than a second charge.
+  // One key per attempt: a submit that slips past every guard is then a no-op, not a
+  // second charge.
   const idempotencyKey = useRef(crypto.randomUUID())
 
-  // A full-page redirect destroys this tab. Coming back, the pending payment is read out of
-  // session storage and resumed from the parameters the provider put on the return URL -
-  // without this, `hpp` and `paypal` can start a payment but never finish one.
+  // A full-page redirect destroys this tab. Coming back, the pending payment is read from
+  // session storage and resumed. Without this, `hpp` and `paypal` never finish.
   useEffect(() => {
     if (window.location.pathname !== RETURN_PATH) return
 
@@ -128,8 +127,8 @@ export const App = () => {
     })
 
     if (result.status === 'requires_action') {
-      // `inline` draws below, in the form. Everything else - a redirect that takes the tab,
-      // a wallet sheet the SDK owns - runs with nothing of ours on screen.
+      // `inline` draws below, in the form. Everything else runs with nothing of ours
+      // on screen.
       if (result.action.surface !== 'inline') settle(await engine.runPendingAction())
       return
     }

@@ -23,10 +23,8 @@ const secondsUntil = (target: number): number =>
   Math.max(0, Math.ceil((target - Date.now()) / 1000))
 
 /**
- * How long is left to pay: a QR code's window, a transfer's deadline, a session about to go.
- *
- * Announced only at the end. A live region that speaks every second is unusable, so the
- * clock is silent while it runs and the expiry is what interrupts.
+ * How long is left to pay - a QR window, a transfer deadline. Silent while it runs: a live
+ * region that speaks every second is unusable, so only the expiry is announced.
  */
 export const Countdown = ({
   expiresAt,
@@ -38,9 +36,8 @@ export const Countdown = ({
 }: CountdownProps): ReactElement => {
   const target = new Date(expiresAt).getTime()
 
-  // The seconds left are derived from the clock, not stored: state would have to be kept in
-  // sync with `expiresAt` on every change, and this way there is nothing to keep in sync. The
-  // interval only asks for a re-render.
+  // Derived from the clock rather than stored, so there is nothing to keep in sync with
+  // `expiresAt`. The interval only asks for a re-render.
   const [, tick] = useState(0)
   const secondsLeft = secondsUntil(target)
 
@@ -50,8 +47,7 @@ export const Countdown = ({
       return
     }
 
-    // Measured off the deadline rather than counting a local number down: a backgrounded tab
-    // throttles its timers, and a resumed one would otherwise be minutes out.
+    // Measured off the deadline, not counted down: a backgrounded tab throttles its timers.
     const id = setInterval(() => {
       tick((count) => count + 1)
       if (secondsUntil(target) === 0) {

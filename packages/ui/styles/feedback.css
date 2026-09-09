@@ -150,8 +150,7 @@
   }
 }
 
-/* The duration tokens are zeroed under reduced motion, but a dash offset of 40 would then
-   never animate away and the mark would simply be missing. */
+/* A zeroed duration would leave the dash offset in place and the mark simply missing. */
 @media (prefers-reduced-motion: reduce) {
   .ck-icon--success .ck-icon__mark,
   .ck-icon--failure .ck-icon__mark {

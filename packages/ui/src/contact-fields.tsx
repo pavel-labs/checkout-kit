@@ -24,10 +24,8 @@ export interface ContactFieldsProps {
 }
 
 /**
- * Where the receipt goes, and how the issuer reaches the shopper for a one-time code.
- *
- * `type="email"` rather than a pattern: it gets the right keyboard on a phone, and the
- * kit does not validate - your schema already does, and would disagree with a regex here.
+ * Where the receipt goes. `type="email"` for the phone keyboard, but no validation - your
+ * schema already does that, and a regex here would only disagree with it.
  */
 export const ContactFields = ({
   value,

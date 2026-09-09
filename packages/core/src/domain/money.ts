@@ -1,7 +1,6 @@
-// Formatting money is not a payments problem, but every consumer of this kit hits it on the
-// first screen: amounts cross the wire in minor units and have to reach a shopper in major
-// ones. `Intl` already knows how many minor units a currency has, so this is a conversion,
-// not a table of exponents to keep up to date.
+// Amounts cross the wire in minor units and have to reach a shopper in major ones. `Intl`
+// already knows how many minor units each currency has, so this is a conversion rather than
+// a table of exponents to keep up to date.
 
 /** An amount as it travels: minor units, plus the currency that says how many those are. */
 export interface Money {
@@ -18,11 +17,7 @@ export interface FormatMoneyOptions {
   readonly display?: 'symbol' | 'code' | 'none'
 }
 
-/**
- * How many minor units make one major unit of a currency: 100 for USD, 1 for JPY, 1000 for
- * KWD. Read out of `Intl` rather than hardcoded, and 2 when the runtime has never heard of
- * the currency - which is the right guess for every currency that is not an exception.
- */
+/** 100 for USD, 1 for JPY, 1000 for KWD. Asked of `Intl`, not hardcoded. */
 export const minorUnitsPerMajor = (currency: string): number => {
   const digits = currencyDigits(currency)
   return 10 ** digits
@@ -39,16 +34,15 @@ const currencyDigits = (currency: string): number => {
 
     return maximumFractionDigits ?? DEFAULT_DIGITS
   } catch {
-    // A malformed code - Intl takes any well-formed three letters, so this is 'US' or worse.
-    // Two is the common case and beats throwing on a screen whose only job is a total.
+    // Malformed - Intl takes any three letters, so this is 'US' or worse. Two is the common
+    // case, and beats throwing on a screen whose only job is a total.
     return DEFAULT_DIGITS
   }
 }
 
 /**
- * Renders a minor-unit amount the way the shopper's locale writes it, including where the
- * symbol goes and which character separates the decimals - both of which move by locale and
- * neither of which is worth reimplementing.
+ * Renders a minor-unit amount the way the locale writes it - where the symbol goes and which
+ * character separates the decimals both move by locale.
  *
  * ```ts
  * formatMoney({ amount: 1999, currency: 'USD' }, { locale: 'en-US' }) // '$19.99'

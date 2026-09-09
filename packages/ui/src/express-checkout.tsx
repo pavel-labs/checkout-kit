@@ -14,11 +14,8 @@ export interface ExpressCheckoutProps {
 }
 
 /**
- * The row above the form: pay with a wallet, or carry on and type a card.
- *
- * Layout only. Every wallet mandates its own button - Apple and Google both publish rules
- * about size, corner radius and wording, and both revoke over a redraw - so the kit holds
- * the space and you bring the button their SDK gives you.
+ * The row above the form: pay with a wallet, or carry on and type a card. Layout only -
+ * every wallet mandates its own button, so you bring the one their SDK draws.
  */
 export const ExpressCheckout = ({
   children,

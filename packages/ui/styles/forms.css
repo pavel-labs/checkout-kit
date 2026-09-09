@@ -69,11 +69,8 @@
   }
 }
 
-/*
- * Two fields side by side rarely carry the same parts: one has a hint, the other does not.
- * Letting the label-and-hint block stretch pushes both controls to the bottom of the taller
- * one, so the inputs line up whatever is written above them.
- */
+/* Two fields in a row rarely carry the same parts. Stretching the label-and-hint block
+   pushes both controls to the bottom of the taller one, so the inputs line up. */
 .ck-fieldset__row > .ck-field,
 .ck-card-fields__row > .ck-field {
   display: grid;

@@ -1,6 +1,5 @@
-// Autofill is the whole point of this component. Every `autoComplete` token below is one the
-// browser actually recognises, and a wrong one silently turns filling off for the whole form -
-// which is why these are not left to each consumer to remember.
+// Autofill is the point of this component: every token below is one a browser recognises, and
+// a single wrong one silently turns filling off for the whole form.
 
 import type { ReactElement, ReactNode } from 'react'
 import { cx } from './cx'

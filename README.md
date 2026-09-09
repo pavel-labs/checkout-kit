@@ -135,40 +135,47 @@ To add an integration of your own, see
 
 ## How this compares
 
-The obvious alternatives are Stripe's Payment Element, Adyen's Drop-in and Braintree's
-Drop-in. They are excellent, and if you are certain you will only ever have one processor,
-they are less work than this.
+The alternatives are Stripe's Payment Element, Adyen's Drop-in and Braintree's Drop-in. They
+are good. If you will only ever have one processor, they are less work than this.
 
-Where this is different:
+|                       | Payment Element / Drop-in | This kit                       |
+| --------------------- | ------------------------- | ------------------------------ |
+| Processors            | one, theirs               | any, as a plugin               |
+| Where the fields live | their iframe              | your DOM (or their iframe)     |
+| Theming               | a fixed `appearance` API  | CSS variables and your own CSS |
+| Plugin contract       | n/a                       | a test suite you must pass     |
+| Native app            | their SDK                 | a WebView bridge               |
+| Has taken real money  | yes                       | **no**                         |
 
-- **The processor is a plugin, not the product.** Elements and Drop-in each come from one
-  processor and only talk to that processor. Here, six wildly different integration shapes -
-  a JSON PSP, a form-urlencoded acquirer, a hosted page, hosted fields, a wallet SDK, a QR
-  transfer - run behind one engine and one UI. Adding a seventh changes nothing in the core.
-- **You own the DOM.** Elements are cross-origin iframes: you theme them through a fixed
-  `appearance` schema and stop where it stops. `@checkout-kit/ui` renders real elements in
-  your page, in a `checkout` cascade layer, so your own CSS wins without a specificity fight.
-  (`@checkout-kit/provider-hosted-fields` exists for when you _want_ the frame - that is a
-  choice you make per provider, not one the library makes for you.)
-- **The plugin contract is runnable.** `@checkout-kit/conformance` is a vitest suite that any
-  plugin has to pass: instrument declarations exact in both directions, idempotency actually
-  replaying, forged evidence refused, a repeated resume never charging twice, no card data in
-  anything returned. A written contract is a promise; this one is a test.
-- **It runs where a checkout has to run.** `@checkout-kit/webview-bridge` is the contract a
-  native app talks to the checkout through, and every layout decision is a container query
-  rather than a viewport query - the same checkout renders full-page, in a 360px WebView and
-  inside a merchant's iframe of unknown width.
-- **ESM-only, zero runtime dependencies**, ~22 kB of JS and 6 kB of CSS for one provider.
+Three things follow from the first row.
 
-Where it is not:
+**Adding a processor does not change the core.** Six integration shapes already run behind
+one engine and one UI: a JSON PSP, a form-urlencoded acquirer, a hosted page, hosted fields,
+a wallet SDK and a QR transfer. A seventh is a new package, not a new branch in the engine.
 
-- **Nothing here has taken a real payment.** All six plugins are written against a mock
-  backend. See the status note below - this is the honest headline.
-- **It does not reduce your PCI scope by itself.** Typing a card into your own DOM is exactly
-  what SAQ A-EP means. Hosted fields and the hosted page are the plugins that change that,
-  and that is a decision about your integration, not something a UI kit grants you.
-- **There is no server half.** No webhooks, no capture, no refunds, no settlement reporting.
-  The engine stops at "the money moved or it did not"; the rest is your backend's.
+**You own the DOM.** Elements are cross-origin iframes. You style them through a fixed schema
+and stop where it stops. Here the kit renders real elements in your page, inside a `checkout`
+cascade layer, so your CSS wins without a specificity fight. If you want the iframe - to keep
+card data out of your page - `@checkout-kit/provider-hosted-fields` is that. It is your
+choice per provider, not the library's.
+
+**The contract is a test, not a promise.** `@checkout-kit/conformance` is a vitest suite every
+plugin has to pass. It checks that declared instruments are exact both ways, that idempotency
+really replays, that forged evidence is refused, that resuming twice does not charge twice,
+and that no card data appears in anything a plugin returns.
+
+Also: ESM-only, no runtime dependencies, about 22 kB of JS and 6 kB of CSS for one provider.
+
+### What it does not do
+
+**It has never taken a real payment.** All six plugins run against a mock backend. This is
+the honest headline - see the status note below.
+
+**It does not reduce your PCI scope.** Typing a card into your own page is what SAQ A-EP
+means. Hosted fields and the hosted page change that; a UI kit does not.
+
+**It has no server half.** No webhooks, no capture, no refunds, no settlement. The engine
+stops at "the money moved or it did not". The rest is your backend's.
 
 ## Status and licence
 

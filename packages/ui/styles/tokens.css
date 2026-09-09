@@ -61,8 +61,8 @@
   --ck-accent-contrast: var(--ck-p-neutral-0);
   --ck-text-on-accent: var(--ck-accent-contrast);
 
-  /* What the sticky bar fades into. The kit does not own your page, so it cannot know the
-     real background - override this one property if yours is not close to the theme's. */
+  /* What the sticky bar fades into. The kit cannot know your real page background, so
+     override this if it is not close to the theme's. */
   --ck-scrim: var(--ck-p-neutral-1000);
 
   --ck-surface: var(--ck-p-neutral-700);
@@ -139,9 +139,8 @@
   --ck-shadow-md: 0 8px 24px rgb(0 0 0 / 32%);
   --ck-shadow-lg: 0 24px 64px rgb(0 0 0 / 40%);
 
-  /* A one-pixel catch of light along a raised top edge. It is the difference between a dark
-     surface that looks drawn and one that looks like a flat rectangle; on a light theme the
-     same trick is invisible, so it is turned off there rather than faked. */
+  /* A one-pixel catch of light along a raised top edge: what makes a dark surface look drawn
+     rather than flat. Invisible on a light ground, so the light theme turns it off. */
   --ck-highlight: inset 0 1px 0 rgb(255 255 255 / 7%);
 
   --ck-z-sticky: 10;

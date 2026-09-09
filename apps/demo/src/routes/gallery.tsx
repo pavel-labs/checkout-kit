@@ -56,13 +56,11 @@ import {
   ValidationSummary,
 } from '@checkout-kit/ui'
 
-// Every component in the kit, on one page, at whatever width the window is - and under
-// whichever theme, platform and density you point the controls at.
+// Every component in the kit on one page, under whichever theme, platform and density the
+// controls are set to.
 //
-// This is deliberately a route in the demo rather than a Storybook: the kit's whole claim is
-// that it is plain React and plain CSS with no build step of its own, and a component
-// workshop that needed a bundler of its own would undercut it. It ships with the deployed
-// demo, so the kit can be looked at without cloning anything.
+// A route rather than a Storybook: the kit's claim is that it needs no build step of its own,
+// and a workshop that needed a bundler would undercut it. It deploys with the demo.
 
 export const Route = createFileRoute('/gallery')({ component: GalleryPage })
 
@@ -182,8 +180,8 @@ function GalleryPage() {
         </div>
       </header>
 
-      {/* A nested root: the kit's tokens are all declared on .ck-root, so an inner one
-          re-declares them for its subtree and the page around it is untouched. */}
+      {/* Tokens are declared on .ck-root, so a nested one re-declares them for its own
+          subtree and leaves the page around it alone. */}
       <CheckoutRoot
         theme={theme}
         platform={platform}

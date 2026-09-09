@@ -41,11 +41,8 @@ export interface SavedInstrumentListProps {
 export const NEW_INSTRUMENT_ID = '__new__'
 
 /**
- * Cards the shopper has used before. Real radio buttons, like every other choice in the kit,
- * so arrow keys and the announcement come from the browser.
- *
- * An expired card is shown and disabled rather than hidden: a shopper who is looking for it
- * needs to see why it is not there.
+ * Cards the shopper has used before. An expired one is shown and disabled rather than hidden:
+ * someone looking for it needs to see why it cannot be used.
  */
 export const SavedInstrumentList = ({
   instruments,

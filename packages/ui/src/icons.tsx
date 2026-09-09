@@ -1,5 +1,5 @@
-// The only art the kit ships. A tick, a cross and a clock are not anyone's trademark, which
-// card-scheme and wallet logos are - those stay yours to license and pass in.
+// The only art the kit ships. A tick, a cross and a clock are nobody's trademark; scheme and
+// wallet logos are, so those stay yours to license and pass in.
 
 import type { ReactElement } from 'react'
 import { cx } from './cx'
@@ -21,7 +21,7 @@ const frame = (className?: string) => ({
   strokeLinejoin: 'round' as const,
 })
 
-/** Drawn on when it arrives - the one animation in a checkout worth the bytes. */
+/** The mark is drawn on when it arrives - the one animation worth the bytes. */
 export const SuccessIcon = ({ className }: StateIconProps): ReactElement => (
   <svg {...frame(cx('ck-icon--success', className))}>
     <circle cx="24" cy="24" r="21" className="ck-icon__ring" />

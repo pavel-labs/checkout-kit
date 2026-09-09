@@ -19,11 +19,8 @@ export interface StepsProps {
 const defaultProgress = (position: number, total: number): string => `Step ${position} of ${total}`
 
 /**
- * Where the shopper is in a checkout that has more than one screen.
- *
- * An ordered list, not a set of tabs: these are not panels you can switch between, and
- * calling them tabs would promise a keyboard interaction that does not exist. The state of
- * each step is spelled out in text for a screen reader rather than left to the colour.
+ * Where the shopper is in a multi-screen checkout. An ordered list, not tabs: there are no
+ * panels to switch between, and the state is in text rather than only in the colour.
  */
 export const Steps = ({
   steps,

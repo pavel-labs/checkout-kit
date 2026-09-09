@@ -20,11 +20,8 @@ const defaultHeading = (count: number): string =>
   count === 1 ? 'There is 1 problem with this form' : `There are ${count} problems with this form`
 
 /**
- * Every problem on the form in one place, each a link to the field it came from.
- *
- * This is what makes a long checkout usable with a screen reader: per-field errors are
- * deliberately polite - see <Field> - so on submit there is otherwise nothing that says how
- * many there were or where they are. The payment's own live region is left alone.
+ * Every problem on the form, each linked to its field. Per-field errors are deliberately
+ * polite - see <Field> - so without this, nothing says how many there were on submit.
  */
 export const ValidationSummary = ({
   problems,

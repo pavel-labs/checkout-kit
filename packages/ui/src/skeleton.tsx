@@ -10,11 +10,8 @@ export interface SkeletonProps {
 }
 
 /**
- * A placeholder for something still loading.
- *
- * `aria-hidden`, always: a screen reader should hear "loading" once, from whatever region
- * owns the wait, not a stutter of empty boxes. Wrap a group in <SkeletonText> or put your
- * own `aria-busy` on the container.
+ * A placeholder for something still loading. Always `aria-hidden`: the wait is announced
+ * once by whatever owns it - <SkeletonText>, or your own `aria-busy` - not per box.
  */
 export const Skeleton = ({ width, height, radius, className }: SkeletonProps): ReactElement => (
   <span
@@ -37,10 +34,7 @@ export interface SkeletonTextProps {
   className?: string
 }
 
-/**
- * A paragraph's worth of skeleton, with one polite announcement for the whole group. The
- * last line is short, because a full-width last line does not read as text.
- */
+/** A paragraph of skeleton, announced once. The last line is short so it reads as text. */
 export const SkeletonText = ({
   lines = 3,
   label = 'Loading',

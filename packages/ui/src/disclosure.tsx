@@ -10,11 +10,8 @@ export interface DisclosureProps {
 }
 
 /**
- * A real <details>. "What is a CVC?", "Why do you need my address?" - the answers a checkout
- * has to have somewhere without spending a line on them.
- *
- * Native, so the open state, the keyboard and the announcement are the browser's, and the
- * content inside is findable by the page's own find-in-page.
+ * A real <details>: "What is a CVC?", "Why do you need my address?". Native, so the open
+ * state, the keyboard and find-in-page are the browser's.
  */
 export const Disclosure = ({
   summary,

@@ -11,12 +11,7 @@ export interface CopyButtonProps extends Omit<ButtonProps, 'children' | 'onClick
   onCopied?: (value: string) => void
 }
 
-/**
- * Copies a value and says so.
- *
- * The label is what changes, not a tooltip, so the confirmation is announced rather than
- * only drawn - and the button keeps its size, so the row does not reflow under the cursor.
- */
+/** Copies a value. The label confirms it, so the change is announced and not just drawn. */
 export const CopyButton = ({
   value,
   children = 'Copy',
@@ -37,8 +32,7 @@ export const CopyButton = ({
     try {
       await navigator.clipboard.writeText(value)
     } catch {
-      // Denied permission, or an insecure origin. The value is on screen and selectable
-      // either way, so there is nothing useful to say here.
+      // Denied, or an insecure origin. The value is on screen and selectable anyway.
       return
     }
 

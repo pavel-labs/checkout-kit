@@ -13,9 +13,8 @@ export interface PanelProps {
 }
 
 /**
- * An opt-in raised surface - an order summary, a receipt, anything that wants to read as a
- * card. A page that already draws its own card should not get a second one, which is why
- * nothing in the kit reaches for this on your behalf.
+ * An opt-in raised surface. Opt-in because a page that already draws its own card should not
+ * get a second one, so nothing in the kit reaches for this on your behalf.
  */
 export const Panel = ({
   children,

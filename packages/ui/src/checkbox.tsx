@@ -15,11 +15,8 @@ export interface CheckboxProps extends Omit<
 }
 
 /**
- * A real checkbox, visually hidden and drawn with `:has(:checked)`. Space, the form's own
- * validation and the screen-reader announcement all come from the browser.
- *
- * The consent control a checkout cannot do without: accepting terms, saving a card,
- * billing-same-as-shipping.
+ * A real checkbox, hidden and drawn with `:has(:checked)`, so Space and the announcement come
+ * from the browser. Accepting terms, saving a card, billing-same-as-shipping.
  */
 export const Checkbox = ({
   label,

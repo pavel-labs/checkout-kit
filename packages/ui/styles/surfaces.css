@@ -43,8 +43,7 @@
   border-radius: var(--ck-radius-lg);
 }
 
-/* Up from the bottom edge, with the corners only on the top two - the shape a phone expects,
-   and the one a thumb can reach. */
+/* Up from the bottom edge: the shape a phone expects, and the part a thumb reaches. */
 .ck-dialog--sheet .ck-dialog__panel {
   inset-block-end: 0;
   inset-inline: 0;
@@ -81,8 +80,7 @@
   gap: var(--ck-space-3);
 }
 
-/* Wallet buttons are drawn by their own SDKs and mandate their own heights, so the row
-   distributes width and says nothing about height. */
+/* Wallet SDKs mandate their own heights, so the row distributes width and nothing else. */
 .ck-express__buttons--row {
   flex-direction: row;
   flex-wrap: wrap;
