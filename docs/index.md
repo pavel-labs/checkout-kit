@@ -14,7 +14,7 @@ hero:
       link: /plugin-authoring
     - theme: alt
       text: Live demo
-      link: /checkout-kit/demo/
+      link: /demo/
 
 features:
   - title: The processor is a plugin
