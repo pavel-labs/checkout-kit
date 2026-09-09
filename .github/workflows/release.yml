@@ -1,0 +1,71 @@
+name: Release
+
+# Publishing is a decision, not something a push does: this only runs when you ask it to.
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Pack and check everything, publish nothing'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # What lets GITHUB_TOKEN publish to npm.pkg.github.com for this repository's owner.
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@checkout-kit'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The packages are published, so they had better be the ones that pass. This is the CI
+      # job's work again, deliberately: a release should not trust a green run from last week.
+      - name: Verify
+        run: |
+          npm run format:check
+          npm run lint
+          npm run typecheck
+          npm run test
+          npm run purity
+
+      - name: Build
+        run: npm run build:packages
+
+      # publint and attw run inside the build; this proves the entry points resolve the way a
+      # consumer will resolve them, from dist rather than from source.
+      - name: Check the packages resolve as published
+        run: |
+          npm run verify:dist
+          npm run check:types
+
+      - name: Pack (dry run)
+        if: ${{ inputs.dry-run }}
+        run: |
+          for dir in packages/*/; do
+            npm pack --workspace "$dir" --dry-run
+          done
+
+      - name: Publish
+        if: ${{ !inputs.dry-run }}
+        run: npx changeset publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}

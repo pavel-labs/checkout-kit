@@ -1,14 +1,13 @@
 {
   "name": "@checkout-kit/core",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "Headless checkout core: domain vocabulary, the payment plugin contract, and an HTTP client with no opinions about payments.",
   "license": "Apache-2.0",
   "author": "themafia98",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/checkout-kit/checkout-kit.git",
     "directory": "packages/core"
   },
   "sideEffects": false,
@@ -45,6 +44,8 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
     "exports": {
       ".": "./dist/index.mjs",
       "./domain": "./dist/domain/index.mjs",

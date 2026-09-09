@@ -6,6 +6,23 @@ What to install, what to import, what to put in `.env`, and what your bundler ne
 Everything on this page is the same whichever plugin you use; the per-plugin pages only add
 their own config object.
 
+## Getting access to the packages
+
+These are published **privately**, to GitHub Packages, so `npm install` on its own will not find
+them. Your project needs to know where the scope lives, and needs a token to read it.
+
+In the project's `.npmrc`:
+
+```ini
+@checkout-kit:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+A classic personal access token with **`read:packages`** is enough. Keep it in the environment,
+not in the file — `.npmrc` gets committed, tokens should not.
+
+Everything outside the `@checkout-kit` scope still comes from the public registry as usual.
+
 ## What to install
 
 The packages are separate so you only ship what you use. Nothing here has runtime dependencies.

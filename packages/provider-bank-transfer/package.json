@@ -1,14 +1,13 @@
 {
   "name": "@checkout-kit/provider-bank-transfer",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "Payment plugin for instant bank transfers: the shopper pays a QR or code in their banking app.",
   "license": "Apache-2.0",
   "author": "themafia98",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/checkout-kit/checkout-kit.git",
     "directory": "packages/provider-bank-transfer"
   },
   "sideEffects": false,
@@ -32,6 +31,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
     "exports": {
       ".": "./dist/index.mjs",
       "./package.json": "./package.json"

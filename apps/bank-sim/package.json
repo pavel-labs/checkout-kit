@@ -8,7 +8,7 @@
   "author": "themafia98",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/checkout-kit/checkout-kit.git",
     "directory": "apps/bank-sim"
   },
   "scripts": {

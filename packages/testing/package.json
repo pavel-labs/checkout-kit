@@ -1,14 +1,13 @@
 {
   "name": "@checkout-kit/testing",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "Shared test material: the card table every provider is exercised with, and an in-memory payment backend built on MSW.",
   "license": "Apache-2.0",
   "author": "themafia98",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/checkout-kit/checkout-kit.git",
     "directory": "packages/testing"
   },
   "sideEffects": false,
@@ -49,6 +48,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
     "exports": {
       ".": "./dist/index.mjs",
       "./backend": "./dist/backend/index.mjs",

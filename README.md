@@ -2,10 +2,10 @@
 
 An embeddable checkout. Every payment integration behind it is a plugin.
 
-**[Documentation](https://themafia98.github.io/checkout-kit/)** ·
-[Русская версия](https://themafia98.github.io/checkout-kit/ru/) ·
-[API reference](https://themafia98.github.io/checkout-kit/api/) ·
-[Live demo](https://themafia98.github.io/checkout-kit/demo/)
+**[Documentation](https://checkout-kit.github.io/checkout-kit/)** ·
+[Русская версия](https://checkout-kit.github.io/checkout-kit/ru/) ·
+[API reference](https://checkout-kit.github.io/checkout-kit/api/) ·
+[Live demo](https://checkout-kit.github.io/checkout-kit/demo/)
 
 The core is a headless engine. It creates a payment, presents an instrument, runs whatever
 step the provider asks for next, and reports the outcome. It does not know what 3-D Secure
@@ -186,11 +186,14 @@ stops at "the money moved or it did not". The rest is your backend's.
 
 Apache-2.0. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
 
-Nothing here is published to npm yet, and every package is still marked private. The
-release plumbing exists so that publishing is a decision rather than a project, but one
-thing has to be true first: **all six plugins are written against a mock backend.** They
-demonstrate the contract; none of them has taken a real payment. Read them as a reference
-implementation, not as an integration you can install and charge a card with.
+The packages are published **privately**, to GitHub Packages under the `@checkout-kit` scope.
+Installing them needs read access to this repository — see [Releasing](./RELEASING.md). Nothing
+goes to npmjs.com.
+
+That is deliberate: **all six plugins are written against a mock backend, and none of them has
+taken a real payment.** They demonstrate the contract. Read them as a reference implementation,
+not as an integration you can install and charge a card with — which is also why they are not
+offered to strangers yet.
 
 ## Repository layout
 
@@ -213,7 +216,7 @@ would. CI runs both.
 ## Architecture and docs
 
 These all read on GitHub, and they are also the
-[documentation site](https://themafia98.github.io/checkout-kit/), which adds a sidebar,
+[documentation site](https://checkout-kit.github.io/checkout-kit/), which adds a sidebar,
 search and a generated API reference.
 
 Every doc exists in English and Russian, except the bank simulator's notes.

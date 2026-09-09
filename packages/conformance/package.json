@@ -1,14 +1,13 @@
 {
   "name": "@checkout-kit/conformance",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "The contract every payment plugin must satisfy, as a runnable vitest suite.",
   "license": "Apache-2.0",
   "author": "themafia98",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/checkout-kit/checkout-kit.git",
     "directory": "packages/conformance"
   },
   "sideEffects": false,
@@ -35,6 +34,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
     "exports": {
       ".": "./dist/index.mjs",
       "./package.json": "./package.json"
