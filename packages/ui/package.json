@@ -4,10 +4,10 @@
   "type": "module",
   "description": "The checkout's visual kit: a handful of themable components and one small stylesheet, with no framework asked of the consumer.",
   "license": "Apache-2.0",
-  "author": "themafia98",
+  "author": "pavel-labs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/pavel-labs/checkout-kit.git",
     "directory": "packages/ui"
   },
   "sideEffects": [

@@ -4,10 +4,10 @@
   "type": "module",
   "description": "Payment plugin for direct bank acquiring: form-urlencoded host-to-host, numeric order statuses, 3-D Secure 1.",
   "license": "Apache-2.0",
-  "author": "themafia98",
+  "author": "pavel-labs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/pavel-labs/checkout-kit.git",
     "directory": "packages/provider-acquiring"
   },
   "sideEffects": false,

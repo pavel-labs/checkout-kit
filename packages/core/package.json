@@ -4,10 +4,10 @@
   "type": "module",
   "description": "Headless checkout core: domain vocabulary, the payment plugin contract, and an HTTP client with no opinions about payments.",
   "license": "Apache-2.0",
-  "author": "themafia98",
+  "author": "pavel-labs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/pavel-labs/checkout-kit.git",
     "directory": "packages/core"
   },
   "sideEffects": false,

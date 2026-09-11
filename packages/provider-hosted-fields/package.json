@@ -4,10 +4,10 @@
   "type": "module",
   "description": "Payment plugin for hosted card fields: the provider renders the inputs in its own frame and hands back a token.",
   "license": "Apache-2.0",
-  "author": "themafia98",
+  "author": "pavel-labs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/pavel-labs/checkout-kit.git",
     "directory": "packages/provider-hosted-fields"
   },
   "sideEffects": false,

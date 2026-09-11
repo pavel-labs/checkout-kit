@@ -5,10 +5,10 @@
   "type": "module",
   "description": "Standalone 3-D Secure ACS simulator: a separate https origin the checkout talks to.",
   "license": "Apache-2.0",
-  "author": "themafia98",
+  "author": "pavel-labs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/pavel-labs/checkout-kit.git",
     "directory": "apps/bank-sim"
   },
   "scripts": {
