@@ -12,7 +12,7 @@ import { defineConfig, type DefaultTheme } from 'vitepress'
 // they still read on GitHub. VitePress adds the sidebar, the search and the language switch;
 // it does not own the content.
 
-const REPO = 'https://github.com/themafia98/checkout-kit'
+const REPO = 'https://github.com/pavel-labs/checkout-kit'
 
 // The demo is a sibling of the docs on the same Pages site, not a page of them. Written
 // without the base: VitePress prepends that itself, and spelling it out here produced
@@ -244,7 +244,7 @@ export default defineConfig({
         },
         footer: {
           message: 'Apache-2.0. Nothing here has taken a real payment yet.',
-          copyright: `© ${new Date().getFullYear()} themafia98`,
+          copyright: `© ${new Date().getFullYear()} pavel-labs`,
         },
       },
     },
@@ -267,7 +267,7 @@ export default defineConfig({
         },
         footer: {
           message: 'Apache-2.0. Ни один настоящий платёж через это ещё не прошёл.',
-          copyright: `© ${new Date().getFullYear()} themafia98`,
+          copyright: `© ${new Date().getFullYear()} pavel-labs`,
         },
         docFooter: { prev: 'Назад', next: 'Дальше' },
         outline: { label: 'На этой странице' },

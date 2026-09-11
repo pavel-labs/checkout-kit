@@ -4,10 +4,10 @@
   "type": "module",
   "description": "Payment plugin for a hosted payment page: the shopper pays on the bank site and the merchant never sees a card.",
   "license": "Apache-2.0",
-  "author": "themafia98",
+  "author": "pavel-labs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/pavel-labs/checkout-kit.git",
     "directory": "packages/provider-hpp"
   },
   "sideEffects": false,

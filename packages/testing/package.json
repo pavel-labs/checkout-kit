@@ -4,10 +4,10 @@
   "type": "module",
   "description": "Shared test material: the card table every provider is exercised with, and an in-memory payment backend built on MSW.",
   "license": "Apache-2.0",
-  "author": "themafia98",
+  "author": "pavel-labs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/pavel-labs/checkout-kit.git",
     "directory": "packages/testing"
   },
   "sideEffects": false,

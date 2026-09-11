@@ -4,10 +4,10 @@
   "type": "module",
   "description": "Browser half of the checkout: the runners that actually execute payment actions - iframes, top-level redirects, postMessage - plus session storage.",
   "license": "Apache-2.0",
-  "author": "themafia98",
+  "author": "pavel-labs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themafia98/checkout-kit.git",
+    "url": "git+https://github.com/pavel-labs/checkout-kit.git",
     "directory": "packages/runtime-browser"
   },
   "sideEffects": false,
