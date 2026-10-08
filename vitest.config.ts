@@ -27,6 +27,14 @@ export default defineConfig({
       {
         resolve: workspaceSources,
         test: {
+          name: 'merchant-server',
+          environment: 'node',
+          include: ['examples/server/**/*.test.ts'],
+        },
+      },
+      {
+        resolve: workspaceSources,
+        test: {
           name: 'core',
           environment: 'node',
           include: ['packages/core/src/**/*.test.ts'],
@@ -70,7 +78,7 @@ export default defineConfig({
         test: {
           name: 'react',
           environment: 'happy-dom',
-          include: ['packages/react/src/**/*.test.tsx'],
+          include: ['packages/react/src/**/*.test.tsx', 'examples/react/**/*.test.ts'],
         },
       },
       {

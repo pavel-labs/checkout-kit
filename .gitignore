@@ -50,3 +50,7 @@ docs/.vitepress/cache
 docs/api
 
 /site
+
+/artifacts/
+
+docs/.vitepress/.temp

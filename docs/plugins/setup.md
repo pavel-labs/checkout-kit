@@ -8,8 +8,9 @@ their own config object.
 
 ## Getting access to the packages
 
-These are published **privately**, to GitHub Packages, so `npm install` on its own will not find
-them. Your project needs to know where the scope lives, and needs a token to read it.
+For immediate installation, build archives with `npm run pack:packages`; see
+[Getting started](../getting-started.md#install-the-actual-packages). The registry configuration
+below applies after an owner publishes a release to GitHub Packages.
 
 In the project's `.npmrc`:
 

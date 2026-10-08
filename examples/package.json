@@ -5,23 +5,31 @@
   "type": "module",
   "scripts": {
     "dev:react": "vite --config react/vite.config.ts",
-    "dev:server": "tsx server/index.ts",
-    "typecheck": "tsc -p providers/tsconfig.json && tsc -p server/tsconfig.json && tsc -p react/tsconfig.json"
+    "dev:server": "node --env-file-if-exists=server/.env --import tsx server/index.ts",
+    "typecheck": "tsc -p providers/tsconfig.json && tsc -p server/tsconfig.json && tsc -p react/tsconfig.json",
+    "dev:server:mock": "node --import tsx server/index.ts --mock",
+    "build:react": "vite build --config react/vite.config.ts",
+    "test:integration": "playwright test --config react/playwright.config.ts"
   },
   "dependencies": {
+    "@adyen/adyen-web": "^6.46.0",
     "@adyen/api-library": "^32.1.0",
     "@checkout-kit/core": "*",
     "@checkout-kit/provider-acquiring": "*",
+    "@checkout-kit/provider-adyen": "*",
     "@checkout-kit/provider-bank-transfer": "*",
     "@checkout-kit/provider-hosted-fields": "*",
     "@checkout-kit/provider-hpp": "*",
+    "@checkout-kit/provider-paypal": "*",
     "@checkout-kit/provider-psp": "*",
+    "@checkout-kit/provider-stripe": "*",
     "@checkout-kit/provider-wallet": "*",
     "@checkout-kit/react": "*",
     "@checkout-kit/runtime-browser": "*",
     "@checkout-kit/testing": "*",
     "@checkout-kit/ui": "*",
     "@paypal/paypal-server-sdk": "^2.5.0",
+    "@stripe/stripe-js": "^10.0.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.0",
@@ -30,14 +38,14 @@
     "react-dom": "^19.3.0",
     "stripe": "^19.1.0",
     "tsx": "^4.19.3",
-    "vite": "^8.2.0",
-    "@checkout-kit/provider-stripe": "*",
-    "@checkout-kit/provider-adyen": "*",
-    "@checkout-kit/provider-paypal": "*"
+    "vite": "^8.2.0"
   },
   "msw": {
     "workerDirectory": [
       "react/public"
     ]
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
   }
 }

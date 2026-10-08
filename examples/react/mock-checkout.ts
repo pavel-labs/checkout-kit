@@ -9,6 +9,8 @@ import type { WalletConfig } from '@checkout-kit/provider-wallet'
 import type { AdyenConfig } from '../providers/adyen'
 import type { PayPalConfig } from '../providers/paypal'
 import type { StripeConfig } from '../providers/stripe'
+import { createStripeSdkAdapter } from '@checkout-kit/provider-stripe'
+import { adyenSdkAdapter, getStripe } from './provider-sdks'
 
 const realProviderBaseUrl = import.meta.env.VITE_REAL_PROVIDER_API_BASE_URL
 const realApiRoot = realProviderBaseUrl?.replace(/\/$/, '')
@@ -19,7 +21,11 @@ export const RETURN_PATH = '/payment/return'
 export const runtime = createBrowserRuntime({
   returnPath: RETURN_PATH,
   sdk: {
-    adapters: [{ sdk: 'mock-wallet', request: async () => ({ walletToken: 'mock-wallet-token' }) }],
+    adapters: [
+      { sdk: 'mock-wallet', request: async () => ({ walletToken: 'mock-wallet-token' }) },
+      createStripeSdkAdapter(getStripe),
+      adyenSdkAdapter,
+    ],
   },
 })
 
@@ -29,7 +35,10 @@ export const mockCheckout = createCheckout({
       ? [
           defineProvider({
             id: 'stripe',
-            config: { baseUrl: `${realApiRoot}/stripe` } satisfies StripeConfig,
+            config: {
+              baseUrl: `${realApiRoot}/stripe`,
+              credentials: 'include',
+            } satisfies StripeConfig,
             load: () => import('../providers/stripe'),
             eager: true,
           }),
@@ -37,6 +46,7 @@ export const mockCheckout = createCheckout({
             id: 'adyen',
             config: {
               baseUrl: `${realApiRoot}/adyen`,
+              credentials: 'include',
               sdk: 'adyen',
               scriptUrl: import.meta.env.VITE_ADYEN_SCRIPT_URL ?? '',
             } satisfies AdyenConfig,
@@ -44,7 +54,7 @@ export const mockCheckout = createCheckout({
           }),
           defineProvider({
             id: 'paypal',
-            config: { baseUrl: realApiRoot } satisfies PayPalConfig,
+            config: { baseUrl: realApiRoot, credentials: 'include' } satisfies PayPalConfig,
             load: () => import('../providers/paypal'),
           }),
         ]

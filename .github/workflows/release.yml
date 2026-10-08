@@ -42,6 +42,7 @@ jobs:
           npm run format:check
           npm run lint
           npm run typecheck
+          npm run examples:typecheck
           npm run test
           npm run purity
 
@@ -54,13 +55,14 @@ jobs:
         run: |
           npm run verify:dist
           npm run check:types
+          npm run verify:consumer
 
-      - name: Pack (dry run)
-        if: ${{ inputs.dry-run }}
-        run: |
-          for dir in packages/*/; do
-            npm pack --workspace "$dir" --dry-run
-          done
+      - name: Upload verified packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: checkout-kit-packages
+          path: artifacts/packages/
+          retention-days: 14
 
       # PACKAGES_TOKEN, not GITHUB_TOKEN: the packages belong to the `checkout-kit`
       # organisation while this repository belongs to a personal account, and a workflow token

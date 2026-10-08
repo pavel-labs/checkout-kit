@@ -87,6 +87,16 @@ jobs:
       - name: Check the published type declarations
         run: npm run check:types
 
+      - name: Install tarballs in a separate consumer and verify types, SSR and checkout
+        run: npm run verify:consumer
+
+      - name: Upload installable packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: checkout-kit-packages
+          path: artifacts/packages/
+          retention-days: 14
+
   e2e:
     name: E2E (mock backend)
     runs-on: ubuntu-latest
@@ -116,4 +126,29 @@ jobs:
         with:
           name: playwright-report
           path: apps/demo/playwright-report/
+          retention-days: 7
+
+  integration:
+    name: E2E (merchant server and provider packages)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run Stripe, Adyen and PayPal flows against the local protocol simulator
+        run: npm run test:integration
+      - name: Upload integration report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: integration-playwright-report
+          path: examples/react/playwright-report/
           retention-days: 7

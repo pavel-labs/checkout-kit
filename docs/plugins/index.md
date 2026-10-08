@@ -2,6 +2,10 @@
 
 > Русская версия: [ru/plugins/index.md](../ru/plugins/index.md)
 
+For Stripe, Adyen or PayPal, start with the installable
+[provider packages](../getting-started.md#connect-a-merchant-api). The six protocols below are
+generic reference integrations against the mock API.
+
 A plugin is the part that knows how one payment provider talks. It creates a payment, sends the
 instrument, and says what happened. Everything else — the screens, the state, the retry, the
 frame a bank draws in — is the same whichever plugin you pick.
