@@ -1,0 +1,44 @@
+{
+  "name": "@checkout-kit/provider-paypal",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Paypal checkout adapter over a merchant-owned payment API.",
+  "license": "Apache-2.0",
+  "author": "pavel-labs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pavel-labs/checkout-kit.git",
+    "directory": "packages/provider-paypal"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown"
+  },
+  "peerDependencies": {
+    "@checkout-kit/core": "*"
+  },
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "@checkout-kit/source": "./src/index.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted",
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./package.json": "./package.json"
+    }
+  },
+  "devDependencies": {
+    "@checkout-kit/conformance": "*",
+    "@checkout-kit/testing": "*",
+    "msw": "^2.15.0"
+  }
+}

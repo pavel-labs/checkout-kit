@@ -1,21 +1,62 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/core" },
-    { "path": "./packages/runtime-browser" },
-    { "path": "./packages/react" },
-    { "path": "./packages/ui" },
-    { "path": "./packages/provider-psp" },
-    { "path": "./packages/provider-acquiring" },
-    { "path": "./packages/provider-hpp" },
-    { "path": "./packages/provider-hosted-fields" },
-    { "path": "./packages/provider-wallet" },
-    { "path": "./packages/provider-bank-transfer" },
-    { "path": "./packages/webview-bridge" },
-    { "path": "./packages/testing" },
-    { "path": "./packages/conformance" },
-    { "path": "./examples/providers" },
-    { "path": "./apps/demo" },
-    { "path": "./apps/bank-sim" }
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/runtime-browser"
+    },
+    {
+      "path": "./packages/react"
+    },
+    {
+      "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/provider-psp"
+    },
+    {
+      "path": "./packages/provider-acquiring"
+    },
+    {
+      "path": "./packages/provider-hpp"
+    },
+    {
+      "path": "./packages/provider-hosted-fields"
+    },
+    {
+      "path": "./packages/provider-wallet"
+    },
+    {
+      "path": "./packages/provider-bank-transfer"
+    },
+    {
+      "path": "./packages/webview-bridge"
+    },
+    {
+      "path": "./packages/testing"
+    },
+    {
+      "path": "./packages/conformance"
+    },
+    {
+      "path": "./apps/demo"
+    },
+    {
+      "path": "./apps/bank-sim"
+    },
+    {
+      "path": "./packages/provider-stripe"
+    },
+    {
+      "path": "./packages/provider-adyen"
+    },
+    {
+      "path": "./packages/provider-paypal"
+    },
+    {
+      "path": "./examples/providers"
+    }
   ]
 }
