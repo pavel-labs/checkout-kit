@@ -14,6 +14,7 @@ export const TEXT = {
   payButton: 'Continue payment',
   paymentSuccessful: 'Payment successful',
   paymentFailed: 'Payment declined',
+  paymentCanceled: 'Payment cancelled',
   transactionId: 'Transaction ID',
   challengeFrameTitle: '3-D Secure authentication',
   cancelChallenge: 'Cancel payment',

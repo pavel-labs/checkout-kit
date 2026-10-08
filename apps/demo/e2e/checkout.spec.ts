@@ -257,7 +257,7 @@ test.describe('Result pages', () => {
       await threeDsPage.cancelButton.click()
 
       await expect(page).toHaveURL(URL_PATTERNS.failure)
-      await expect(failurePage.heading).toBeVisible()
+      await expect(failurePage.canceledHeading).toBeVisible()
     },
   )
 
