@@ -106,6 +106,9 @@ describe('the redirect runner, in a frame', () => {
       data: { type: 'verdict', actionId: 'act_1', transStatus: 'Y' },
     })
     Object.defineProperty(event, 'origin', { value: 'https://bank.test' })
+    Object.defineProperty(event, 'source', {
+      value: hostOf(ctx)?.querySelector('iframe')?.contentWindow,
+    })
     window.dispatchEvent(event)
 
     await evidence

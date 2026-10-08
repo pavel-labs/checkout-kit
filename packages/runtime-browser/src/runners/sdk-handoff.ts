@@ -93,19 +93,43 @@ export const createSdkHandoffRunner = (
         }
       }
 
-      try {
+      const execute = async (): Promise<ActionEvidence> => {
         if (action.scriptUrl) {
           ctx.report({ stage: 'loading-sdk', detail: action.scriptUrl })
-          await loadScript(action.scriptUrl, action.integrity, options.loadTimeoutMs ?? 15_000)
+          try {
+            await loadScript(action.scriptUrl, action.integrity, options.loadTimeoutMs ?? 15_000)
+          } catch (cause) {
+            return { via: 'aborted', actionId: action.id, reason: 'runner_error', cause }
+          }
         }
-
+        if (ctx.signal.aborted) return { via: 'aborted', actionId: action.id, reason: 'user' }
         ctx.report({ stage: 'awaiting-shopper', detail: action.sdk })
-        const payload = await adapter.request(action.params, ctx.signal)
+        try {
+          const payload = await adapter.request(action.params, ctx.signal)
+          return { via: 'sdk_callback', actionId: action.id, payload }
+        } catch (cause) {
+          return { via: 'aborted', actionId: action.id, reason: 'user', cause }
+        }
+      }
 
-        return { via: 'sdk_callback', actionId: action.id, payload }
-      } catch (cause) {
-        // A wallet sheet the shopper closes is the ordinary case, not an incident.
-        return { via: 'aborted', actionId: action.id, reason: 'user', cause }
+      // Third-party SDKs do not all honor AbortSignal. Bound their wait on our side.
+      let timer: ReturnType<typeof setTimeout> | undefined
+      let onAbort = (): void => {}
+      const stopped = new Promise<ActionEvidence>((resolve) => {
+        onAbort = () => resolve({ via: 'aborted', actionId: action.id, reason: 'user' })
+        timer = setTimeout(
+          () => resolve({ via: 'aborted', actionId: action.id, reason: 'timeout' }),
+          Math.max(0, ctx.deadline - Date.now()),
+        )
+        ctx.signal.addEventListener('abort', onAbort, { once: true })
+        if (ctx.signal.aborted) onAbort()
+      })
+      try {
+        if (ctx.signal.aborted) return await stopped
+        return await Promise.race([execute(), stopped])
+      } finally {
+        clearTimeout(timer)
+        ctx.signal.removeEventListener('abort', onAbort)
       }
     },
   }

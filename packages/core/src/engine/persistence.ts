@@ -35,13 +35,18 @@ const isPendingCheckout = (value: unknown): value is PendingCheckout =>
   typeof value === 'object' &&
   value !== null &&
   typeof (value as PendingCheckout).providerId === 'string' &&
+  (value as PendingCheckout).providerId.length > 0 &&
   typeof (value as PendingCheckout).intentId === 'string' &&
-  typeof (value as PendingCheckout).actionId === 'string'
+  (value as PendingCheckout).intentId.length > 0 &&
+  typeof (value as PendingCheckout).actionId === 'string' &&
+  (value as PendingCheckout).actionId.length > 0 &&
+  typeof (value as PendingCheckout).idempotencyKey === 'string' &&
+  Number.isFinite((value as PendingCheckout).startedAt)
 
 export const readPendingCheckout = (storage: StorageAdapter): PendingCheckout | null => {
-  const raw = storage.read(PENDING_CHECKOUT_KEY)
-  if (!raw) return null
   try {
+    const raw = storage.read(PENDING_CHECKOUT_KEY)
+    if (!raw) return null
     const parsed: unknown = JSON.parse(raw)
     return isPendingCheckout(parsed) ? parsed : null
   } catch {
@@ -51,9 +56,17 @@ export const readPendingCheckout = (storage: StorageAdapter): PendingCheckout | 
 }
 
 export const writePendingCheckout = (storage: StorageAdapter, pending: PendingCheckout): void => {
-  storage.write(PENDING_CHECKOUT_KEY, JSON.stringify(pending))
+  try {
+    storage.write(PENDING_CHECKOUT_KEY, JSON.stringify(pending))
+  } catch {
+    // Storage may be disabled by the host. The current payment can still complete.
+  }
 }
 
 export const clearPendingCheckout = (storage: StorageAdapter): void => {
-  storage.remove(PENDING_CHECKOUT_KEY)
+  try {
+    storage.remove(PENDING_CHECKOUT_KEY)
+  } catch {
+    // Match the best-effort write contract.
+  }
 }

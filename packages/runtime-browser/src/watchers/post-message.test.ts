@@ -101,3 +101,28 @@ describe('awaitPostMessage', () => {
     expect(() => post({ type: 'verdict', actionId: 'act_1', transStatus: 'N' })).not.toThrow()
   })
 })
+
+it('requires correlation even when origin and type match', async () => {
+  const evidence = awaitPostMessage(expectation({ deadline: Date.now() + 30 }))
+  post({ type: 'verdict', transStatus: 'Y' })
+  await expect(evidence).resolves.toMatchObject({ via: 'aborted', reason: 'timeout' })
+})
+
+it('rejects another window on the same origin', async () => {
+  const frame = document.createElement('iframe')
+  document.body.append(frame)
+  const evidence = awaitPostMessage(
+    expectation({ source: frame.contentWindow, deadline: Date.now() + 30 }),
+  )
+  post({ type: 'verdict', actionId: 'act_1' })
+  await expect(evidence).resolves.toMatchObject({ via: 'aborted', reason: 'timeout' })
+  frame.remove()
+})
+
+it('settles immediately if the signal was already aborted', async () => {
+  const controller = new AbortController()
+  controller.abort()
+  await expect(awaitPostMessage(expectation({ signal: controller.signal }))).resolves.toMatchObject(
+    { via: 'aborted', reason: 'user' },
+  )
+})

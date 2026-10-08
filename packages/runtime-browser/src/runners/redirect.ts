@@ -88,6 +88,7 @@ const runInIframe = async (
   const evidence = awaitPostMessage({
     actionId: action.id,
     origin: action.completion.origin,
+    source: frame.contentWindow,
     type: action.completion.type,
     correlationField: action.completion.correlationField,
     signal: ctx.signal,
@@ -95,7 +96,11 @@ const runInIframe = async (
   })
 
   if (action.method === 'GET') {
-    frame.src = action.url
+    const url = new URL(action.url, window.location.href)
+    for (const [name, value] of Object.entries(action.fields ?? {}))
+      url.searchParams.set(name, value)
+    if (action.returnUrlField) url.searchParams.set(action.returnUrlField, ctx.returnUrl)
+    frame.src = url.toString()
   } else {
     const form = buildForm(action, name, ctx.returnUrl)
     document.body.append(form)
@@ -130,7 +135,11 @@ const runInTopWindow = (action: RedirectAction, ctx: RunnerContext): Promise<Act
 
   // This page is on its way out. Resolving would only race the unload; the payment is
   // picked back up by `hydrate()` after the provider returns the browser to us.
-  return new Promise<ActionEvidence>(() => {})
+  return new Promise<ActionEvidence>((resolve) => {
+    const abort = (): void => resolve({ via: 'aborted', actionId: action.id, reason: 'user' })
+    ctx.signal.addEventListener('abort', abort, { once: true })
+    if (ctx.signal.aborted) abort()
+  })
 }
 
 export const createRedirectRunner = (

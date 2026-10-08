@@ -14,7 +14,7 @@ export default defineConfig({
   format: ['esm'],
   unbundle: true,
   // oxc emits the .d.ts files; the tsc-based path does not support TypeScript 7 yet.
-  dts: { oxc: true },
+  dts: { generator: 'oxc' },
   exports: { devExports: '@checkout-kit/source' },
   publint: true,
   // are-the-types-wrong runs separately, in `npm run check:types`. Checking eleven packages

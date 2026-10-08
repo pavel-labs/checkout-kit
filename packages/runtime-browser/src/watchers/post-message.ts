@@ -7,6 +7,8 @@ import type { ActionEvidence } from '@checkout-kit/core'
 export interface PostMessageExpectation {
   readonly actionId: string
   readonly origin: string
+  /** When rendering a frame, only messages from that frame may finish the action. */
+  readonly source?: MessageEventSource | null
   readonly type: string
   /** Message field carrying the action id. Defaults to `actionId`. */
   readonly correlationField?: string
@@ -28,12 +30,13 @@ export const awaitPostMessage = (expect: PostMessageExpectation): Promise<Action
 
     const onMessage = (event: MessageEvent<unknown>): void => {
       if (event.origin !== expect.origin) return
+      if (expect.source && event.source !== expect.source) return
       if (!isRecord(event.data)) return
       if (event.data.type !== expect.type) return
       // A message about someone else's action is not ours to act on. A protocol that
       // names the field differently still gets checked - see `correlationField`.
-      const correlation = event.data.actionId ?? event.data[expect.correlationField ?? 'actionId']
-      if (correlation !== undefined && correlation !== expect.actionId) return
+      const correlation = event.data[expect.correlationField ?? 'actionId']
+      if (correlation !== expect.actionId) return
 
       settle({
         via: 'post_message',
@@ -54,4 +57,5 @@ export const awaitPostMessage = (expect: PostMessageExpectation): Promise<Action
 
     window.addEventListener('message', onMessage)
     expect.signal.addEventListener('abort', onAbort, { once: true })
+    if (expect.signal.aborted) onAbort()
   })

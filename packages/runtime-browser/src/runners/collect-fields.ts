@@ -52,12 +52,13 @@ export const createCollectFieldsRunner = (
     frame.style.width = '100%'
     frame.style.height = '100%'
     frame.style.border = '0'
-    frame.src = buildUrl(action, ctx.returnUrl)
+    mount.append(frame)
 
     // Listening before the frame is attached: it may answer as soon as it loads.
     const evidence = awaitPostMessage({
       actionId: action.id,
       origin: action.origin,
+      source: frame.contentWindow,
       type: action.completion.via === 'post_message' ? action.completion.type : 'ck-fields-token',
       correlationField:
         action.completion.via === 'post_message' ? action.completion.correlationField : undefined,
@@ -65,7 +66,7 @@ export const createCollectFieldsRunner = (
       deadline: ctx.deadline,
     })
 
-    mount.append(frame)
+    frame.src = buildUrl(action, ctx.returnUrl)
     ctx.report({ stage: 'collecting', detail: action.origin })
 
     try {

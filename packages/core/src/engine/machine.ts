@@ -26,6 +26,8 @@ export type MachineEvent =
   | 'action_required'
   | 'run_action'
   | 'action_done'
+  /** Evidence collected by the host, without invoking a runner. */
+  | 'resume'
   /** Coming back from a full-page redirect: there is an intent, but no live engine state. */
   | 'hydrate'
   | 'processing'
@@ -44,8 +46,14 @@ const SETTLE = {
 
 const TRANSITIONS: Record<CheckoutPhase, Partial<Record<MachineEvent, CheckoutPhase>>> = {
   idle: { prepare: 'preparing', pay: 'creating', hydrate: 'resuming', reset: 'idle' },
-  preparing: { prepared: 'ready', failed: 'failed', reset: 'idle' },
-  ready: { pay: 'confirming', prepare: 'preparing', failed: 'failed', reset: 'idle' },
+  preparing: { prepared: 'ready', canceled: 'canceled', failed: 'failed', reset: 'idle' },
+  ready: {
+    pay: 'confirming',
+    prepare: 'preparing',
+    canceled: 'canceled',
+    failed: 'failed',
+    reset: 'idle',
+  },
   creating: { created: 'confirming', ...SETTLE, reset: 'idle' },
   confirming: {
     action_required: 'action_pending',
@@ -53,7 +61,12 @@ const TRANSITIONS: Record<CheckoutPhase, Partial<Record<MachineEvent, CheckoutPh
     ...SETTLE,
     reset: 'idle',
   },
-  action_pending: { run_action: 'action_running', ...SETTLE, reset: 'idle' },
+  action_pending: {
+    run_action: 'action_running',
+    resume: 'resuming',
+    ...SETTLE,
+    reset: 'idle',
+  },
   // `run_action` again is a surface change, not a second payment: the shopper moved
   // the same action from a frame into the whole window.
   action_running: {
@@ -66,8 +79,14 @@ const TRANSITIONS: Record<CheckoutPhase, Partial<Record<MachineEvent, CheckoutPh
   polling: { processing: 'polling', ...SETTLE, reset: 'idle' },
   succeeded: { reset: 'idle' },
   declined: { reset: 'idle', pay: 'creating' },
-  canceled: { reset: 'idle', pay: 'creating' },
-  failed: { reset: 'idle', pay: 'creating' },
+  canceled: { reset: 'idle', pay: 'creating', succeeded: 'succeeded', processing: 'polling' },
+  failed: {
+    reset: 'idle',
+    pay: 'creating',
+    hydrate: 'resuming',
+    processing: 'polling',
+    canceled: 'canceled',
+  },
 }
 
 /** The phase this event leads to, or `null` if the machine forbids it here. */
