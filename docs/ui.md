@@ -47,6 +47,8 @@ example combines an order, editable contact details, saved/new card choices and 
 transfer. Switch **Preview state** to inspect waiting, success and decline; use **Frame
 width** for 390px and 320px containers. This workshop never creates a payment or stores a card.
 
+![Complete checkout preview in the light theme with compact density](/checkout-ui.jpg)
+
 The default styling uses neutral surfaces, a blue accent, pill actions and 16px input text.
 Controls keep native form behavior and keyboard access. The catalog below the preview shows
 individual components with the same theme, platform, density and accent.

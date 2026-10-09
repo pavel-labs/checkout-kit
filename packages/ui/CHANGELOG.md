@@ -1,5 +1,16 @@
 # @checkout-kit/ui
 
+## 0.2.0
+
+### Minor Changes
+
+- 5c29d7e: Refine the checkout design system with neutral light/dark surfaces, readable typography,
+  pill actions, consistent button states, visible control borders and composed payment screens.
+  Add accessible IconButton and InputGroup components, a localized Dialog close button and
+  description, and opt-outs for focus/live announcements in static result specimens. Derive
+  interactive colors from custom accents and prevent busy or aria-disabled buttons from
+  submitting a native form. The live gallery now includes a responsive checkout preview.
+
 ## 0.1.0
 
 ### Minor Changes

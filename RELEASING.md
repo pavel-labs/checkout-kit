@@ -2,17 +2,18 @@
 
 Checkout kit has two independent distribution paths: public GitHub release archives and
 an optional package-registry release. Archive installation needs no registry credentials.
-Version `0.1.0` is an early release; fixture/simulator coverage and provider account verification
+Bundle `0.2.0` includes UI `0.2.0` and the other 15 packages at `0.1.0`.
+Package versions are independent. This is an early release; fixture/simulator coverage and provider account verification
 are documented separately.
 
 ## Install a tagged release
 
-Download `checkout-kit-0.1.0.tar.gz` from
-[GitHub Releases](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.1.0) and extract it.
+Download `checkout-kit-0.2.0.tar.gz` from
+[GitHub Releases](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0) and extract it.
 From your application's directory:
 
 ```bash
-node /path/to/checkout-kit-0.1.0/install.mjs runtime-browser provider-paypal react ui
+node /path/to/checkout-kit-0.2.0/install.mjs runtime-browser provider-paypal react ui
 ```
 
 The installer includes required checkout-kit dependencies and peers, then asks npm to install
@@ -62,7 +63,7 @@ The private root package's `version` names the **complete archive bundle**, not 
 Set its next version in the release PR and update the lockfile, for example:
 
 ```bash
-npm pkg set version=0.1.1
+npm pkg set version=0.2.1
 npm install --package-lock-only
 ```
 

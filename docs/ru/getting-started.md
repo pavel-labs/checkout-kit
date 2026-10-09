@@ -30,20 +30,22 @@ npm run dev:integration
 
 ## Установка архивов {#install-package-archives}
 
-Скачайте `checkout-kit-0.1.0.tar.gz` из [GitHub Release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.1.0) и распакуйте его. В комплекте все 16 пакетов, manifest с хешами, checksums и отдельный установщик. Клонировать репозиторий или получать токен реестра не нужно.
+Скачайте `checkout-kit-0.2.0.tar.gz` из [GitHub Release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0) и распакуйте его. В комплекте все 16 пакетов, manifest с хешами, checksums и отдельный установщик. Клонировать репозиторий или получать токен реестра не нужно.
+
+Комплект **0.2.0** содержит `@checkout-kit/ui@0.2.0` и остальные 15 пакетов версии `0.1.0`. Версии пакетов независимы; установщик выбирает их архивы по manifest.
 
 Запускайте установщик **из каталога своего приложения**:
 
 ```sh
-node /path/to/checkout-kit-0.1.0/install.mjs runtime-browser provider-paypal react ui
+node /path/to/checkout-kit-0.2.0/install.mjs runtime-browser provider-paypal react ui
 ```
 
 Он проверяет выбранные архивы и автоматически добавляет необходимые checkout-kit peers, включая core. Внешние peers, например React 19, устанавливает npm. Версия `react-dom` приложения должна быть совместима с React. Для другого адаптера замените `provider-paypal` на `provider-stripe` или `provider-adyen`.
 
 ```sh
 # Список пакетов или проверка выбора без установки:
-node /path/to/checkout-kit-0.1.0/install.mjs --list
-node /path/to/checkout-kit-0.1.0/install.mjs provider-paypal react ui --dry-run
+node /path/to/checkout-kit-0.2.0/install.mjs --list
+node /path/to/checkout-kit-0.2.0/install.mjs provider-paypal react ui --dry-run
 ```
 
 Без React выберите `runtime-browser` и провайдера. Отдельные `.tgz` assets можно установить через `npm install`, указав их checkout-kit peers в той же команде.
