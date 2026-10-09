@@ -1,10 +1,15 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+const selectProvider = async (page: Page, provider: string) => {
+  await page.getByText(`${provider} adapter`, { exact: true }).click()
+  await expect(page.getByRole('radio', { name: new RegExp(`${provider} adapter`) })).toBeChecked()
+}
 
 for (const provider of ['Stripe', 'Adyen']) {
   for (const scenario of ['approve', 'decline', 'processing', 'challenge']) {
     test(`${provider}: ${scenario} through its installed API contract`, async ({ page }) => {
       await page.goto('/')
-      await page.getByRole('radio', { name: new RegExp(`${provider} adapter`) }).check()
+      await selectProvider(page, provider)
       await page.getByLabel('Payment token').fill(`pm_mock_${scenario}`)
       await page.getByRole('button', { name: /^Pay/ }).click()
       if (scenario === 'challenge') {
@@ -31,7 +36,7 @@ for (const provider of ['Stripe', 'Adyen']) {
 for (const outcome of ['Approve', 'Decline']) {
   test(`PayPal: ${outcome.toLowerCase()} after a full-page return`, async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('radio', { name: /PayPal adapter/ }).check()
+    await selectProvider(page, 'PayPal')
     await page.getByRole('button', { name: /^Pay/ }).click()
     await expect(page.getByRole('heading', { name: 'Simulated approval' })).toBeVisible()
     await page.getByRole('button', { name: outcome, exact: true }).click()
@@ -53,7 +58,7 @@ test('a declined retry creates a fresh payment', async ({ page }) => {
       void response.json().then((body: { id: string }) => ids.push(body.id))
   })
   await page.goto('/')
-  await page.getByRole('radio', { name: /Stripe adapter/ }).check()
+  await selectProvider(page, 'Stripe')
   await page.getByLabel('Payment token').fill('pm_mock_decline')
   await page.getByRole('button', { name: /^Pay/ }).click()
   await expect(page.getByRole('heading', { name: 'Payment declined', exact: true })).toBeVisible()
