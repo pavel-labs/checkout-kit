@@ -11,6 +11,7 @@ type DisplayAction = Extract<PaymentAction, { kind: 'display' }>
 export interface DisplayRunnerText {
   readonly copy: string
   readonly copied: string
+  readonly copyFailed: string
   readonly openApp: string
   /** Alt text for a provider-rendered QR image. */
   readonly qrAlt: string
@@ -26,6 +27,7 @@ export interface DisplayRunnerOptions {
 const DEFAULT_TEXT: DisplayRunnerText = {
   copy: 'Copy',
   copied: 'Copied',
+  copyFailed: 'Could not copy. Select the code to copy it.',
   openApp: 'Open your bank app',
   qrAlt: 'QR code for this payment',
 }
@@ -74,9 +76,18 @@ export const createDisplayRunner = (
     // The label is the only feedback a copy gives, so it has to be announced too.
     copy.setAttribute('aria-live', 'polite')
     copy.addEventListener('click', () => {
-      void navigator.clipboard?.writeText(action.value).then(() => {
-        copy.textContent = text.copied
-      })
+      if (!navigator.clipboard) {
+        copy.textContent = text.copyFailed
+        return
+      }
+      void navigator.clipboard.writeText(action.value).then(
+        () => {
+          copy.textContent = text.copied
+        },
+        () => {
+          copy.textContent = text.copyFailed
+        },
+      )
     })
     root.append(copy)
 
@@ -111,16 +122,19 @@ export const createDisplayRunner = (
 
       try {
         return await new Promise<ActionEvidence>((resolve) => {
+          let timer: ReturnType<typeof setTimeout> | undefined
+          const onAbort = () => done('user')
           const done = (reason: 'user' | 'timeout') => {
+            clearTimeout(timer)
+            ctx.signal.removeEventListener('abort', onAbort)
             resolve({ via: 'aborted', actionId: action.id, reason })
           }
-
-          ctx.signal.addEventListener('abort', () => done('user'), { once: true })
+          if (ctx.signal.aborted) return done('user')
+          ctx.signal.addEventListener('abort', onAbort, { once: true })
 
           const left = ctx.deadline - Date.now()
           if (left <= 0) return done('timeout')
-          const timer = setTimeout(() => done('timeout'), left)
-          ctx.signal.addEventListener('abort', () => clearTimeout(timer), { once: true })
+          timer = setTimeout(() => done('timeout'), left)
         })
       } finally {
         node.remove()

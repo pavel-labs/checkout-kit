@@ -14,7 +14,12 @@ import {
   type CvcCode,
   type PaymentInstrument,
 } from '@checkout-kit/core'
-import { createWebViewBridge, parseBridgeEvent, type BridgeEvent } from './index'
+import {
+  createWebViewBridge,
+  parseBridgeEvent,
+  type BridgeEvent,
+  type WebViewBridge,
+} from './index'
 
 const CARD: PaymentInstrument = {
   kind: 'card',
@@ -23,6 +28,8 @@ const CARD: PaymentInstrument = {
   cvc: '123' as CvcCode,
   holder: 'Ada Lovelace',
 } as PaymentInstrument
+
+const bridges: WebViewBridge[] = []
 
 const setup = (script: FakeProviderScript = {}) => {
   const { provider } = createFakeProvider(script)
@@ -39,6 +46,8 @@ const setup = (script: FakeProviderScript = {}) => {
     sessionId: 'sess_1',
   })
 
+  bridges.push(bridge)
+
   const events = () =>
     sent.map((raw) => {
       const parsed = parseBridgeEvent(raw)
@@ -52,6 +61,7 @@ const setup = (script: FakeProviderScript = {}) => {
 const types = (events: BridgeEvent[]) => events.map((event) => event.type)
 
 afterEach(() => {
+  for (const bridge of bridges.splice(0)) bridge.stop()
   vi.restoreAllMocks()
 })
 
@@ -188,5 +198,69 @@ describe('createWebViewBridge', () => {
     await engine.pay({ input: { planId: 'plan_1' }, instrument: CARD })
 
     expect(sent).toHaveLength(before)
+  })
+})
+
+const command = (type = 'PAYMENT_RETRY', extra: object = {}) =>
+  JSON.stringify({
+    source: 'checkout-kit',
+    v: 1,
+    id: 'cmd',
+    sessionId: 'sess_1',
+    ts: Date.now(),
+    type,
+    payload: {},
+    ...extra,
+  })
+
+describe('native command boundary', () => {
+  it('rejects commands from another session and from a provider frame', () => {
+    const { engine } = setup()
+    const reset = vi.spyOn(engine, 'reset')
+    window.dispatchEvent(
+      new MessageEvent('message', { data: command('PAYMENT_RETRY', { sessionId: 'old' }) }),
+    )
+    const frame = document.createElement('iframe')
+    document.body.append(frame)
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: command(),
+        source: frame.contentWindow,
+        origin: window.location.origin,
+      }),
+    )
+    frame.remove()
+    expect(reset).not.toHaveBeenCalled()
+  })
+
+  it('handles the same command only once across window and document', () => {
+    const { engine } = setup()
+    const reset = vi.spyOn(engine, 'reset')
+    window.dispatchEvent(new MessageEvent('message', { data: command() }))
+    document.dispatchEvent(new MessageEvent('message', { data: command() }))
+    expect(reset).toHaveBeenCalledTimes(1)
+  })
+
+  it('answers ping with a correlated ready message', () => {
+    const { events } = setup()
+    window.dispatchEvent(new MessageEvent('message', { data: command('PAYMENT_PING') }))
+    expect(events().at(-1)).toMatchObject({ type: 'PAYMENT_READY', correlationId: 'cmd' })
+  })
+
+  it('keeps a native delivery failure from changing the payment outcome', async () => {
+    const { engine } = setup()
+    const onError = vi.fn()
+    const bridge = createWebViewBridge(engine, {
+      target: {
+        postMessage() {
+          throw new Error('Host detached')
+        },
+      },
+      onError,
+    })
+    bridges.push(bridge)
+    await engine.pay({ input: { planId: 'plan_1' }, instrument: CARD })
+    expect(engine.getSnapshot().phase).toBe('succeeded')
+    expect(onError).toHaveBeenCalled()
   })
 })

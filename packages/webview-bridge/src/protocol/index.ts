@@ -2,7 +2,7 @@
 //
 // Types only, no DOM and no engine: this half has to compile in a React Native bundle.
 
-import type { CheckoutPhase, PaymentUiState } from '@checkout-kit/core'
+import { PHASE_TO_UI_STATE, type CheckoutPhase, type PaymentUiState } from '@checkout-kit/core'
 
 export const BRIDGE_VERSION = 1
 
@@ -104,22 +104,102 @@ export type ParseResult<T> =
   | { readonly ok: true; readonly message: T }
   | { readonly ok: false; readonly reason: 'not_ours' | 'malformed' | 'unsupported_version' }
 
-const isEnvelope = (value: unknown): value is BridgeEnvelope<string, unknown> => {
-  if (typeof value !== 'object' || value === null) return false
-  const candidate = value as Record<string, unknown>
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
 
-  return (
-    candidate.source === 'checkout-kit' &&
-    typeof candidate.v === 'number' &&
-    typeof candidate.id === 'string' &&
-    typeof candidate.sessionId === 'string' &&
-    typeof candidate.type === 'string' &&
-    typeof candidate.payload === 'object' &&
-    candidate.payload !== null
-  )
+const isString = (value: unknown): value is string => typeof value === 'string'
+const isId = (value: unknown): value is string => isString(value) && value.trim().length > 0
+const isOptionalString = (value: unknown): boolean => value === undefined || isString(value)
+const isStringArray = (value: unknown): boolean => Array.isArray(value) && value.every(isString)
+const isAmount = (value: unknown): boolean => Number.isSafeInteger(value) && (value as number) >= 0
+const isPhase = (value: unknown): value is CheckoutPhase =>
+  isString(value) && Object.hasOwn(PHASE_TO_UI_STATE, value)
+const isPayment = (payload: Record<string, unknown>): boolean =>
+  isId(payload.intentId) &&
+  isAmount(payload.amount) &&
+  isString(payload.currency) &&
+  /^[a-z]{3}$/i.test(payload.currency)
+const isAction = (payload: Record<string, unknown>): boolean =>
+  isId(payload.actionId) &&
+  ['redirect', 'collect_fields', 'sdk_handoff', 'display', 'poll'].includes(String(payload.kind)) &&
+  ['top', 'iframe', 'popup', 'inline', 'none'].includes(String(payload.surface)) &&
+  ['authenticate', 'authorize', 'collect'].includes(String(payload.purpose)) &&
+  isOptionalString(payload.url)
+
+const isEnvelope = (
+  value: Record<string, unknown>,
+): value is Record<string, unknown> & BridgeEnvelope<string, Record<string, unknown>> =>
+  Number.isInteger(value.v) &&
+  isId(value.id) &&
+  isId(value.sessionId) &&
+  isId(value.type) &&
+  typeof value.ts === 'number' &&
+  Number.isFinite(value.ts) &&
+  value.ts >= 0 &&
+  isOptionalString(value.correlationId) &&
+  isRecord(value.payload)
+
+const eventPayloadIsValid = (type: string, payload: Record<string, unknown>): boolean => {
+  switch (type) {
+    case 'PAYMENT_READY':
+      return (
+        payload.bridgeVersion === BRIDGE_VERSION &&
+        (payload.providerId === null || isId(payload.providerId)) &&
+        isStringArray(payload.instruments) &&
+        isStringArray(payload.actions)
+      )
+    case 'PAYMENT_STATE_CHANGED':
+      return (
+        isPhase(payload.phase) &&
+        PHASE_TO_UI_STATE[payload.phase] === payload.state &&
+        (payload.previousPhase === null || isPhase(payload.previousPhase))
+      )
+    case 'PAYMENT_INTENT_CREATED':
+      return isPayment(payload) && isId(payload.providerId)
+    case 'PAYMENT_SUCCEEDED':
+      return isPayment(payload)
+    case 'PAYMENT_REQUIRES_ACTION':
+    case 'PAYMENT_ACTION_STARTED':
+    case 'PAYMENT_ACTION_FINISHED':
+      return isAction(payload)
+    case 'PAYMENT_DECLINED':
+      return (
+        (payload.intentId === null || isId(payload.intentId)) &&
+        isOptionalString(payload.code) &&
+        isString(payload.message)
+      )
+    case 'PAYMENT_CANCELLED':
+      return (payload.intentId === null || isId(payload.intentId)) && isString(payload.reason)
+    case 'PAYMENT_FAILED':
+      return isOptionalString(payload.code) && isString(payload.message)
+    case 'PAYMENT_HEIGHT_CHANGED':
+      return (
+        typeof payload.height === 'number' && Number.isFinite(payload.height) && payload.height >= 0
+      )
+    default:
+      return false
+  }
 }
 
-const parse = <T extends BridgeEnvelope<string, unknown>>(raw: unknown): ParseResult<T> => {
+const commandPayloadIsValid = (type: string, payload: Record<string, unknown>): boolean => {
+  switch (type) {
+    case 'PAYMENT_CANCEL':
+    case 'PAYMENT_RETRY':
+    case 'PAYMENT_PING':
+      return Object.keys(payload).length === 0
+    case 'PAYMENT_RESUME':
+      return isRecord(payload.params) && Object.values(payload.params).every(isString)
+    case 'PAYMENT_SET_THEME':
+      return ['light', 'dark', 'auto'].includes(String(payload.theme))
+    default:
+      return false
+  }
+}
+
+const parse = <T extends BridgeEnvelope<string, unknown>>(
+  raw: unknown,
+  validatePayload: (type: string, payload: Record<string, unknown>) => boolean,
+): ParseResult<T> => {
   let value = raw
   if (typeof value === 'string') {
     try {
@@ -128,17 +208,17 @@ const parse = <T extends BridgeEnvelope<string, unknown>>(raw: unknown): ParseRe
       return { ok: false, reason: 'not_ours' }
     }
   }
-
-  if (!isEnvelope(value)) return { ok: false, reason: 'not_ours' }
-  // A newer WebView than the app: say so rather than acting on half of it.
-  if (value.v > BRIDGE_VERSION) return { ok: false, reason: 'unsupported_version' }
-
+  if (!isRecord(value) || value.source !== 'checkout-kit') return { ok: false, reason: 'not_ours' }
+  if (!isEnvelope(value)) return { ok: false, reason: 'malformed' }
+  if (value.v !== BRIDGE_VERSION) return { ok: false, reason: 'unsupported_version' }
+  if (!validatePayload(value.type, value.payload)) return { ok: false, reason: 'malformed' }
   return { ok: true, message: value as T }
 }
 
-/** Host side: what came out of a WebView `onMessage`. */
-export const parseBridgeEvent = (raw: unknown): ParseResult<BridgeEvent> => parse<BridgeEvent>(raw)
+/** Host side: validate the envelope, event type and event-specific payload. */
+export const parseBridgeEvent = (raw: unknown): ParseResult<BridgeEvent> =>
+  parse<BridgeEvent>(raw, eventPayloadIsValid)
 
-/** Web side: what the host sent in. */
+/** Web side: validate the envelope, command type and command-specific payload. */
 export const parseBridgeCommand = (raw: unknown): ParseResult<BridgeCommand> =>
-  parse<BridgeCommand>(raw)
+  parse<BridgeCommand>(raw, commandPayloadIsValid)

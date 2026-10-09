@@ -1,71 +1,15 @@
-# The checkout in a React Native app
+# Checkout in a React Native WebView
 
-The same web checkout, opened in a `WebView`, with the native app driving the chrome around
-it. Nothing here is built or tested by this repository: it is outside the npm workspaces on
-purpose, so `npm ci` never pulls a native toolchain in.
+`CheckoutScreen.tsx` hosts an existing HTTPS web checkout; `App.tsx` shows how to mount the screen. Import only `@checkout-kit/webview-bridge/host` and `/protocol` on the native side. The web page registers `createWebViewBridge(engine)` once.
 
-## Why a WebView rather than native screens
+Set `CHECKOUT_URL` and register `myapp://payment/return` in your application's iOS/Android deep-link configuration. Add `allowedProviderUrls` when your selected provider needs a top-window bank page inside the WebView. The navigation policy allows exact origins and directory boundaries, and the message handler accepts events only from the merchant checkout document.
 
-A payment page changes when a provider changes, and it has to pass PCI scrutiny. One web
-checkout, used by the browser and by the app, means one place to update and one thing to
-review. The parts a shopper expects to feel native - the header, the cancel button, the
-result screen - stay native, because those are the parts that never talk to a provider.
+Commands wait for `PAYMENT_READY` and use its session id plus a unique command id. They are delivered with `createBridgeCommand` and `createCommandScript` through `injectJavaScript`; return tokens are serialized as data. Duplicates and events from a retired page are ignored. Cancel is disabled until the bridge is ready.
 
-The one flow that genuinely wants a native screen is a wallet: Apple Pay and Google Pay
-have to be presented by the OS. Take that one natively, and let the WebView cover the rest.
+A return deep link received through `Linking` or intercepted by the WebView is parsed and sent back as `PAYMENT_RESUME`. The custom scheme is not loaded as a WebView page. A return received before the checkout handshake is queued until it is ready. Ordinary HTTPS checkout returns load normally and the web app hydrates its own saved attempt.
 
-## What the app has to do
+For a system-browser authentication session, your app must start the platform session and deliver its return URL through the same helper. Opening a URL from `PAYMENT_REQUIRES_ACTION` alone is insufficient for providers requiring form POST fields; let the web runtime perform that redirect or implement the provider's full platform flow.
 
-```tsx
-import {
-  createCheckoutMessageHandler,
-  createNavigationPolicy,
-} from '@checkout-kit/webview-bridge/host'
-```
+Drop these files into your Expo or React Native application and supply its dependencies. This example is deliberately outside the repository workspaces so installing the web library does not pull in a native toolchain. Repository tests cover bridge payloads, session isolation, navigation and command serialization; the example still needs an iOS/Android build in the consuming app.
 
-That import has no DOM in it and no engine behind it - it is checked in CI - so it bundles
-into React Native cleanly.
-
-**1. Listen.** The web side posts `PAYMENT_*` events. `createCheckoutMessageHandler` parses
-them, drops anything that is not ours, and refuses a version it does not understand instead
-of guessing at half a message.
-
-**2. Decide where the WebView may go.** `createNavigationPolicy` compares origins for
-equality and then matches a path prefix. Without one, any link the page offers runs inside
-your app. `http:` is always blocked, and `mailto:`/`tel:` go out to the system.
-
-**3. Handle the return.** Two paths, in this order:
-
-- **Stay inside.** A redirect that happens in the WebView comes back to the return URL, the
-  policy calls it `return`, and the app does nothing: the web app hydrates itself, exactly
-  as it does after a redirect in a browser. Prefer this - the bank keeps its cookies.
-- **Come back by deep link.** For a bank that refuses to be framed, open the URL in
-  `ASWebAuthenticationSession` or a Custom Tab, catch `myapp://payment/return?…`, and post
-  `PAYMENT_RESUME` with `parseReturnDeepLink`. The checkout picks the payment up from
-  session storage, which it wrote before the action started. A system browser does not
-  share cookies with your WebView, which is why this is the second choice, not the first.
-
-## Events
-
-| Event                                                                             | When                                                          |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `PAYMENT_READY`                                                                   | first, always - tells you the bridge version and the provider |
-| `PAYMENT_STATE_CHANGED`                                                           | one of the nine UI states; drive your header from it          |
-| `PAYMENT_INTENT_CREATED`                                                          | amount and currency are confirmed                             |
-| `PAYMENT_REQUIRES_ACTION`                                                         | carries the URL for a redirect, so you can open it elsewhere  |
-| `PAYMENT_ACTION_STARTED` / `PAYMENT_ACTION_FINISHED`                              | around an authentication step                                 |
-| `PAYMENT_SUCCEEDED` / `PAYMENT_DECLINED` / `PAYMENT_CANCELLED` / `PAYMENT_FAILED` | the outcome                                                   |
-| `PAYMENT_HEIGHT_CHANGED`                                                          | for sizing the WebView, when `reportHeight` is on             |
-
-Commands go the other way: `PAYMENT_CANCEL`, `PAYMENT_RETRY`, `PAYMENT_RESUME`,
-`PAYMENT_SET_THEME`, `PAYMENT_PING`.
-
-No card data is ever on this channel. Payloads are built field by field from a whitelist,
-and a test runs a real card payment through the bridge and checks the number, the security
-code and the name appear in none of it.
-
-## Running it
-
-Point `CHECKOUT_URL` at your own deployment, register the return scheme in
-`Info.plist`/`AndroidManifest.xml`, and drop the two files into an Expo or bare React Native
-app. There is no build here to run.
+[WebView guide](https://pavel-labs.github.io/checkout-kit/webview.html) · [Bridge package](../../packages/webview-bridge/README.md)

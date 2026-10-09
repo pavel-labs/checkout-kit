@@ -254,6 +254,26 @@ describe('Dialog', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
+  it('requests one controlled dismissal for Escape', () => {
+    const onClose = vi.fn()
+    const { rerender } = render(
+      <Dialog open onClose={onClose} title="Confirm">
+        body
+      </Dialog>,
+    )
+    const dialog = screen.getByRole('dialog')
+    const event = new Event('cancel', { cancelable: true })
+    fireEvent(dialog, event)
+    expect(event.defaultPrevented).toBe(true)
+    expect(onClose).toHaveBeenCalledTimes(1)
+    rerender(
+      <Dialog open={false} onClose={onClose} title="Confirm">
+        body
+      </Dialog>,
+    )
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
   it('refuses to close when the shopper has to answer', () => {
     const onClose = vi.fn()
     render(

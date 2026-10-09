@@ -118,6 +118,18 @@ describe('the SDK handoff runner', () => {
     expect(appended[0]?.integrity).toBe('sha384-abc')
     expect(appended[0]?.crossOrigin).toBe('anonymous')
   })
+
+  it('does not reuse an unpinned script for a request requiring integrity', async () => {
+    const request = vi.fn().mockResolvedValue({})
+    const runner = createSdkHandoffRunner({ adapters: [{ sdk: 'wallet', request }] })
+    const appended = captureScripts()
+    const scriptUrl = 'https://wallet.test/integrity-conflict.js'
+    await runner.run(action({ scriptUrl }), context())
+    const next = await runner.run(action({ scriptUrl, integrity: 'sha384-required' }), context())
+    expect(next).toMatchObject({ via: 'aborted', reason: 'runner_error' })
+    expect(request).toHaveBeenCalledTimes(1)
+    expect(appended).toHaveLength(1)
+  })
 })
 
 it('stops waiting for an SDK that ignores cancellation', async () => {

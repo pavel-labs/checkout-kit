@@ -52,11 +52,10 @@ export const Dialog = ({
       aria-labelledby={title ? headingId : undefined}
       // Escape fires `cancel` first; refusing it there is what makes a dialog undismissable.
       onCancel={(event) => {
-        if (!dismissible) {
-          event.preventDefault()
-          return
-        }
-        onClose()
+        // Keep the controlled `open` prop authoritative. Otherwise Escape closes the
+        // native dialog and fires `close` too, calling onClose twice for one dismissal.
+        event.preventDefault()
+        if (dismissible) onClose()
       }}
       onClose={() => {
         if (open) onClose()

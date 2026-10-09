@@ -62,7 +62,8 @@ writeFileSync(
 import { createCheckout, createRunnerRegistry, defineProvider } from '@checkout-kit/core'
 import { createHttpClient } from '@checkout-kit/core/http'
 import { createBrowserRuntime } from '@checkout-kit/runtime-browser'
-import { CheckoutProvider, useCheckout } from '@checkout-kit/react'
+import { CheckoutProvider, useCheckout, useCheckoutSelector } from '@checkout-kit/react'
+import { createBridgeCommand, createCommandScript } from '@checkout-kit/webview-bridge/host'
 import { Button, Money } from '@checkout-kit/ui'
 import type { StripeConfig } from '@checkout-kit/provider-stripe'
 import type { AdyenConfig } from '@checkout-kit/provider-adyen'
@@ -76,6 +77,10 @@ const providers = [
 const engine = createCheckout({ providers, runners: createRunnerRegistry(), returnUrl: 'https://merchant.test/payment/return' })
 void createHttpClient
 void createBrowserRuntime
+const cancel = createBridgeCommand('PAYMENT_CANCEL', {}, { sessionId: 'session', id: 'cmd' })
+createCommandScript(cancel)
+function Selected() { const s = useCheckoutSelector((s) => ({ phase: s.phase }), (a, b) => a.phase === b.phase); return <span>{s.phase}</span> }
+void Selected
 function Checkout() { const { phase } = useCheckout(); return <Button><Money amount={2500} currency="USD" />{phase}</Button> }
 renderToString(<CheckoutProvider engine={engine}><Checkout /></CheckoutProvider>)
 `,
@@ -88,6 +93,12 @@ import { createCheckout, createRunnerRegistry, defineProvider } from '@checkout-
 import { renderToString } from 'react-dom/server'
 import { createElement } from 'react'
 import { Money } from '@checkout-kit/ui'
+import { createBridgeCommand, createCommandScript, createCheckoutMessageHandler } from '@checkout-kit/webview-bridge/host'
+import { parseBridgeCommand } from '@checkout-kit/webview-bridge/protocol'
+const command = createBridgeCommand('PAYMENT_RESUME', { params: { token: 'opaque' } }, { sessionId: 'session', id: 'cmd' })
+assert.equal(parseBridgeCommand(command).ok, true)
+assert.equal(typeof createCommandScript(command), 'string')
+assert.equal(createCheckoutMessageHandler({}).sessionId, null)
 const publicPackages = ${JSON.stringify(packages.map(({ name }) => name))}
 for (const name of publicPackages) {
   const entry = import.meta.resolve(name)

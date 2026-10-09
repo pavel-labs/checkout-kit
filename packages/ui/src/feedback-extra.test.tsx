@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { StrictMode } from 'react'
 import { CopyButton } from './copy-button'
 import { Countdown } from './countdown'
 import { Skeleton, SkeletonText } from './skeleton'
@@ -71,6 +72,31 @@ describe('Countdown', () => {
     await vi.advanceTimersByTimeAsync(1500)
 
     await waitFor(() => expect(onExpire).toHaveBeenCalled())
+  })
+
+  it('notifies once for one deadline across StrictMode and callback replacements', () => {
+    const expiresAt = Date.now() - 1000
+    const first = vi.fn()
+    const next = vi.fn()
+    const { rerender } = render(
+      <StrictMode>
+        <Countdown expiresAt={expiresAt} onExpire={first} />
+      </StrictMode>,
+    )
+    expect(first).toHaveBeenCalledTimes(1)
+    rerender(
+      <StrictMode>
+        <Countdown expiresAt={expiresAt} onExpire={next} />
+      </StrictMode>,
+    )
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  it('does not show a NaN clock or invoke expiry for an invalid date', () => {
+    const onExpire = vi.fn()
+    render(<Countdown expiresAt="not-a-date" onExpire={onExpire} />)
+    expect(screen.getByText('Expired')).toBeDefined()
+    expect(onExpire).not.toHaveBeenCalled()
   })
 
   it('is already expired when the deadline has passed', () => {

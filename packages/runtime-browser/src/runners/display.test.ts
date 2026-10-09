@@ -95,6 +95,43 @@ describe('the display runner', () => {
     expect(hostOf(ctx)?.querySelector('.ck-display')).toBeNull()
   })
 
+  it('settles immediately for a signal aborted before rendering', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    const ctx = context({ signal: controller.signal })
+    await expect(createDisplayRunner().run(action(), ctx)).resolves.toMatchObject({
+      via: 'aborted',
+      reason: 'user',
+    })
+    expect(hostOf(ctx)?.children.length).toBe(0)
+  })
+
+  it('releases its abort listener when the deadline expires', async () => {
+    const controller = new AbortController()
+    const remove = vi.spyOn(controller.signal, 'removeEventListener')
+    await createDisplayRunner().run(
+      action(),
+      context({ signal: controller.signal, deadline: Date.now() + 5 }),
+    )
+    expect(remove).toHaveBeenCalledWith('abort', expect.any(Function))
+  })
+
+  it('offers manual copying when clipboard permission is denied', async () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockRejectedValue(new Error('Denied')) },
+      configurable: true,
+    })
+    const controller = new AbortController()
+    const ctx = context({ signal: controller.signal })
+    const pending = createDisplayRunner().run(action(), ctx)
+    hostOf(ctx)?.querySelector('button')?.click()
+    await vi.waitFor(() =>
+      expect(hostOf(ctx)?.querySelector('button')?.textContent).toContain('Select the code'),
+    )
+    controller.abort()
+    await pending
+  })
+
   it('gives up when the code expires', async () => {
     const runner = createDisplayRunner()
 
