@@ -9,6 +9,7 @@ import {
   HttpError,
   type ApiErrorPayload,
   type HttpClient,
+  type HttpClientConfig,
 } from '@checkout-kit/core/http'
 import type {
   ActionEvidence,
@@ -26,7 +27,7 @@ import type {
   ProviderContext,
 } from '@checkout-kit/core'
 
-export interface PspConfig {
+export interface PspConfig extends Pick<HttpClientConfig, 'headers' | 'credentials'> {
   /** Root of the PSP API, e.g. `/api` under the app's base path. */
   readonly baseUrl: string
   /** Origin of the access control server that renders the challenge. */
@@ -86,7 +87,12 @@ const toPaymentError = (cause: unknown, fallback: string): PaymentError => {
 
 export const createPspProvider = (
   ctx: ProviderContext<PspConfig>,
-  http: HttpClient = createHttpClient({ baseUrl: ctx.config.baseUrl, fetch: ctx.fetch }),
+  http: HttpClient = createHttpClient({
+    baseUrl: ctx.config.baseUrl,
+    headers: ctx.config.headers,
+    credentials: ctx.config.credentials,
+    fetch: ctx.fetch,
+  }),
 ): PaymentProviderInstance => {
   const toIntent = (dto: PaymentIntentDto): PaymentIntent => ({
     id: dto.id,
@@ -106,7 +112,7 @@ export const createPspProvider = (
     kind: 'redirect',
     purpose: 'authenticate',
     surface: 'iframe',
-    url: `${ctx.config.acsOrigin}/challenge/${challengeId}`,
+    url: `${ctx.config.acsOrigin}/challenge/${encodeURIComponent(challengeId)}`,
     method: 'POST',
     fields: {
       creq: base64url({
@@ -165,6 +171,13 @@ export const createPspProvider = (
       case 'processing':
         return { status: 'processing', intent }
 
+      case 'canceled':
+        return {
+          status: 'error',
+          intent,
+          error: { code: 'canceled', message: 'The payment was canceled.' },
+        }
+
       default:
         return {
           status: 'error',
@@ -215,10 +228,18 @@ export const createPspProvider = (
           : { paymentMethodId: instrument.token }
 
       try {
-        const dto = await http.post<PaymentIntentDto>(
-          `/payment-intents/${intentId}/confirm`,
-          body,
+        const current = await http.get<PaymentIntentDto>(
+          `/payment-intents/${encodeURIComponent(intentId)}`,
           { signal: opts.signal },
+        )
+        if (current.status !== 'requires_payment_method') return toResult(current)
+        const dto = await http.post<PaymentIntentDto>(
+          `/payment-intents/${encodeURIComponent(intentId)}/confirm`,
+          body,
+          {
+            headers: { 'Idempotency-Key': `${opts.idempotencyKey}:confirm:${intentId}` },
+            signal: opts.signal,
+          },
         )
         return toResult(dto)
       } catch (cause) {
@@ -226,7 +247,7 @@ export const createPspProvider = (
       }
     },
 
-    resume: async (_intentId, evidence, opts) => {
+    resume: async (intentId, evidence, opts) => {
       const outcome = outcomeOf(evidence)
       if (!outcome) {
         return {
@@ -242,13 +263,51 @@ export const createPspProvider = (
       }
 
       try {
+        const current = await http.get<PaymentIntentDto>(
+          `/payment-intents/${encodeURIComponent(intentId)}`,
+          { signal: opts.signal },
+        )
+        if (['succeeded', 'processing', 'declined', 'canceled'].includes(current.status))
+          return toResult(current)
+        if (current.nextAction?.three_d_secure.challengeId !== evidence.actionId) {
+          return {
+            status: 'error',
+            error: {
+              code: 'evidence_mismatch',
+              message: 'That authentication belongs to a different payment.',
+            },
+          }
+        }
+        if (evidence.via === 'post_message' && evidence.origin !== ctx.config.acsOrigin) {
+          return {
+            status: 'error',
+            error: {
+              code: 'evidence_mismatch',
+              message: 'Authentication came from an unexpected origin.',
+            },
+          }
+        }
         // The ACS already checked the human's one-time code; only its verdict travels
         // here, and the backend is what actually settles the payment.
         const { paymentIntent } = await http.post<{ paymentIntent: PaymentIntentDto }>(
-          `/3ds/challenge/${evidence.actionId}/complete`,
+          `/3ds/challenge/${encodeURIComponent(evidence.actionId)}/complete`,
           { outcome },
-          { headers: { Accept: 'application/json' }, signal: opts.signal },
+          {
+            headers: {
+              Accept: 'application/json',
+              'Idempotency-Key': `${opts.idempotencyKey}:resume:${intentId}`,
+            },
+            signal: opts.signal,
+          },
         )
+        if (paymentIntent.id !== intentId)
+          return {
+            status: 'error',
+            error: {
+              code: 'evidence_mismatch',
+              message: 'The server returned a different payment.',
+            },
+          }
         return toResult(paymentIntent)
       } catch (cause) {
         return {
@@ -260,21 +319,28 @@ export const createPspProvider = (
 
     getIntent: async (intentId, opts) =>
       toIntent(
-        await http.get<PaymentIntentDto>(`/payment-intents/${intentId}`, {
+        await http.get<PaymentIntentDto>(`/payment-intents/${encodeURIComponent(intentId)}`, {
           signal: opts.signal,
         }),
       ),
 
-    cancel: async (intentId, opts) =>
-      toIntent(
+    cancel: async (intentId, opts) => {
+      const current = await http.get<PaymentIntentDto>(
+        `/payment-intents/${encodeURIComponent(intentId)}`,
+        { signal: opts.signal },
+      )
+      if (['succeeded', 'declined', 'canceled'].includes(current.status)) return toIntent(current)
+      return toIntent(
         await http.post<PaymentIntentDto>(
-          `/payment-intents/${intentId}/cancel`,
+          `/payment-intents/${encodeURIComponent(intentId)}/cancel`,
           {},
           {
             signal: opts.signal,
+            headers: { 'Idempotency-Key': `${opts.idempotencyKey}:cancel:${intentId}` },
           },
         ),
-      ),
+      )
+    },
   }
 }
 

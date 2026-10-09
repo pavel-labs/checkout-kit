@@ -9,7 +9,7 @@
 //
 // None of that reaches the checkout. This file is the whole difference between the two.
 
-import { createHttpClient, type HttpClient } from '@checkout-kit/core/http'
+import { createHttpClient, type HttpClient, type HttpClientConfig } from '@checkout-kit/core/http'
 import type {
   ActionEvidence,
   CallOptions,
@@ -26,7 +26,7 @@ import type {
   ProviderContext,
 } from '@checkout-kit/core'
 
-export interface AcquiringConfig {
+export interface AcquiringConfig extends Pick<HttpClientConfig, 'headers' | 'credentials'> {
   /** Root of the acquirer's REST endpoint. */
   readonly baseUrl: string
   /** Credentials, sent in the body of every request. That is how this protocol works. */
@@ -62,6 +62,10 @@ interface PaymentOrderResponse extends BankResponse {
 }
 
 interface OrderStatusResponse extends BankResponse {
+  /** The merchant proxy includes the active challenge so a reload can bind its evidence. */
+  MD?: string
+  acsUrl?: string
+  paReq?: string
   orderStatus?: number
   actionCode?: number
   actionCodeDescription?: string
@@ -134,6 +138,8 @@ export const createAcquiringProvider = (
   ctx: ProviderContext<AcquiringConfig>,
   http: HttpClient = createHttpClient({
     baseUrl: ctx.config.baseUrl,
+    headers: ctx.config.headers,
+    credentials: ctx.config.credentials,
     // The whole protocol is form-encoded, so it belongs on the client.
     encoding: 'form',
     fetch: ctx.fetch,
@@ -171,7 +177,7 @@ export const createAcquiringProvider = (
     kind: 'redirect',
     purpose: 'authenticate',
     surface: 'iframe',
-    url: `${ctx.config.acsOrigin}${response.acsUrl ?? '/acs/pareq'}`,
+    url: new URL(response.acsUrl ?? '/acs/pareq', ctx.config.acsOrigin).toString(),
     method: 'POST',
     fields: { PaReq: response.paReq ?? '', MD: response.MD ?? '' },
     // The bank calls its return field `TermUrl`. The host fills it in - only it knows the
@@ -185,8 +191,12 @@ export const createAcquiringProvider = (
     },
   })
 
-  const resultFromStatus = async (orderId: string, opts: CallOptions): Promise<PaymentResult> => {
-    const status = await orderStatus(orderId, opts)
+  const resultFromStatus = async (
+    orderId: string,
+    opts: CallOptions,
+    knownStatus?: OrderStatusResponse,
+  ): Promise<PaymentResult> => {
+    const status = knownStatus ?? (await orderStatus(orderId, opts))
     if (isFailure(status)) return { status: 'error', error: toBankError(status) }
 
     const intent = toIntent(orderId, status)
@@ -250,6 +260,7 @@ export const createAcquiringProvider = (
       }
 
       const status = await orderStatus(registered.orderId, opts)
+      if (isFailure(status)) throw new Error(toBankError(status).message)
       return toIntent(registered.orderId, status)
     },
 
@@ -265,6 +276,16 @@ export const createAcquiringProvider = (
       }
 
       try {
+        const current = await orderStatus(intentId, opts)
+        if (isFailure(current)) return { status: 'error', error: toBankError(current) }
+        if (current.orderStatus === 5 && current.MD && current.acsUrl) {
+          return {
+            status: 'requires_action',
+            intent: toIntent(intentId, current),
+            action: toChallengeAction(current),
+          }
+        }
+        if (current.orderStatus !== 0) return await resultFromStatus(intentId, opts, current)
         const response = await call<PaymentOrderResponse>(
           '/rest/paymentorder.do',
           {
@@ -309,6 +330,22 @@ export const createAcquiringProvider = (
       }
 
       try {
+        const current = await orderStatus(intentId, opts)
+        if (isFailure(current)) return { status: 'error', error: toBankError(current) }
+        if ([1, 2, 3, 4, 6].includes(current.orderStatus ?? -1))
+          return await resultFromStatus(intentId, opts, current)
+        if (
+          current.MD !== evidence.actionId ||
+          (evidence.via === 'post_message' && evidence.origin !== ctx.config.acsOrigin)
+        ) {
+          return {
+            status: 'error',
+            error: {
+              code: 'evidence_mismatch',
+              message: 'That authentication belongs to a different payment.',
+            },
+          }
+        }
         // `PaRes` is the bank's signed verdict. Synthesized here from what the browser
         // brought back; a real integration forwards the blob untouched.
         const finished = await call<BankResponse>(
@@ -332,6 +369,9 @@ export const createAcquiringProvider = (
     },
 
     cancel: async (intentId, opts) => {
+      const current = await orderStatus(intentId, opts)
+      if (isFailure(current)) throw new Error(toBankError(current).message)
+      if ([2, 3, 4, 6].includes(current.orderStatus ?? -1)) return toIntent(intentId, current)
       const reversed = await call<BankResponse>('/rest/reverse.do', { orderId: intentId }, opts)
       if (isFailure(reversed)) throw new Error(toBankError(reversed).message)
 

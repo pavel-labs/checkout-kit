@@ -225,14 +225,18 @@ export const createStripeProvider = (
       }
     },
     getIntent: async (id, opts) => toIntent(await read(id, opts)),
-    cancel: async (id, opts) =>
-      toIntent(
+    cancel: async (id, opts) => {
+      const current = await read(id, opts)
+      const intent = toIntent(current)
+      if (['succeeded', 'declined', 'canceled'].includes(intent.status)) return intent
+      return toIntent(
         await http.post<StripePaymentIntent>(
           `${path(id)}/cancel`,
           {},
           options(opts, `cancel:${id}`),
         ),
-      ),
+      )
+    },
   }
 }
 

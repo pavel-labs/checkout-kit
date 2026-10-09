@@ -1,7 +1,7 @@
 // Hosted card fields: the provider renders the inputs in its own frame and hands back a
 // token. This plugin has no way to read a card, which is the point.
 
-import { createHttpClient, type HttpClient } from '@checkout-kit/core/http'
+import { createHttpClient, type HttpClient, type HttpClientConfig } from '@checkout-kit/core/http'
 import type {
   CallOptions,
   CreateIntentInput,
@@ -15,7 +15,7 @@ import type {
   ProviderContext,
 } from '@checkout-kit/core'
 
-export interface HostedFieldsConfig {
+export interface HostedFieldsConfig extends Pick<HttpClientConfig, 'headers' | 'credentials'> {
   readonly baseUrl: string
   /** Where the provider's field frame is served from. */
   readonly fieldsUrl: string
@@ -54,7 +54,12 @@ const capabilities: ProviderCapabilities = {
 
 export const createHostedFieldsProvider = (
   ctx: ProviderContext<HostedFieldsConfig>,
-  http: HttpClient = createHttpClient({ baseUrl: ctx.config.baseUrl, fetch: ctx.fetch }),
+  http: HttpClient = createHttpClient({
+    baseUrl: ctx.config.baseUrl,
+    headers: ctx.config.headers,
+    credentials: ctx.config.credentials,
+    fetch: ctx.fetch,
+  }),
 ): PaymentProviderInstance => {
   const toIntent = (dto: ChargeDto): PaymentIntent => ({
     id: dto.id,
@@ -79,6 +84,12 @@ export const createHostedFieldsProvider = (
           error: dto.error
             ? { code: dto.error.code, message: dto.error.message }
             : { code: 'card_declined', message: 'Your card was declined.' },
+        }
+      case 'canceled':
+        return {
+          status: 'error',
+          intent,
+          error: { code: 'canceled', message: 'The payment was canceled.' },
         }
       default:
         return {
@@ -115,9 +126,13 @@ export const createHostedFieldsProvider = (
       // shopper types, and it has to be the real one.
       let intent: PaymentIntent
       try {
-        intent = toIntent(
-          await http.get<ChargeDto>(`/hosted-fields/charges/${intentId}`, { signal: opts.signal }),
+        const charge = await http.get<ChargeDto>(
+          `/hosted-fields/charges/${encodeURIComponent(intentId)}`,
+          { signal: opts.signal },
         )
+        if (!['requires_payment_method', 'requires_action'].includes(charge.status))
+          return toResult(charge)
+        intent = toIntent(charge)
       } catch (cause) {
         return {
           status: 'error',
@@ -175,8 +190,17 @@ export const createHostedFieldsProvider = (
         }
       }
 
+      if (evidence.origin !== ctx.config.fieldsOrigin)
+        return {
+          status: 'error',
+          error: {
+            code: 'evidence_mismatch',
+            message: 'The fields result came from an unexpected origin.',
+          },
+        }
+
       const token = typeof evidence.data.token === 'string' ? evidence.data.token : ''
-      if (!token) {
+      if (!token.trim()) {
         return {
           status: 'error',
           error: { code: 'missing_token', message: 'The card details produced no token.' },
@@ -184,12 +208,21 @@ export const createHostedFieldsProvider = (
       }
 
       try {
+        const current = await http.get<ChargeDto>(
+          `/hosted-fields/charges/${encodeURIComponent(intentId)}`,
+          { signal: opts.signal },
+        )
+        if (!['requires_payment_method', 'requires_action'].includes(current.status))
+          return toResult(current)
         // The token is exchanged server-side. This page has never held anything else.
         return toResult(
           await http.post<ChargeDto>(
-            `/hosted-fields/charges/${intentId}/pay`,
+            `/hosted-fields/charges/${encodeURIComponent(intentId)}/pay`,
             { token },
-            { signal: opts.signal },
+            {
+              headers: { 'Idempotency-Key': `${opts.idempotencyKey}:pay:${intentId}` },
+              signal: opts.signal,
+            },
           ),
         )
       } catch (cause) {
@@ -205,17 +238,28 @@ export const createHostedFieldsProvider = (
 
     getIntent: async (intentId, opts) =>
       toIntent(
-        await http.get<ChargeDto>(`/hosted-fields/charges/${intentId}`, { signal: opts.signal }),
+        await http.get<ChargeDto>(`/hosted-fields/charges/${encodeURIComponent(intentId)}`, {
+          signal: opts.signal,
+        }),
       ),
 
-    cancel: async (intentId, opts) =>
-      toIntent(
+    cancel: async (intentId, opts) => {
+      const current = await http.get<ChargeDto>(
+        `/hosted-fields/charges/${encodeURIComponent(intentId)}`,
+        { signal: opts.signal },
+      )
+      if (['succeeded', 'declined', 'canceled'].includes(current.status)) return toIntent(current)
+      return toIntent(
         await http.post<ChargeDto>(
-          `/hosted-fields/charges/${intentId}/cancel`,
+          `/hosted-fields/charges/${encodeURIComponent(intentId)}/cancel`,
           {},
-          { signal: opts.signal },
+          {
+            headers: { 'Idempotency-Key': `${opts.idempotencyKey}:cancel:${intentId}` },
+            signal: opts.signal,
+          },
         ),
-      ),
+      )
+    },
   }
 }
 

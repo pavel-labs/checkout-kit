@@ -4,7 +4,7 @@
 // The card behind the wallet still decides the outcome. A wallet is a way of presenting a
 // card, not of avoiding one.
 
-import { createHttpClient, type HttpClient } from '@checkout-kit/core/http'
+import { createHttpClient, type HttpClient, type HttpClientConfig } from '@checkout-kit/core/http'
 import type {
   CallOptions,
   CreateIntentInput,
@@ -18,7 +18,7 @@ import type {
   ProviderContext,
 } from '@checkout-kit/core'
 
-export interface WalletConfig {
+export interface WalletConfig extends Pick<HttpClientConfig, 'headers' | 'credentials'> {
   readonly baseUrl: string
   /** Key of the SDK adapter the host registered for this wallet. */
   readonly sdk: string
@@ -61,7 +61,12 @@ const capabilities: ProviderCapabilities = {
 
 export const createWalletProvider = (
   ctx: ProviderContext<WalletConfig>,
-  http: HttpClient = createHttpClient({ baseUrl: ctx.config.baseUrl, fetch: ctx.fetch }),
+  http: HttpClient = createHttpClient({
+    baseUrl: ctx.config.baseUrl,
+    headers: ctx.config.headers,
+    credentials: ctx.config.credentials,
+    fetch: ctx.fetch,
+  }),
 ): PaymentProviderInstance => {
   const toIntent = (dto: WalletChargeDto): PaymentIntent => ({
     id: dto.id,
@@ -86,6 +91,12 @@ export const createWalletProvider = (
           error: dto.error
             ? { code: dto.error.code, message: dto.error.message }
             : { code: 'card_declined', message: 'Your card was declined.' },
+        }
+      case 'canceled':
+        return {
+          status: 'error',
+          intent,
+          error: { code: 'canceled', message: 'The payment was canceled.' },
         }
       default:
         return {
@@ -118,9 +129,15 @@ export const createWalletProvider = (
       }
 
       try {
-        const charge = await http.get<WalletChargeDto>(`/wallet/charges/${intentId}`, {
-          signal: opts.signal,
-        })
+        const charge = await http.get<WalletChargeDto>(
+          `/wallet/charges/${encodeURIComponent(intentId)}`,
+          {
+            signal: opts.signal,
+          },
+        )
+
+        if (!['requires_payment_method', 'requires_action'].includes(charge.status))
+          return toResult(charge)
 
         return {
           status: 'requires_action',
@@ -181,8 +198,15 @@ export const createWalletProvider = (
         }
       }
 
-      const payload = evidence.payload as { walletToken?: string } | null
-      if (!payload?.walletToken) {
+      const payload = evidence.payload
+      const walletToken =
+        payload &&
+        typeof payload === 'object' &&
+        'walletToken' in payload &&
+        typeof payload.walletToken === 'string'
+          ? payload.walletToken
+          : ''
+      if (!walletToken.trim()) {
         return {
           status: 'error',
           error: { code: 'missing_wallet_token', message: 'The wallet returned no payment token.' },
@@ -190,11 +214,20 @@ export const createWalletProvider = (
       }
 
       try {
+        const current = await http.get<WalletChargeDto>(
+          `/wallet/charges/${encodeURIComponent(intentId)}`,
+          { signal: opts.signal },
+        )
+        if (!['requires_payment_method', 'requires_action'].includes(current.status))
+          return toResult(current)
         return toResult(
           await http.post<WalletChargeDto>(
-            `/wallet/charges/${intentId}/pay`,
-            { walletToken: payload.walletToken },
-            { signal: opts.signal },
+            `/wallet/charges/${encodeURIComponent(intentId)}/pay`,
+            { walletToken },
+            {
+              headers: { 'Idempotency-Key': `${opts.idempotencyKey}:pay:${intentId}` },
+              signal: opts.signal,
+            },
           ),
         )
       } catch (cause) {
@@ -210,17 +243,28 @@ export const createWalletProvider = (
 
     getIntent: async (intentId, opts) =>
       toIntent(
-        await http.get<WalletChargeDto>(`/wallet/charges/${intentId}`, { signal: opts.signal }),
+        await http.get<WalletChargeDto>(`/wallet/charges/${encodeURIComponent(intentId)}`, {
+          signal: opts.signal,
+        }),
       ),
 
-    cancel: async (intentId, opts) =>
-      toIntent(
+    cancel: async (intentId, opts) => {
+      const current = await http.get<WalletChargeDto>(
+        `/wallet/charges/${encodeURIComponent(intentId)}`,
+        { signal: opts.signal },
+      )
+      if (['succeeded', 'declined', 'canceled'].includes(current.status)) return toIntent(current)
+      return toIntent(
         await http.post<WalletChargeDto>(
-          `/wallet/charges/${intentId}/cancel`,
+          `/wallet/charges/${encodeURIComponent(intentId)}/cancel`,
           {},
-          { signal: opts.signal },
+          {
+            headers: { 'Idempotency-Key': `${opts.idempotencyKey}:cancel:${intentId}` },
+            signal: opts.signal,
+          },
         ),
-      ),
+      )
+    },
   }
 }
 
