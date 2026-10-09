@@ -185,6 +185,7 @@ jobs:
   ui:
     name: UI (desktop, Android, iOS and 320px)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -196,6 +197,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium and WebKit
+        timeout-minutes: 5
         run: npx playwright install --with-deps chromium webkit
       - name: Check component accessibility, keyboard behavior and responsive layouts
         run: npm run test:ui
