@@ -7,28 +7,19 @@
 
 ## Сколько весит
 
-Собрано, минифицировано, gzip — на момент этого коммита:
+Измерение собранных корневых entry points от 2026-10-09: bundle/minify через esbuild, затем gzip. Все root exports включены; peers (React, core, SDK) external и не входят в строку. Приложение может tree-shake exports; измеряйте и его итоговый bundle.
 
-| Пакет                           | gzip       |
-| ------------------------------- | ---------- |
-| `@checkout-kit/core`            | 7.2 кБ     |
-| `@checkout-kit/runtime-browser` | 3.7 кБ     |
-| `@checkout-kit/react`           | 1.1 кБ     |
-| `@checkout-kit/ui` (JS)         | 1.2 кБ     |
-| `@checkout-kit/ui/styles.css`   | 1.4 кБ     |
-| плагин                          | 1.3–2.6 кБ |
+| Package | gzip |
+| --- | --- |
+| `@checkout-kit/core` | 6.8 KiB |
+| `@checkout-kit/runtime-browser` | 3.2 KiB |
+| `@checkout-kit/react` | 1.0 KiB |
+| `@checkout-kit/ui` (root JS) | 9.1 KiB |
+| `@checkout-kit/ui/styles.css` (all imports) | 6.2 KiB |
+| Provider root | 1.0–1.9 KiB |
+| `@checkout-kit/webview-bridge` root | 2.1 KiB |
 
-То есть чекаут с одним провайдером — примерно 14 кБ JavaScript плюс 1.4 кБ CSS, каждый
-следующий провайдер добавляет около 1.5 кБ. Рантайм-зависимостей нет нигде: у всех пакетов
-`dependencies` пустые, а то, что им нужно друг от друга и от React, — peer-зависимости.
-
-Держится это на двух вещах, и обе стоит беречь:
-
-- **Плагины загружаются, а не импортируются.** `load: () => import('@checkout-kit/provider-x')`
-  кладёт каждый в свой чанк, и покупатель скачивает того провайдера, которым платит. `eager:
-true` нужен только провайдеру по умолчанию.
-- **Набор не рисует QR и не тащит иконки.** Провайдер, который использует QR, возвращает URL
-  картинки. Именно поэтому здесь нет кодировщика.
+Dynamic imports загружают выбранного провайдера. React, Stripe.js, Adyen Web и QR encoder не включены в набор. См. [каталог](./packages.md).
 
 ## Рендер на сервере
 

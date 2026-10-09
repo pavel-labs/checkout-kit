@@ -70,104 +70,320 @@ const apiSidebar = (): DefaultTheme.SidebarItem[] => {
 
 const guideSidebar = (): DefaultTheme.SidebarItem[] => [
   {
-    text: 'Start here',
-    items: [
-      { text: 'Getting started', link: '/getting-started' },
-      { text: 'Architecture', link: '/architecture' },
-      { text: 'Adopting it', link: '/adopting' },
-      { text: 'The UI kit', link: '/ui' },
-    ],
+    "text": "Start here",
+    "items": [
+      {
+        "text": "Getting started",
+        "link": "/getting-started"
+      },
+      {
+        "text": "Choose your packages",
+        "link": "/packages"
+      },
+      {
+        "text": "Architecture",
+        "link": "/architecture"
+      }
+    ]
   },
   {
-    text: 'Using the plugins',
-    items: [
-      { text: 'Which one do I need?', link: '/plugins/' },
-      { text: 'Setting up your environment', link: '/plugins/setup' },
-      { text: 'Card processor', link: '/plugins/psp' },
-      { text: 'Acquiring bank', link: '/plugins/acquiring' },
-      { text: 'Hosted payment page', link: '/plugins/hosted-page' },
-      { text: 'Hosted card fields', link: '/plugins/hosted-fields' },
-      { text: 'Wallet', link: '/plugins/wallet' },
-      { text: 'Bank transfer', link: '/plugins/bank-transfer' },
-    ],
+    "text": "Connect a provider",
+    "items": [
+      {
+        "text": "Stripe",
+        "link": "/providers/stripe"
+      },
+      {
+        "text": "Adyen",
+        "link": "/providers/adyen"
+      },
+      {
+        "text": "PayPal",
+        "link": "/providers/paypal"
+      },
+      {
+        "text": "Merchant server",
+        "link": "/merchant-integration"
+      }
+    ]
   },
   {
-    text: 'Building an integration',
-    items: [
-      { text: 'Writing a payment plugin', link: '/plugin-authoring' },
-      { text: 'The backend a plugin talks to', link: '/backend' },
-      { text: 'Real providers, mapped', link: '/real-world-providers' },
-      { text: 'Integration recipes', link: '/integrations' },
-    ],
+    "text": "Build the checkout",
+    "items": [
+      {
+        "text": "React",
+        "link": "/react"
+      },
+      {
+        "text": "UI kit",
+        "link": "/ui"
+      },
+      {
+        "text": "Runtime and recovery",
+        "link": "/runtime"
+      },
+      {
+        "text": "WebView and native commands",
+        "link": "/webview"
+      },
+      {
+        "text": "Adopting an existing checkout",
+        "link": "/adopting"
+      }
+    ]
   },
   {
-    text: 'Providers by region',
-    collapsed: false,
-    items: [
-      { text: 'Europe', link: '/providers/europe' },
-      { text: 'Americas', link: '/providers/americas' },
-      { text: 'Asia', link: '/providers/asia' },
-    ],
+    "text": "Verify and extend",
+    "items": [
+      {
+        "text": "Testing and conformance",
+        "link": "/testing"
+      },
+      {
+        "text": "Troubleshooting",
+        "link": "/troubleshooting"
+      },
+      {
+        "text": "Write a provider",
+        "link": "/plugin-authoring"
+      },
+      {
+        "text": "Backend contracts",
+        "link": "/backend"
+      },
+      {
+        "text": "Iframes and 3DS",
+        "link": "/iframe"
+      },
+      {
+        "text": "Security headers",
+        "link": "/security-headers"
+      }
+    ]
   },
   {
-    text: 'Running it safely',
-    items: [
-      { text: 'Iframes and 3-D Secure', link: '/iframe' },
-      { text: 'Security headers', link: '/security-headers' },
-      { text: 'In a WebView', link: '/webview' },
-    ],
+    "text": "Reference protocols",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Choose a protocol",
+        "link": "/plugins/"
+      },
+      {
+        "text": "Simulator environment",
+        "link": "/plugins/setup"
+      },
+      {
+        "text": "JSON PSP",
+        "link": "/plugins/psp"
+      },
+      {
+        "text": "Form acquiring",
+        "link": "/plugins/acquiring"
+      },
+      {
+        "text": "Hosted page",
+        "link": "/plugins/hosted-page"
+      },
+      {
+        "text": "Hosted fields",
+        "link": "/plugins/hosted-fields"
+      },
+      {
+        "text": "Wallet SDK",
+        "link": "/plugins/wallet"
+      },
+      {
+        "text": "Bank transfer",
+        "link": "/plugins/bank-transfer"
+      }
+    ]
   },
+  {
+    "text": "Integration design examples",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Provider mappings",
+        "link": "/real-world-providers"
+      },
+      {
+        "text": "Integration recipes",
+        "link": "/integrations"
+      },
+      {
+        "text": "Europe",
+        "link": "/providers/europe"
+      },
+      {
+        "text": "Americas",
+        "link": "/providers/americas"
+      },
+      {
+        "text": "Asia",
+        "link": "/providers/asia"
+      }
+    ]
+  }
 ]
 
 const ruSidebar = (): DefaultTheme.SidebarItem[] => [
   {
-    text: 'Начало',
-    items: [
-      { text: 'Быстрый старт', link: '/ru/getting-started' },
-      { text: 'Архитектура', link: '/ru/architecture' },
-      { text: 'Как внедрить', link: '/ru/adopting' },
-      { text: 'UI-кит', link: '/ru/ui' },
-    ],
+    "text": "Начало",
+    "items": [
+      {
+        "text": "Быстрый старт",
+        "link": "/ru/getting-started"
+      },
+      {
+        "text": "Каталог пакетов",
+        "link": "/ru/packages"
+      },
+      {
+        "text": "Архитектура",
+        "link": "/ru/architecture"
+      }
+    ]
   },
   {
-    text: 'Как пользоваться плагинами',
-    items: [
-      { text: 'Какой мне нужен?', link: '/ru/plugins/' },
-      { text: 'Настройка окружения', link: '/ru/plugins/setup' },
-      { text: 'Карточный процессинг', link: '/ru/plugins/psp' },
-      { text: 'Банк-эквайер', link: '/ru/plugins/acquiring' },
-      { text: 'Платёжная страница банка', link: '/ru/plugins/hosted-page' },
-      { text: 'Хостед-поля', link: '/ru/plugins/hosted-fields' },
-      { text: 'Кошелёк', link: '/ru/plugins/wallet' },
-      { text: 'Банковский перевод', link: '/ru/plugins/bank-transfer' },
-    ],
+    "text": "Подключение провайдера",
+    "items": [
+      {
+        "text": "Stripe",
+        "link": "/ru/providers/stripe"
+      },
+      {
+        "text": "Adyen",
+        "link": "/ru/providers/adyen"
+      },
+      {
+        "text": "PayPal",
+        "link": "/ru/providers/paypal"
+      },
+      {
+        "text": "Сервер мерчанта",
+        "link": "/ru/merchant-integration"
+      }
+    ]
   },
   {
-    text: 'Своя интеграция',
-    items: [
-      { text: 'Как написать плагин', link: '/ru/plugin-authoring' },
-      { text: 'Бэкенд для плагина', link: '/ru/backend' },
-      { text: 'Настоящие провайдеры', link: '/ru/real-world-providers' },
-      { text: 'Рецепты интеграций', link: '/ru/integrations' },
-    ],
+    "text": "Интерфейс чекаута",
+    "items": [
+      {
+        "text": "React",
+        "link": "/ru/react"
+      },
+      {
+        "text": "UI-кит",
+        "link": "/ru/ui"
+      },
+      {
+        "text": "Runtime и восстановление",
+        "link": "/ru/runtime"
+      },
+      {
+        "text": "WebView и нативные команды",
+        "link": "/ru/webview"
+      },
+      {
+        "text": "Внедрение в свой чекаут",
+        "link": "/ru/adopting"
+      }
+    ]
   },
   {
-    text: 'Провайдеры по регионам',
-    collapsed: false,
-    items: [
-      { text: 'Европа', link: '/ru/providers/europe' },
-      { text: 'Америки', link: '/ru/providers/americas' },
-      { text: 'Азия', link: '/ru/providers/asia' },
-    ],
+    "text": "Проверка и расширение",
+    "items": [
+      {
+        "text": "Тестирование и conformance",
+        "link": "/ru/testing"
+      },
+      {
+        "text": "Решение проблем",
+        "link": "/ru/troubleshooting"
+      },
+      {
+        "text": "Свой провайдер",
+        "link": "/ru/plugin-authoring"
+      },
+      {
+        "text": "Контракты бэкенда",
+        "link": "/ru/backend"
+      },
+      {
+        "text": "Iframe и 3DS",
+        "link": "/ru/iframe"
+      },
+      {
+        "text": "Заголовки безопасности",
+        "link": "/ru/security-headers"
+      }
+    ]
   },
   {
-    text: 'Безопасность',
-    items: [
-      { text: 'Iframe и 3-D Secure', link: '/ru/iframe' },
-      { text: 'Заголовки безопасности', link: '/ru/security-headers' },
-      { text: 'В WebView', link: '/ru/webview' },
-    ],
+    "text": "Референсные протоколы",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Выбор протокола",
+        "link": "/ru/plugins/"
+      },
+      {
+        "text": "Окружение симулятора",
+        "link": "/ru/plugins/setup"
+      },
+      {
+        "text": "JSON PSP",
+        "link": "/ru/plugins/psp"
+      },
+      {
+        "text": "Form-эквайер",
+        "link": "/ru/plugins/acquiring"
+      },
+      {
+        "text": "Платёжная страница",
+        "link": "/ru/plugins/hosted-page"
+      },
+      {
+        "text": "Хостед-поля",
+        "link": "/ru/plugins/hosted-fields"
+      },
+      {
+        "text": "SDK кошелька",
+        "link": "/ru/plugins/wallet"
+      },
+      {
+        "text": "Банковский перевод",
+        "link": "/ru/plugins/bank-transfer"
+      }
+    ]
   },
+  {
+    "text": "Примеры проектирования",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Сопоставление протоколов",
+        "link": "/ru/real-world-providers"
+      },
+      {
+        "text": "Рецепты интеграций",
+        "link": "/ru/integrations"
+      },
+      {
+        "text": "Европа",
+        "link": "/ru/providers/europe"
+      },
+      {
+        "text": "Америки",
+        "link": "/ru/providers/americas"
+      },
+      {
+        "text": "Азия",
+        "link": "/ru/providers/asia"
+      }
+    ]
+  }
 ]
 
 export default defineConfig({
@@ -178,7 +394,7 @@ export default defineConfig({
 
   // The demo is served from the same site but built separately - there is no page here for
   // the link checker to find.
-  ignoreDeadLinks: [/^\/demo\/?$/],
+  ignoreDeadLinks: [/^\/demo\/(?:index(?:\.html)?)?$/],
 
   markdown: {
     config(md) {
@@ -199,6 +415,10 @@ export default defineConfig({
 
           if (fromDocsRoot.startsWith('../')) {
             const inRepo = fromDocsRoot.replace(/^(\.\.\/)+/, '')
+            const target = inRepo.split(/[?#]/)[0]
+            if (!target || !existsSync(join(here, '../..', decodeURIComponent(target)))) {
+              throw new Error('Missing repository link in ' + String(env.relativePath) + ': ' + href)
+            }
             tokens[idx].attrSet('href', `${REPO}/blob/main/${inRepo}`)
             tokens[idx].attrSet('target', '_blank')
             tokens[idx].attrSet('rel', 'noreferrer')
@@ -218,7 +438,7 @@ export default defineConfig({
       'meta',
       {
         property: 'og:description',
-        content: 'An embeddable checkout. Every payment integration behind it is a plugin.',
+        content: 'Headless checkout engine, provider adapters, browser runners and native hosts.',
       },
     ],
   ],
@@ -233,10 +453,11 @@ export default defineConfig({
     root: {
       label: 'English',
       lang: 'en',
-      description: 'An embeddable checkout. Every payment integration behind it is a plugin.',
+      description: 'Headless checkout engine, provider adapters, browser runners and native hosts.',
       themeConfig: {
         nav: [
-          { text: 'Guide', link: '/architecture', activeMatch: '^/(?!ru/|api/)' },
+          { text: 'Guide', link: '/getting-started', activeMatch: '^/(?!ru/|api/)' },
+          { text: 'Packages', link: '/packages' },
           { text: 'API', link: '/api/', activeMatch: '^/api/' },
           { text: 'Demo', link: DEMO },
         ],
@@ -249,7 +470,7 @@ export default defineConfig({
           text: 'Edit this page on GitHub',
         },
         footer: {
-          message: 'Apache-2.0. Nothing here has taken a real payment yet.',
+          message: 'Apache-2.0 · Headless engine, provider adapters and runnable examples.',
           copyright: `© ${new Date().getFullYear()} pavel-labs`,
         },
       },
@@ -259,10 +480,11 @@ export default defineConfig({
       label: 'Русский',
       lang: 'ru',
       link: '/ru/',
-      description: 'Встраиваемый чекаут. Каждая платёжная интеграция за ним — плагин.',
+      description: 'Headless-движок чекаута, адаптеры провайдеров и браузерные/нативные хосты.',
       themeConfig: {
         nav: [
-          { text: 'Руководство', link: '/ru/architecture', activeMatch: '^/ru/' },
+          { text: 'Руководство', link: '/ru/getting-started', activeMatch: '^/ru/' },
+          { text: 'Пакеты', link: '/ru/packages' },
           { text: 'API', link: '/api/' },
           { text: 'Демо', link: DEMO },
         ],
@@ -272,7 +494,7 @@ export default defineConfig({
           text: 'Править эту страницу на GitHub',
         },
         footer: {
-          message: 'Apache-2.0. Ни один настоящий платёж через это ещё не прошёл.',
+          message: 'Apache-2.0 · Headless-движок, адаптеры провайдеров и запускаемые примеры.',
           copyright: `© ${new Date().getFullYear()} pavel-labs`,
         },
         docFooter: { prev: 'Назад', next: 'Дальше' },

@@ -189,7 +189,7 @@ would sooner or later disagree about whether the shopper was charged.
 
 ## What is left out on purpose
 
-**No `capture` or `refund`.** The contract has no verb for them and no screen shows them.
+**No separate `capture` or `refund` command.** PayPal captures inside confirm/resume. Manual capture, refunds and fulfillment need a merchant workflow outside this client engine.
 
 **No `authorized` or `refunded` status.** The acquiring bank reports both. They are mapped to
 `processing` and `canceled`. That loses information on purpose: the domain speaks its own
@@ -198,8 +198,7 @@ vocabulary, not the bank's.
 **No sandbox around plugin code.** A plugin runs with the page's full rights. Trusting a
 plugin means trusting its code.
 
-**No webhooks and no server.** There is no backend to receive them. `poll` covers payments
-that settle later.
+**The core does not receive webhooks.** [The merchant example](./merchant-integration.md) calls three provider APIs and verifies Adyen notifications. The server persists payment truth and reconciles after browser closure; client polling updates the active checkout.
 
 ## Two loose ends in the vocabulary
 

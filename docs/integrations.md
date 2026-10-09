@@ -1,5 +1,9 @@
 # Integrating a real payment SDK
 
+::: info Integration design examples
+This page describes possible adaptations. Shipped Stripe, Adyen, PayPal packages and support boundaries are listed in [the catalog](./packages.md). Regional names here do not imply shipped integrations.
+:::
+
 > Русская версия: [ru/integrations.md](./ru/integrations.md)
 
 How each popular provider maps onto the contract, in one place so they can be compared. Read

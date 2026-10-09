@@ -8,31 +8,19 @@ browsers does it drop.
 
 ## How big is it
 
-Built, minified and gzipped, as of this commit:
+Built root entry points measured on 2026-10-09: bundle/minify with esbuild, then gzip. All root exports are included; peers (React, core, SDKs) are external and excluded from each row. A consumer may tree-shake unused exports; measure its final bundle too.
 
-| Package                         | gzipped    |
-| ------------------------------- | ---------- |
-| `@checkout-kit/core`            | 7.2 kB     |
-| `@checkout-kit/runtime-browser` | 3.7 kB     |
-| `@checkout-kit/react`           | 1.1 kB     |
-| `@checkout-kit/ui` (JS)         | 1.2 kB     |
-| `@checkout-kit/ui/styles.css`   | 1.4 kB     |
-| a plugin                        | 1.3–2.6 kB |
+| Package | gzip |
+| --- | --- |
+| `@checkout-kit/core` | 6.8 KiB |
+| `@checkout-kit/runtime-browser` | 3.2 KiB |
+| `@checkout-kit/react` | 1.0 KiB |
+| `@checkout-kit/ui` (root JS) | 9.1 KiB |
+| `@checkout-kit/ui/styles.css` (all imports) | 6.2 KiB |
+| Provider root | 1.0–1.9 KiB |
+| `@checkout-kit/webview-bridge` root | 2.1 KiB |
 
-So a checkout with one provider is roughly 22 kB of JavaScript plus 6 kB of CSS, and every
-further provider adds about 1.5 kB. The kit grew when it gained the accessible fields, the
-card inputs and the state screens; that is most of a checkout, and it is still less than a
-single icon font. There are no runtime dependencies anywhere: every package
-declares an empty `dependencies`, and what they need from each other and from React is a peer
-dependency.
-
-Two things keep it that way, and both are worth preserving:
-
-- **Plugins are loaded, not imported.** `load: () => import('@checkout-kit/provider-x')` puts
-  each one in its own chunk, so a shopper downloads the provider they are paying with. Only
-  the default one needs `eager: true`.
-- **The kit renders no QR codes and bundles no icons.** A provider that uses QR returns an
-  image URL. That decision is why there is no encoder in here.
+Dynamic imports load the selected provider. React, Stripe.js, Adyen Web and QR encoders are not bundled by the kit. See [the catalog](./packages.md).
 
 ## Server rendering
 
@@ -110,8 +98,7 @@ If you need translated messages, branch on `PaymentError.code` and fall back to 
 when you do not recognise the code. That is what `code` is for, and it is why errors here are
 data rather than exception classes.
 
-Nothing formats money for you either. `intent.amount` is in minor units and `intent.currency`
-is an ISO code, which is everything `Intl.NumberFormat` needs.
+Use `formatMoney` from core or `Money` from UI for the currency's fraction digits. `intent.amount` is in minor units; see [the UI guide](./ui.md).
 
 ## Browsers
 

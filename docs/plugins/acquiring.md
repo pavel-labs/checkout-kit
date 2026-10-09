@@ -1,108 +1,69 @@
-# Acquiring bank
+# Form acquiring
 
-> Русская версия: [ru/plugins/acquiring.md](../ru/plugins/acquiring.md)
+> [Русская версия](../ru/plugins/acquiring.md)
 
-`@checkout-kit/provider-acquiring` — id `acquiring`
+Reference adapter for **3-D Secure 1 redirect, iframe or top window**. Provider id: `acquiring`. Instruments: **card**.
 
-A direct, host-to-host connection to a bank's own acquiring system. These are older than the
-JSON providers and they show it: form-encoded bodies, credentials repeated in every request,
-numeric status codes, and 3-D Secure 1 rather than 2.
+This package implements checkout-kit's example merchant protocol. It is useful as an executable integration template and with `@checkout-kit/testing/backend`; it is not a certified adapter for a named bank or payment network. For Stripe, Adyen and PayPal, use their dedicated provider packages.
 
-**Pick this one when** you have a contract with a bank directly rather than through a payment
-provider — common in Eastern Europe, Central Asia and with national banks generally.
+## Configure
 
-It exists in this repository mostly to prove a point: this is about as unlike the
-[card processor](./psp.md) as two card integrations get, and none of the difference reaches your
-code.
-
-## What is different about it
-
-Worth knowing before you debug it, because it surprises people:
-
-- **A declined card arrives as a successful HTTP request.** 200 OK, with a status field saying
-  it failed. The plugin turns that into a normal decline for you.
-- **Statuses are numbers.** `orderStatus: 2` means paid. `actionCode` says why a card was
-  refused.
-- **Starting a payment takes two round trips**, not one: register the order, then send the card.
-- **Credentials go in the body of every call**, not in a header. That is how the protocol works.
-- **3-D Secure 1**, which means a form is POSTed to the bank with a `PaReq` blob, instead of the
-  small JSON challenge version 2 uses.
-
-## What the shopper sees
-
-Exactly what they see with the card processor: they type a card, and either it is done or a
-frame appears with the bank's confirmation screen. The differences above are all below the
-waterline.
-
-## Setting it up
+Follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html) for package archives or registry setup.
 
 ```ts
+import { defineProvider } from '@checkout-kit/core'
 import type { AcquiringConfig } from '@checkout-kit/provider-acquiring'
 
-const acquiring: AcquiringConfig = {
-  // Your backend, which holds the bank credentials and proxies to it.
+const config: AcquiringConfig = {
   baseUrl: '/acquiring',
-  userName: 'issued-by-the-bank',
-  password: 'issued-by-the-bank',
-  acsOrigin: 'https://acs.yourbank.example',
+  userName: 'demo-api',
+  password: 'demo',
+  acsOrigin: 'https://acs.example.com',
 }
 
-defineProvider({
+const provider = defineProvider({
   id: 'acquiring',
-  config: acquiring,
-  // Lazy: a shopper who never picks this one never downloads it.
+  config: { ...config, credentials: 'include' },
   load: () => import('@checkout-kit/provider-acquiring'),
 })
+// Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-::: warning Those credentials are not for the browser
-`userName` and `password` here are for the _hop between your server and the bank_. Point
-`baseUrl` at your own backend and let it add the real ones. If you put a bank credential in a
-front-end bundle, it is public.
-:::
+`baseUrl` is your merchant API. Optional `headers` carry merchant session or CSRF headers; `credentials` controls cookies. Keep payment-service secrets on the server. The host supplies the browser runtime, return URL and any SDK adapter.
 
-Paying is identical to the card processor — same `instrument`, same call.
+## Merchant API
 
-## What your backend must provide
+Paths below are relative to `baseUrl`. Authenticate the shopper, resolve price from `planId`, verify order ownership, and enforce allowed state transitions on the server. Monetary amounts are integers in the currency's minor units.
 
-Your server proxies to the bank's REST endpoints, form-encoded:
+| Method | Path                              | Contract                                                                 |
+| ------ | --------------------------------- | ------------------------------------------------------------------------ |
+| POST   | `/rest/register.do`               | Form `{ planId, orderNumber, currency, amount }`; return `{ orderId }`.  |
+| POST   | `/rest/getOrderStatusExtended.do` | Form `{ orderId }`; return verified numeric status and active challenge. |
+| POST   | `/rest/paymentorder.do`           | Form `{ MDORDER, $PAN, $EXPIRY, $CVC }`; return result or challenge.     |
+| POST   | `/rest/finish3ds.do`              | Form `{ MD, PaRes }`; finish authentication.                             |
+| POST   | `/rest/reverse.do`                | Form `{ orderId }`; cancel an unfinished order.                          |
 
-| Call                                   | What it does                                         |
-| -------------------------------------- | ---------------------------------------------------- |
-| `POST /rest/register.do`               | registers the order and gets an order id             |
-| `POST /rest/paymentorder.do`           | sends the card; answers paid, refused, or 3-D Secure |
-| `POST /rest/finish3ds.do`              | finishes the confirmation                            |
-| `POST /rest/getOrderStatusExtended.do` | reads the order                                      |
-| `POST /rest/reverse.do`                | cancels it                                           |
+All requests are form-encoded and include `userName` / `password`. The shown credentials belong only to the simulator. A browser integration must point at a merchant proxy that injects real credentials server-side and validates the request. Never put real acquirer credentials in this config.
 
-If you have seen a bank integration of this family before, these names will look familiar —
-that is the point.
+Status responses include `errorCode`, `orderStatus`, `amount`, `currency` and optional issuer error fields. While `orderStatus === 5`, the proxy must also include the active `MD`, `acsUrl` and `paReq`, bound to that order; the adapter uses them to recover a challenge after reload and reject another order's evidence. Numeric currencies supported by this example are USD/840, EUR/978 and GBP/826.
 
-## Trying it
+The demo synthesizes `PaRes` from a test verdict. A real acquirer requires its authenticated, signed result and its own supported protocol; implement that exchange on your server. Do not forward the demo verdict as proof of payment.
 
-`npm run dev:mock` and `npm run dev:bank`, then pick "Acquiring bank" in the demo. The same
-test cards as everywhere else. The bank simulator serves the 3-D Secure 1 flow for this one, so
-you can watch the `PaReq` form post rather than a JSON challenge.
+## Retries and verification
 
-## What can go wrong
+The adapter reads the authoritative order before reopening payment, spending another token or canceling. Successful, declined and canceled orders retain their outcome; processing orders continue to be polled. A retry after a lost reply checks the same order before issuing another mutation.
 
-**Everything returns "success" and the payment never completes.** You are reading the HTTP
-status instead of the body's status field. The plugin handles this; a hand-rolled integration
-usually does not, first time.
+Creation uses `orderNumber` in the form body for idempotency. Your proxy must make confirmation and authentication settlement atomic for each order; the simulated acquirer is a protocol fixture, not a production gateway.
 
-**The frame is empty.** `acsOrigin` mismatch, same as with the card processor.
+Run this package's contract and regression tests from the repository:
 
-**A number appears in an error message.** `actionCode` reached the shopper. Branch on
-`PaymentError.code` for your own wording — but keep the issuer's `message` available, because
-that is what the shopper repeats to their bank.
+```sh
+npm ci
+npm test -- packages/provider-acquiring
+```
 
-## What it declares
+[Provider guide](https://pavel-labs.github.io/checkout-kit/plugins/acquiring.html) · [Architecture](https://pavel-labs.github.io/checkout-kit/architecture.html)
 
-|                |                    |
-| -------------- | ------------------ |
-| instruments    | `card`             |
-| actions        | `redirect`         |
-| surfaces       | `iframe`, `top`    |
-| authentication | none, 3-D Secure 1 |
-| cancel         | yes                |
-| polling        | yes                |
+## Run and verify
+
+Run `npm run dev:mock` plus `npm run dev:bank`, or use [the site demo](/demo/). This is a reference merchant protocol, not a named-bank integration. [Environment](./setup.md), [runtime](../runtime.md) and [testing](../testing.md) cover mounts, recovery and contract verification.

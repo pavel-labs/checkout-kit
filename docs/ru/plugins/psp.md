@@ -1,141 +1,50 @@
-# Карточный процессинг
+# JSON PSP
 
-> English version: [plugins/psp.md](../../plugins/psp.md)
+> [English](../../plugins/psp.md)
 
-`@checkout-kit/provider-psp` — id `psp`
+`@checkout-kit/provider-psp` — исполняемый референсный протокол API мерчанта и симулятора. Сам по себе он не подключается к конкретному банку.
 
-Форма, которую использует большинство современных провайдеров: JSON-API, заголовок
-идемпотентности и 3-D Secure 2 в виде небольшого челленджа во фрейме на вашей странице. Stripe,
-Checkout.com, Mollie и Adyen работают примерно так.
+## Поток и граница
 
-**Берите этот, если** провайдер даёт JSON-API, вы готовы рисовать поля карты сами и хотите,
-чтобы подтверждение банка появлялось внутри вашего чекаута, а не уводило покупателя.
+JSON API, saved tokens и 3DS2 challenge. Evidence содержит текущий challengeId, transStatus и точный ACS origin.
 
-## Что видит покупатель
+Цена, владелец и результат определяются сервером. Проверка адаптера до мутации сохраняет конечный результат; сервер обеспечивает переходы и идемпотентность атомарно. Cancel не переписывает paid, повтор confirm/resume не создаёт второе списание.
 
-1. Вводит карту на вашей странице и жмёт «Оплатить».
-2. Чаще всего на этом всё — одобрение или отказ, прямо здесь.
-3. Иногда банк хочет сначала поговорить. Появляется небольшой фрейм с экраном самого банка —
-   код по SMS, подтверждение в приложении. Покупатель заканчивает, фрейм закрывается, платёж
-   завершается.
-
-Со страницы он никуда не уходит.
-
-## Как подключить
+## Регистрация
 
 ```ts
-import { createCheckout, defineProvider } from '@checkout-kit/core'
-import { createBrowserRuntime } from '@checkout-kit/runtime-browser'
+import { defineProvider } from '@checkout-kit/core'
 import type { PspConfig } from '@checkout-kit/provider-psp'
 
-const psp: PspConfig = {
-  // Ваш бэкенд, не провайдер. Секретный ключ в браузер не попадает.
-  baseUrl: '/api',
-  // Origin, с которого отдаётся экран подтверждения банка. Сообщения откуда-либо ещё
-  // игнорируются — именно это не даёт чужой странице сделать вид, что платёж прошёл.
-  acsOrigin: 'https://acs.yourbank.example',
-}
+const config: PspConfig = { baseUrl: '/api', acsOrigin: 'https://acs.example.com' }
 
-const runtime = createBrowserRuntime({
-  returnPath: '/payment/return',
-  // Скринридер зачитает это, когда фрейм появится, — скажите, что это.
-  redirect: { frameTitle: () => 'Подтверждение 3-D Secure' },
+const provider = defineProvider({
+  id: 'psp',
+  config: { ...config, credentials: 'include' },
+  load: () => import('@checkout-kit/provider-psp'),
 })
-
-export const checkout = createCheckout({
-  providers: [
-    defineProvider({
-      id: 'psp',
-      config: psp,
-      load: () => import('@checkout-kit/provider-psp'),
-      eager: true,
-    }),
-  ],
-  defaultProviderId: 'psp',
-  runners: runtime.runners,
-  storage: runtime.storage,
-  returnUrl: runtime.returnUrl,
-})
+// Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-### Оплата
+Config type регистрирует id в TypeScript; динамический import загружает реализацию. Подключите runners, storage и return URL, как в [React](../react.md) или [runtime](../runtime.md). Для видимой поверхности нужен mount.
 
-```ts
-await engine.pay({
-  input: { planId: 'monthly' },
-  instrument: {
-    kind: 'card',
-    number: createBranded('4242424242424242'),
-    exp: createBranded('12/30'),
-    cvc: createBranded('123'),
-    holder: 'A Shopper',
-  },
-  // Один ключ на попытку. Если та же отправка каким-то образом дойдёт до провайдера
-  // дважды, он ответит первым платежом, а не создаст второй.
-  idempotencyKey: crypto.randomUUID(),
-})
-```
+## Точный HTTP-контракт
 
-Этот плагин принимает и карту, сохранённую раньше. В браузере лежит id, а не номер:
+Маршруты, fields и ключи ниже совпадают с [README пакета](../../../packages/provider-psp/README.md); protocol names сохранены в исходной форме:
 
-```ts
-instrument: { kind: 'token', token: 'pm_1234', last4: '4242', scheme: 'visa' }
-```
+| Method | Path                           | Contract                                                      |
+| ------ | ------------------------------ | ------------------------------------------------------------- |
+| POST   | `/payment-intents`             | Create from `{ planId }`; return an intent.                   |
+| GET    | `/payment-intents/:id`         | Authoritative intent, including its active challenge.         |
+| POST   | `/payment-intents/:id/confirm` | `{ cardNumber }` or `{ paymentMethodId }`; return the intent. |
+| POST   | `/3ds/challenge/:id/complete`  | Mock `{ outcome }`; return `{ paymentIntent }`.               |
+| POST   | `/payment-intents/:id/cancel`  | Cancel an unfinished intent.                                  |
 
-## Что должен уметь ваш бэкенд
 
-Четыре эндпоинта под `baseUrl`. Секретный ключ провайдера держит ваш сервер, он же переводит:
+Все шесть reference configs поддерживают credentials и headers API мерчанта. Повтор операции сохраняет прежний ключ. После reload сервер возвращает состояние и активное действие.
 
-| Вызов                                    | Что делает                                              |
-| ---------------------------------------- | ------------------------------------------------------- |
-| `POST /payment-intents`                  | открывает платёж на сумму                               |
-| `POST /payment-intents/:id/confirm`      | отправляет карту или токен; отвечает статусом или шагом |
-| `GET  /payment-intents/:id`              | читает текущее состояние                                |
-| `POST /payment-intents/:id/cancel`       | отменяет                                                |
-| `POST /3ds/challenge/:actionId/complete` | завершает подтверждение банка                           |
+## Проверка
 
-Заголовок `idempotency-key` пробрасывается на записи. Передайте его дальше провайдеру — именно
-это делает повтор безопасным.
+Запустите `npm run dev:mock` / `npm run dev:bank` либо [демо сайта](/demo/). Проверьте success, decline, action, processing, retry и чужое evidence. [Conformance](../testing.md) проверяет контракт без account credentials.
 
-**Сумму решает ваш сервер, она не приходит из браузера.** Браузер говорит, какой план выбран;
-цена берётся на сервере. См. [Бэкенд, с которым говорит плагин](../backend.md).
-
-## Как попробовать
-
-```bash
-npm run dev:mock   # чекаут
-npm run dev:bank   # банк, на своём https-origin
-```
-
-Дальше `4242 4242 4242 4242` для одобрения и `4000 0025 0000 3155` для карты, которая просит
-подтверждение и проходит. Одноразовый код в симуляторе — `1234`.
-
-Банк запускается отдельно намеренно: фрейм подтверждения по-настоящему кросс-доменный, поэтому
-в DevTools видно реальную картину безопасности — `frame-ancestors`, куки `SameSite=None` и
-проверку `event.origin`, которой управляет `acsOrigin` выше.
-
-## Что может пойти не так
-
-**Фрейм появился, и ничего не происходит.** `acsOrigin` не совпадает с origin, который реально
-отдаёт экран банка, поэтому его сообщение игнорируется. Это origin — схема, хост и порт, без
-пути.
-
-**Платёж прошёл, а приложение об этом не узнало.** Подтверждение завершилось после того, как
-покупатель закрыл вкладку. `engine.hydrate()` на вашем возвратном роуте это подхватывает; без
-него платёж может завершиться в банке и потеряться у вас.
-
-**Повтор списал дважды.** Ваш бэкенд не пробрасывает `idempotency-key` провайдеру.
-
-## Что он объявляет
-
-Движок использует это, чтобы решить, что рисовать и что разрешать, — но никогда чтобы управлять
-потоком.
-
-|                |                                     |
-| -------------- | ----------------------------------- |
-| инструменты    | `card`, `token`                     |
-| действия       | `redirect`                          |
-| поверхности    | `iframe`, `top`                     |
-| аутентификация | нет, 3-D Secure 2                   |
-| отмена         | да                                  |
-| поллинг        | да — часть одобрений приходит позже |
+[Окружение](./setup.md) · [Восстановление](../runtime.md) · [Каталог](../packages.md)

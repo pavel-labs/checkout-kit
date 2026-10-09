@@ -1,106 +1,55 @@
-# Банк-эквайер
+# Form-эквайер
 
-> English version: [plugins/acquiring.md](../../plugins/acquiring.md)
+> [English](../../plugins/acquiring.md)
 
-`@checkout-kit/provider-acquiring` — id `acquiring`
+`@checkout-kit/provider-acquiring` — исполняемый референсный протокол API мерчанта и симулятора. Сам по себе он не подключается к конкретному банку.
 
-Прямое host-to-host соединение с эквайринговой системой банка. Такие старше JSON-провайдеров, и
-это видно: form-encoded тела, учётные данные в каждом запросе, числовые статусы и 3-D Secure 1
-вместо 2.
+## Поток и граница
 
-**Берите этот, если** у вас договор напрямую с банком, а не через платёжного провайдера — обычное
-дело в Восточной Европе, Центральной Азии и с национальными банками вообще.
+Form API, numeric statuses, 3DS1 PaReq/PaRes. Браузер обращается к merchant proxy с demo credentials; реальные bank passwords остаются на сервере. USD/EUR/GBP поддержаны; status возвращает активные MD/acsUrl/paReq. Симулятор PaRes не является проверкой подписи настоящего банка.
 
-В этом репозитории он существует в основном чтобы доказать тезис: сложно придумать две карточные
-интеграции, более непохожие, чем этот и [карточный процессинг](./psp.md), — и ни одно из отличий
-не доходит до вашего кода.
+Цена, владелец и результат определяются сервером. Проверка адаптера до мутации сохраняет конечный результат; сервер обеспечивает переходы и идемпотентность атомарно. Cancel не переписывает paid, повтор confirm/resume не создаёт второе списание.
 
-## Чем он отличается
-
-Стоит знать до того, как начнёте его отлаживать, потому что это удивляет:
-
-- **Отказ по карте приходит как успешный HTTP-запрос.** 200 OK, а в теле поле статуса, что не
-  прошло. Плагин превращает это в обычный отказ.
-- **Статусы — числа.** `orderStatus: 2` значит оплачено. `actionCode` говорит, почему карту не
-  приняли.
-- **Старт платежа — два похода**, а не один: зарегистрировать заказ, потом отправить карту.
-- **Учётные данные идут в теле каждого вызова**, не в заголовке. Так устроен протокол.
-- **3-D Secure 1**: в банк POST-ится форма с блобом `PaReq` вместо компактного JSON-челленджа,
-  как во второй версии.
-
-## Что видит покупатель
-
-Ровно то же, что и с карточным процессингом: вводит карту, и либо готово, либо появляется фрейм
-с экраном подтверждения банка. Все отличия выше — ниже ватерлинии.
-
-## Как подключить
+## Регистрация
 
 ```ts
+import { defineProvider } from '@checkout-kit/core'
 import type { AcquiringConfig } from '@checkout-kit/provider-acquiring'
 
-const acquiring: AcquiringConfig = {
-  // Ваш бэкенд, который держит банковские данные и проксирует в банк.
+const config: AcquiringConfig = {
   baseUrl: '/acquiring',
-  userName: 'выдаётся банком',
-  password: 'выдаётся банком',
-  acsOrigin: 'https://acs.yourbank.example',
+  userName: 'demo-api',
+  password: 'demo',
+  acsOrigin: 'https://acs.example.com',
 }
 
-defineProvider({
+const provider = defineProvider({
   id: 'acquiring',
-  config: acquiring,
-  // Лениво: кто не выберет этот способ, тот его и не скачает.
+  config: { ...config, credentials: 'include' },
   load: () => import('@checkout-kit/provider-acquiring'),
 })
+// Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-::: warning Эти учётные данные не для браузера
-`userName` и `password` здесь — для _участка между вашим сервером и банком_. Направьте `baseUrl`
-на собственный бэкенд и дайте ему подставлять настоящие. Банковский секрет во фронтенд-бандле —
-это публичный секрет.
-:::
+Config type регистрирует id в TypeScript; динамический import загружает реализацию. Подключите runners, storage и return URL, как в [React](../react.md) или [runtime](../runtime.md). Для видимой поверхности нужен mount.
 
-Оплата идентична карточному процессингу — тот же `instrument`, тот же вызов.
+## Точный HTTP-контракт
 
-## Что должен уметь ваш бэкенд
+Маршруты, fields и ключи ниже совпадают с [README пакета](../../../packages/provider-acquiring/README.md); protocol names сохранены в исходной форме:
 
-Ваш сервер проксирует в REST-эндпоинты банка, form-encoded:
+| Method | Path                              | Contract                                                                 |
+| ------ | --------------------------------- | ------------------------------------------------------------------------ |
+| POST   | `/rest/register.do`               | Form `{ planId, orderNumber, currency, amount }`; return `{ orderId }`.  |
+| POST   | `/rest/getOrderStatusExtended.do` | Form `{ orderId }`; return verified numeric status and active challenge. |
+| POST   | `/rest/paymentorder.do`           | Form `{ MDORDER, $PAN, $EXPIRY, $CVC }`; return result or challenge.     |
+| POST   | `/rest/finish3ds.do`              | Form `{ MD, PaRes }`; finish authentication.                             |
+| POST   | `/rest/reverse.do`                | Form `{ orderId }`; cancel an unfinished order.                          |
 
-| Вызов                                  | Что делает                                                 |
-| -------------------------------------- | ---------------------------------------------------------- |
-| `POST /rest/register.do`               | регистрирует заказ и получает его id                       |
-| `POST /rest/paymentorder.do`           | отправляет карту; отвечает оплатой, отказом или 3-D Secure |
-| `POST /rest/finish3ds.do`              | завершает подтверждение                                    |
-| `POST /rest/getOrderStatusExtended.do` | читает заказ                                               |
-| `POST /rest/reverse.do`                | отменяет                                                   |
 
-Если вы видели банковскую интеграцию этого семейства, названия покажутся знакомыми — в этом и
-смысл.
+Все шесть reference configs поддерживают credentials и headers API мерчанта. Повтор операции сохраняет прежний ключ. После reload сервер возвращает состояние и активное действие.
 
-## Как попробовать
+## Проверка
 
-`npm run dev:mock` и `npm run dev:bank`, затем выберите «Acquiring bank» в демо. Карты те же,
-что и везде. Симулятор банка отдаёт для него сценарий 3-D Secure 1, так что можно посмотреть на
-POST формы с `PaReq`, а не на JSON-челлендж.
+Запустите `npm run dev:mock` / `npm run dev:bank` либо [демо сайта](/demo/). Проверьте success, decline, action, processing, retry и чужое evidence. [Conformance](../testing.md) проверяет контракт без account credentials.
 
-## Что может пойти не так
-
-**Всё возвращает «успех», а платёж не завершается.** Вы читаете HTTP-статус вместо поля статуса
-в теле. Плагин это учитывает; самописная интеграция с первого раза — обычно нет.
-
-**Фрейм пустой.** Несовпадение `acsOrigin`, как и в карточном процессинге.
-
-**В сообщении об ошибке появилось число.** До покупателя дошёл `actionCode`. Ветвитесь по
-`PaymentError.code` для своих формулировок — но сохраняйте `message` от банка: именно его
-покупатель повторит в разговоре со своим банком.
-
-## Что он объявляет
-
-|                |                   |
-| -------------- | ----------------- |
-| инструменты    | `card`            |
-| действия       | `redirect`        |
-| поверхности    | `iframe`, `top`   |
-| аутентификация | нет, 3-D Secure 1 |
-| отмена         | да                |
-| поллинг        | да                |
+[Окружение](./setup.md) · [Восстановление](../runtime.md) · [Каталог](../packages.md)

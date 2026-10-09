@@ -7,6 +7,8 @@ The application supplies the order, collects a payment instrument using the prov
 and renders any requested action. The merchant API owns prices, credentials and payment truth.
 The core handles attempts, retries, cancellation, polling and redirect recovery.
 
+Browse the [English documentation](https://pavel-labs.github.io/checkout-kit/) or [русскую документацию](https://pavel-labs.github.io/checkout-kit/ru/). Start with the [package catalog](https://pavel-labs.github.io/checkout-kit/packages.html), then follow provider, React, recovery and merchant-server guides.
+
 ## Try a complete checkout
 
 Requires Node.js 24 and npm.

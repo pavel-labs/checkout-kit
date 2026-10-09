@@ -1,127 +1,65 @@
-# Hosted card fields
+# Hosted fields
 
-> Русская версия: [ru/plugins/hosted-fields.md](../ru/plugins/hosted-fields.md)
+> [Русская версия](../ru/plugins/hosted-fields.md)
 
-`@checkout-kit/provider-hosted-fields` — id `hostedfields`
+Reference adapter for **provider fields, inline iframe**. Provider id: `hostedfields`. Instruments: **none**.
 
-The card inputs are drawn by the provider, inside their own frame, sitting inside your checkout.
-The shopper types into that frame; you get back a token. The card never touches your page.
+This package implements checkout-kit's example merchant protocol. It is useful as an executable integration template and with `@checkout-kit/testing/backend`; it is not a certified adapter for a named bank or payment network. For Stripe, Adyen and PayPal, use their dedicated provider packages.
 
-**Pick this one when** you want the shopper to stay on your site — unlike the
-[hosted payment page](./hosted-page.md) — but you do not want the card in your DOM. It is the
-usual middle ground, and what Stripe Elements and Braintree Hosted Fields are.
+## Configure
 
-## What the shopper sees
-
-A card form, in your layout, that looks like part of your checkout. They will not notice the
-frame. They type, they press Pay, and it completes.
-
-## What is actually happening
-
-```text
-your page                          the provider's origin
-┌────────────────────────┐
-│  Card number  ┌───────────────┐
-│               │  their frame  │  ← the shopper types in here
-│               └───────────────┘
-│                        │   │
-│   Pay  ────────────────┼───┘  a token comes back by postMessage
-└────────────────────────┘
-```
-
-Your JavaScript cannot read inside that frame. **That is the entire point** — it is what keeps
-your page out of the card's path, and it is also why you cannot validate the number yourself or
-prefill it.
-
-## Setting it up
+Follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html) for package archives or registry setup.
 
 ```ts
+import { defineProvider } from '@checkout-kit/core'
 import type { HostedFieldsConfig } from '@checkout-kit/provider-hosted-fields'
 
-const hostedFields: HostedFieldsConfig = {
+const config: HostedFieldsConfig = {
   baseUrl: '/api',
-  // Where the provider serves the field frame from.
-  fieldsUrl: 'https://fields.yourprovider.example/v1/fields',
-  // Its origin. A message from anywhere else is ignored - this is the check that stops
-  // another page claiming to be the card form.
-  fieldsOrigin: 'https://fields.yourprovider.example',
+  fieldsUrl: 'https://fields.example.com/card',
+  fieldsOrigin: 'https://fields.example.com',
 }
 
-const runtime = createBrowserRuntime({
-  returnPath: '/payment/return',
-  collectFields: { frameTitle: () => 'Card details' },
-})
-
-defineProvider({
+const provider = defineProvider({
   id: 'hostedfields',
-  config: hostedFields,
+  config: { ...config, credentials: 'include' },
   load: () => import('@checkout-kit/provider-hosted-fields'),
 })
+// Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-### Rendering it
+`baseUrl` is your merchant API. Optional `headers` carry merchant session or CSRF headers; `credentials` controls cookies. Keep payment-service secrets on the server. The host supplies the browser runtime, return URL and any SDK adapter.
 
-The frame needs somewhere to go. It draws inline, in the form, where card fields would be:
+## Merchant API
 
-```tsx
-{
-  action?.surface === 'inline' ? (
-    <ActionFrame variant="inline">
-      <PaymentActionHost onSettled={settle} className="ck-action-host" />
-    </ActionFrame>
-  ) : null
-}
+Paths below are relative to `baseUrl`. Authenticate the shopper, resolve price from `planId`, verify order ownership, and enforce allowed state transitions on the server. Monetary amounts are integers in the currency's minor units.
+
+| Method | Path                                | Contract                                               |
+| ------ | ----------------------------------- | ------------------------------------------------------ |
+| POST   | `/hosted-fields/charges`            | `{ planId }`; return a charge.                         |
+| GET    | `/hosted-fields/charges/:id`        | Authoritative charge.                                  |
+| POST   | `/hosted-fields/charges/:id/pay`    | `{ token }`; exchange the opaque token on your server. |
+| POST   | `/hosted-fields/charges/:id/cancel` | Cancel an unfinished charge.                           |
+
+Intent/order/charge responses include `{ id, amount, currency, status, error? }`. Statuses use checkout-kit's `PaymentStatus`; declines may include `{ code?, message }` in `error`.
+
+The provider frame receives `actionId` and `fields` query parameters. It answers with a `ck-fields-token` postMessage containing that `actionId` and a nonempty opaque `token`. The runtime checks the frame sender and exact origin; the adapter also checks the origin and payment id. The server must verify token ownership and usage.
+
+## Retries and verification
+
+The adapter reads the authoritative order before reopening payment, spending another token or canceling. Successful, declined and canceled orders retain their outcome; processing orders continue to be polled. A retry after a lost reply checks the same order before issuing another mutation.
+
+Creation forwards `CallOptions.idempotencyKey` as `Idempotency-Key`. Mutations scope it with an operation and intent id (`:confirm:`, `:resume:`, `:pay:`, `:code:` or `:cancel:` as applicable). Your backend must honor the key and reject a changed payload under the same key; sending a header alone cannot guarantee a single charge.
+
+Run this package's contract and regression tests from the repository:
+
+```sh
+npm ci
+npm test -- packages/provider-hosted-fields
 ```
 
-### Paying
+[Provider guide](https://pavel-labs.github.io/checkout-kit/plugins/hosted-fields.html) · [Architecture](https://pavel-labs.github.io/checkout-kit/architecture.html)
 
-Nothing is passed in — the token is produced inside the frame and arrives as evidence:
+## Run and verify
 
-```ts
-await engine.pay({
-  input: { planId: 'monthly' },
-  instrument: { kind: 'none' },
-  idempotencyKey: crypto.randomUUID(),
-})
-```
-
-Do not render your own card fields for this provider. Check `capabilities.instruments` as on the
-[hosted page](./hosted-page.md#paying).
-
-## What your backend must provide
-
-| Call                                     | What it does                         |
-| ---------------------------------------- | ------------------------------------ |
-| `POST /hosted-fields/charges`            | opens a charge and a field session   |
-| `POST /hosted-fields/charges/:id/pay`    | charges the token the frame produced |
-| `GET  /hosted-fields/charges/:id`        | reads the outcome                    |
-| `POST /hosted-fields/charges/:id/cancel` | gives up on it                       |
-
-## Trying it
-
-`npm run dev:mock`, then pick "Hosted fields". The demo serves the frame from its own origin,
-because a browser-only mock cannot serve a second one — in production `fieldsOrigin` is genuinely
-somebody else's domain, and that difference is the whole security model.
-
-## What can go wrong
-
-**The frame loads but Pay does nothing.** `fieldsOrigin` does not match the origin serving
-`fieldsUrl`, so the token message is being dropped. It is an origin, not a URL — no path.
-
-**You want to validate the card before submitting.** You cannot, and should not try. The frame
-reports validity; anything your page could read, an attacker's script on your page could read
-too.
-
-**The frame is the wrong height.** `ActionFrame` has three variants. `inline` is right for
-fields; `content` sizes itself, and `challenge` is for a full bank screen.
-
-## What it declares
-
-|                |                                                       |
-| -------------- | ----------------------------------------------------- |
-| instruments    | `none` — the token comes from the frame, not from you |
-| actions        | `collect_fields`                                      |
-| surfaces       | `inline`                                              |
-| authentication | none, 3-D Secure 2                                    |
-| cancel         | yes                                                   |
-| polling        | yes                                                   |
+Run `npm run dev:mock` plus `npm run dev:bank`, or use [the site demo](/demo/). This is a reference merchant protocol, not a named-bank integration. [Environment](./setup.md), [runtime](../runtime.md) and [testing](../testing.md) cover mounts, recovery and contract verification.

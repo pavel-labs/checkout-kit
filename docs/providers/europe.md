@@ -1,5 +1,9 @@
 # Europe: providers and banks
 
+::: info Integration design examples
+This page describes possible adaptations. Shipped Stripe, Adyen, PayPal packages and support boundaries are listed in [the catalog](../packages.md). Regional names here do not imply shipped integrations.
+:::
+
 > Русская версия: [ru/providers/europe.md](../ru/providers/europe.md)
 
 Read [Real providers, mapped onto the contract](../real-world-providers.md) first. It

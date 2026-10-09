@@ -1,66 +1,89 @@
 ---
-layout: home
-
-hero:
-  name: Checkout kit
-  text: Один чекаут, любой провайдер
-  tagline: Встраиваемый чекаут, где каждая платёжная интеграция — плагин. Ядро не знает, что такое 3-D Secure.
-  actions:
-    - theme: brand
-      text: Быстрый старт
-      link: /ru/getting-started
-    - theme: alt
-      text: Написать плагин
-      link: /ru/plugin-authoring
-    - theme: alt
-      text: Живое демо
-      link: /demo/
-
-features:
-  - title: Провайдер — это плагин
-    details: 'За одним движком и одним UI уже живут шесть разных форм интеграции: JSON-PSP, эквайер на form-urlencoded, платёжная страница банка, хостед-поля, SDK кошелька и перевод по QR. Седьмая — это новый пакет, а не новая ветка в ядре.'
-    link: /ru/architecture
-    linkText: Как устроен цикл
-  - title: DOM ваш
-    details: Не кросс-доменный iframe, который темизируется по фиксированной схеме. Настоящие элементы на вашей странице, в каскадном слое checkout, — ваш CSS выигрывает без войны специфичности.
-    link: /ru/ui
-    linkText: UI-кит
-  - title: Контракт — это тест
-    details: 'Каждый плагин обязан пройти запускаемый conformance-набор: инструменты точны в обе стороны, идемпотентность действительно повторяет ответ, поддельные evidence отвергаются, данные карты не утекают в ответах.'
-    link: /ru/plugin-authoring
-    linkText: Как написать плагин
-  - title: Работает там, где живут чекауты
-    details: 'Мост для WebView в нативном приложении, и все решения о раскладке — container-запросы, а не про вьюпорт: один и тот же чекаут на всю страницу, в 360px WebView и внутри iframe мерчанта.'
-    link: /ru/webview
-    linkText: В WebView
+{
+  "layout": "home",
+  "hero": {
+    "name": "Checkout kit",
+    "text": "Платёжный цикл под вашим контролем",
+    "tagline": "Headless-движок, Stripe / Adyen / PayPal, браузерные и нативные хосты. Ваш интерфейс и API мерчанта.",
+    "actions": [
+      {
+        "theme": "brand",
+        "text": "Собрать чекаут",
+        "link": "/ru/getting-started"
+      },
+      {
+        "theme": "alt",
+        "text": "Выбрать пакеты",
+        "link": "/ru/packages"
+      },
+      {
+        "theme": "alt",
+        "text": "Попробовать демо",
+        "link": "/demo/"
+      }
+    ]
+  },
+  "features": [
+    {
+      "title": "Три конкретных адаптера",
+      "details": "PaymentIntents, Adyen Advanced flow и PayPal Orders с точными контрактами мерчанта и запускаемым HTTP-сервером.",
+      "link": "/ru/packages#named-provider-adapters",
+      "linkText": "Открыть руководство"
+    },
+    {
+      "title": "Ваш платёжный интерфейс",
+      "details": "React bindings и необязательный UI. Свои раскладки и SDK провайдеров для сбора инструмента.",
+      "link": "/ru/react",
+      "linkText": "Открыть руководство"
+    },
+    {
+      "title": "Восстановление и повторы",
+      "details": "Сохранение попытки при redirect/потере ответа и проверка прежней оплаты перед новым списанием.",
+      "link": "/ru/runtime",
+      "linkText": "Открыть руководство"
+    },
+    {
+      "title": "Нативный хост",
+      "details": "Typed WebView sessions, проверка сообщений, безопасные команды и возврат по deep link.",
+      "link": "/ru/webview",
+      "linkText": "Открыть руководство"
+    },
+    {
+      "title": "Исполняемые контракты",
+      "details": "Fixtures, браузерные сценарии, replay оплаты, чужое evidence и отдельная установка архивов.",
+      "link": "/ru/testing",
+      "linkText": "Открыть руководство"
+    },
+    {
+      "title": "16 пакетов",
+      "details": "Движок и адаптер; host/UI/test по необходимости, шесть референсных протоколов для своей интеграции.",
+      "link": "/ru/packages",
+      "linkText": "Открыть руководство"
+    }
+  ]
+}
 ---
 
-## Одна идея
+## Начните с работающего сценария
 
-Любая интеграция — это один и тот же цикл:
+~~~sh
+npm ci
+npm run dev:integration
+~~~
 
-```text
-createIntent → confirm(instrument) → [ action → run → evidence → resume ]* → terminal
-```
+В [репозитории](https://github.com/pavel-labs/checkout-kit) это запускает React checkout и merchant server с локальными симуляторами без account keys. [Быстрый старт](./getting-started.md) ведёт к установке архивов и sandbox провайдера.
 
-Между карточным процессингом, банком, платёжной страницей, хостед-полями, кошельком и QR-кодом
-различаются только две вещи: **какое действие вернул провайдер** и **какой раннер его исполняет**.
-Это проверено, а не заявлено: один Playwright-спек, не называющий ни одного провайдера, гоняется
-по всем шести.
+## Выберите путь
 
-| Интеграция           | инструмент | первое действие              | завершается через |
-| -------------------- | ---------- | ---------------------------- | ----------------- |
-| Карточный процессинг | `card`     | `redirect` во фрейм          | `post_message`    |
-| Банк-эквайер         | `card`     | `redirect` с `PaReq`         | `post_message`    |
-| Платёжная страница   | `none`     | `redirect` на всё окно       | `return_url`      |
-| Хостед-поля          | `none`     | `collect_fields` во фрейме   | `post_message`    |
-| Кошелёк              | `none`     | `sdk_handoff` в чужой скрипт | `sdk_callback`    |
-| Мгновенный перевод   | `none`     | `display` QR или кода        | `poll`            |
+| Задача | Инструкция |
+| --- | --- |
+| Stripe / Adyen / PayPal | [Stripe](./providers/stripe.md), [Adyen](./providers/adyen.md), [PayPal](./providers/paypal.md). |
+| Свой React-интерфейс | [React](./react.md), [UI](./ui.md), [runtime](./runtime.md). |
+| Другой PSP или банк | [Референсы](./plugins/index.md), [контракт](./plugin-authoring.md), [тестирование](./testing.md). |
+| Нативное приложение | [WebView](./webview.md) и пример хоста. |
 
-## Статус
+## Один цикл, явные границы
 
-Пакеты Stripe, Adyen и PayPal доступны вместе с шестью референсными протоколами.
-`npm run dev:integration` запускает локальную интеграцию, `npm run pack:packages` собирает
-устанавливаемые архивы. [Быстрый старт](./getting-started.md) описывает установку, поля SDK
-и сервер мерчанта. Тесты используют fixtures и явно обозначенные симуляторы; проверка живого
-sandbox требует ключей вашего аккаунта. Публикация в реестр — отдельное действие владельца.
+Engine создаёт intent, подтверждает инструмент, выполняет actions и проверяет результат. Провайдер отвечает за протокол, runner за поверхность, мерчант за цену, покупателя и состояние оплаты.
+
+Все 16 пакетов имеют ESM-архивы, декларации, API и тесты. Общие референсы не являются сертификацией банков. Account sandbox и registry publishing — отдельные шаги. [Сервер](./merchant-integration.md) описывает обязанности, [решение проблем](./troubleshooting.md) помогает при сбое.

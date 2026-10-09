@@ -1,85 +1,99 @@
 # Быстрый старт
 
-> English version: [getting-started.md](../getting-started.md)
+> [English](../getting-started.md)
 
-Checkout kit управляет общим жизненным циклом оплаты. SDK провайдера собирает платёжные
-данные, а ваш сервер проверяет результат. Можно использовать только headless-движок,
-добавить браузерные раннеры или собрать React-экран с необязательным UI-пакетом.
+Запустите полный сценарий, затем подключите тот же клиент к API мерчанта. Движок управляет попытками, действиями и восстановлением; SDK собирает инструмент, а сервер проверяет оплату.
 
-## Запуск
+## Полный локальный сценарий
 
-Клонируйте репозиторий и используйте Node.js 24:
+Нужны Node.js 24 и npm:
 
-```bash
+~~~sh
+git clone https://github.com/pavel-labs/checkout-kit.git
+cd checkout-kit
 npm ci
 npm run dev:integration
-```
+~~~
 
-Откройте `http://localhost:5173` и выберите Stripe, Adyen или PayPal. Для Stripe/Adyen доступны
-`pm_mock_approve`, `pm_mock_decline`, `pm_mock_challenge` и `pm_mock_processing`.
-PayPal открывает локальную страницу подтверждения. При редиректе страница уничтожается и
-создаётся заново; движок восстанавливает незавершённую оплату перед показом результата.
+Откройте `http://localhost:5173`. Команда запускает React и HTTP-сервер мерчанта в явном режиме **локального симулятора**, без ключей аккаунтов. Выберите Stripe, Adyen или PayPal. Цена определяется сервером по `planId`.
 
-Это явно обозначенный симулятор протоколов. Для официальных sandbox API и полей SDK
-прочитайте [руководство серверного примера](../../examples/server/README.md). Настраивайте
-ключи только нужных провайдеров: секретные — на сервере, публичные клиентские — в браузере.
+| Сценарий | Mock-инструмент Stripe / Adyen | PayPal |
+| --- | --- | --- |
+| Оплачено | `pm_mock_approve` | Подтвердите на локальной странице. |
+| Отказ | `pm_mock_decline` | Выберите отказ на локальной странице. |
+| Challenge / redirect | `pm_mock_challenge` | Подтверждение уводит со страницы и возвращает. |
+| Обработка | `pm_mock_processing` | Pending capture проверяется fixtures. |
 
-## Установка пакетов
+Обновите страницу возврата для проверки восстановления. Callback передаёт evidence; результат определяет API мерчанта. Mock-идентификаторы используются только в этом режиме.
 
-```bash
+[Демо сайта](/demo/) проверяет шесть референсных протоколов через MSW в браузере. Локальный пример выше проверяет три конкретных адаптера через HTTP-сервер. См. [тестирование](./testing.md).
+
+## Установка архивов {#install-package-archives}
+
+До публикации версии в реестр соберите архивы либо скачайте `checkout-kit-packages` успешного [CI](https://github.com/pavel-labs/checkout-kit/actions/workflows/ci.yml):
+
+~~~sh
 npm run pack:packages
-npm run verify:consumer
-```
+~~~
 
-Первая команда создаёт архивы `.tgz` в `artifacts/packages`. Вторая независимо собирает и
-устанавливает все пакеты в новый проект, проверяет строгий TypeScript, импорты в Node,
-серверный рендеринг React и платёжный цикл. Успешные запуски CI также содержат архив
-`checkout-kit-packages`.
+Архивы и integrity manifest появятся в `artifacts/packages`. В React-приложении установите выбранные пакеты и peers вместе, заменив путь/версию:
 
-Установите в своё приложение архивы core, browser runtime и выбранного провайдера одной
-командой. Если используете React и UI, добавьте их архивы вместе с peer-пакетами: тогда npm
-не придётся искать ещё не выпущенные checkout-kit пакеты в реестре.
-[Releasing](../../RELEASING.md) описывает версии и настроенный выпуск в GitHub Packages.
+~~~sh
+npm install \
+  ../checkout-kit/artifacts/packages/checkout-kit-core-0.0.0.tgz \
+  ../checkout-kit/artifacts/packages/checkout-kit-runtime-browser-0.0.0.tgz \
+  ../checkout-kit/artifacts/packages/checkout-kit-provider-paypal-0.0.0.tgz \
+  ../checkout-kit/artifacts/packages/checkout-kit-react-0.0.0.tgz \
+  ../checkout-kit/artifacts/packages/checkout-kit-ui-0.0.0.tgz \
+  react@^19 react-dom@^19
+~~~
 
-## Подключение API мерчанта
 
-| Провайдер | Инструмент                                                                | Настройка SDK и точные маршруты сервера                  |
-| --------- | ------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Stripe    | `token`: PaymentMethod id из Stripe.js                                    | [Пакет Stripe](../../packages/provider-stripe/README.md) |
-| Adyen     | `wallet`: `state.data` компонента Adyen, либо `token` сохранённого метода | [Пакет Adyen](../../packages/provider-adyen/README.md)   |
-| PayPal    | `none`: подтверждение на странице PayPal                                  | [Пакет PayPal](../../packages/provider-paypal/README.md) |
+Пакеты — ESM с декларациями. [Каталог](./packages.md) описывает все 16. Без React нужны core, runtime и провайдер. [Releasing](../../RELEASING.md) описывает реестр и версии.
 
-Зарегистрируйте провайдера через `defineProvider`, его тип конфига и динамический импорт.
-Браузерный runtime предоставляет раннеры, session storage и URL возврата. Передайте в
-`engine.pay()` известный серверу plan id и платёжный инструмент. В React отрисуйте
-`PaymentActionHost`; в headless-хосте вызовите `runPendingAction()` и предоставьте mount
-для видимых действий. [React-пример](../../examples/react/App.tsx) и
-[headless-пример](../../examples/providers/usage.ts) показывают оба варианта.
+## Подключение приложения {#connect-your-app}
 
-## Попытки и восстановление
+Скопируйте два проверяемых модуля из [React-гайда](./react.md#complete-example), затем восстановите попытку в браузерном корне:
 
-- Сохраняйте ключ идемпотентности при повторе прерванной попытки. Потерянный ответ может
-  скрывать успешный платёж; преждевременная смена ключа создаёт другой заказ.
-- После отказа или отмены можно начать новую попытку. Движок создаёт новый intent.
-- Таймаут обработки означает неопределённый результат. Следующий `pay()` проверяет
-  прежний intent через polling перед созданием другой оплаты.
-- На маршруте возврата вызывайте `hydrate(runtime.readReturnParams())`. При временной
-  недоступности API сохраняйте маршрут и параметры, затем повторите восстановление.
-- `reset()` очищает локальное состояние. `abort()` запрашивает отмену, но провайдер мог уже
-  принять оплату; ориентируйтесь на его подтверждённый статус.
-- Выдавайте товар по проверенному состоянию сервера, включая webhook или серверную
-  сверку, когда покупатель закрыл браузер.
+~~~tsx
+import { createRoot } from 'react-dom/client'
+import { createPayPalCheckout } from './quickstart-engine'
+import { PayPalCheckout } from './quickstart'
 
-Серверный пример проверяет цену, принадлежность заказа сессии, ключи идемпотентности и HMAC
-уведомлений Adyen. Хранилище в памяти и демонстрационный cookie заменяются базой данных
-приложения и аутентифицированным покупателем.
+const { engine, runtime, pay } = createPayPalCheckout('http://localhost:4000', '/payment/return')
+await engine.hydrate(runtime.readReturnParams())
+const root = document.getElementById('root')
+if (!root) throw new Error('Missing checkout root')
+createRoot(root).render(<PayPalCheckout engine={engine} planId="1id" pay={pay} />)
+~~~
 
-## Проверка интеграции
 
-`npm test` проверяет движок, серверный HTTP-интерфейс и conformance-контракт плагинов.
-`npm run test:e2e` запускает шесть общих протоколов. `npm run test:integration` проверяет три
-пакета провайдеров через сервер: отказы, polling, возврат после редиректа и capture.
-CI также проверяет экспорты и установку в отдельное приложение.
+Создавайте один движок на чекаут. На маршруте возврата сервер должен отдавать то же приложение. `baseUrl` указывает на аутентифицированный API мерчанта.
 
-Fixtures и симуляторы проверяют код без доступа к аккаунтам. Перед включением платежей
-пройдите sandbox выбранного провайдера со своими ключами, настройками webhook и SDK.
+| Провайдер | Инструмент | Настройка |
+| --- | --- | --- |
+| Stripe | PaymentMethod id из Stripe.js как `token`. | [Stripe](./providers/stripe.md) |
+| Adyen | Component `state.data` как `wallet` Adyen либо stored token. | [Adyen](./providers/adyen.md) |
+| PayPal | `{ kind: 'none' }`; подтверждение на странице провайдера. | [PayPal](./providers/paypal.md) |
+
+## Официальные sandbox API
+
+~~~sh
+cp examples/server/.env.example examples/server/.env
+cp examples/react/.env.example examples/react/.env
+# Заполните test keys выбранного провайдера до запуска.
+npm run dev:server -w @checkout-kit/examples
+# Во втором терминале:
+npm run dev:react -w @checkout-kit/examples
+~~~
+
+Используйте одинаковый hostname для app и API. Браузер хранит публичные ключи, сервер — секреты. Без ключей провайдер отключён. [Интеграция сервера](./merchant-integration.md) описывает настройки, маршруты, сессии и постоянное состояние.
+
+## Продолжение интеграции
+
+- [React](./react.md): время жизни движка, hooks, действия.
+- [Runtime](./runtime.md): возврат, повторы, polling, отмена.
+- [Тестирование](./testing.md): fixtures, браузерные сценарии, отдельная установка.
+- [Решение проблем](./troubleshooting.md): причины и исправления.
+
+`npm run verify:consumer` собирает и устанавливает архивы в отдельный проект, проверяет exports, строгие типы, Node checkout и React SSR. Симуляторы проверяют код; sandbox аккаунта — его SDK, уведомления и возврат.

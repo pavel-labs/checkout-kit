@@ -1,65 +1,89 @@
 ---
-layout: home
-
-hero:
-  name: Checkout kit
-  text: One checkout, every provider
-  tagline: An embeddable checkout whose payment integrations are all plugins. The core does not know what 3-D Secure is.
-  actions:
-    - theme: brand
-      text: Getting started
-      link: /getting-started
-    - theme: alt
-      text: Write a plugin
-      link: /plugin-authoring
-    - theme: alt
-      text: Live demo
-      link: /demo/
-
-features:
-  - title: The processor is a plugin
-    details: Six integration shapes already run behind one engine and one UI - a JSON PSP, a form-urlencoded acquirer, a hosted page, hosted fields, a wallet SDK and a QR transfer. A seventh is a new package, not a new branch in the engine.
-    link: /architecture
-    linkText: How the loop works
-  - title: You own the DOM
-    details: Not a cross-origin iframe you theme through a fixed schema. Real elements in your page, in a checkout cascade layer, so your CSS wins without a specificity fight.
-    link: /ui
-    linkText: The UI kit
-  - title: The contract is a test
-    details: Every plugin has to pass a runnable conformance suite - instruments exact both ways, idempotency that really replays, forged evidence refused, and no card data in anything returned.
-    link: /plugin-authoring
-    linkText: Writing a plugin
-  - title: It runs where checkouts run
-    details: A WebView bridge for native apps, and every layout decision a container query rather than a viewport one - the same checkout full-page, in a 360px WebView, or inside a merchant's iframe.
-    link: /webview
-    linkText: In a WebView
+{
+  "layout": "home",
+  "hero": {
+    "name": "Checkout kit",
+    "text": "Payment flows you control",
+    "tagline": "Headless engine, Stripe / Adyen / PayPal, browser and native hosts. Your interface and merchant API.",
+    "actions": [
+      {
+        "theme": "brand",
+        "text": "Build your checkout",
+        "link": "/getting-started"
+      },
+      {
+        "theme": "alt",
+        "text": "Choose packages",
+        "link": "/packages"
+      },
+      {
+        "theme": "alt",
+        "text": "Try the demo",
+        "link": "/demo/"
+      }
+    ]
+  },
+  "features": [
+    {
+      "title": "Three provider adapters",
+      "details": "PaymentIntents, Adyen Advanced flow and PayPal Orders, with exact merchant contracts and a runnable HTTP server.",
+      "link": "/packages#named-provider-adapters",
+      "linkText": "Read the guide"
+    },
+    {
+      "title": "Your checkout interface",
+      "details": "React bindings and optional UI. Your layouts, provider SDKs for instrument collection.",
+      "link": "/react",
+      "linkText": "Read the guide"
+    },
+    {
+      "title": "Recovery and retries",
+      "details": "Preserve attempts across redirects and lost replies; verify existing payments before another charge.",
+      "link": "/runtime",
+      "linkText": "Read the guide"
+    },
+    {
+      "title": "Native hosts",
+      "details": "Typed WebView sessions, strict messages, safe commands and deep-link recovery.",
+      "link": "/webview",
+      "linkText": "Read the guide"
+    },
+    {
+      "title": "Executable contracts",
+      "details": "Fixture and browser scenarios, paid replay, foreign evidence and isolated package installation.",
+      "link": "/testing",
+      "linkText": "Read the guide"
+    },
+    {
+      "title": "16 packages",
+      "details": "Engine plus one adapter; add host/UI/test pieces and six reference protocols when needed.",
+      "link": "/packages",
+      "linkText": "Read the guide"
+    }
+  ]
+}
 ---
 
-## The one idea
+## Start with a working flow
 
-Every integration is the same loop:
+~~~sh
+npm ci
+npm run dev:integration
+~~~
 
-```text
-createIntent → confirm(instrument) → [ action → run → evidence → resume ]* → terminal
-```
+In the [repository](https://github.com/pavel-labs/checkout-kit), this starts React and a merchant server with local simulators, without account keys. [Getting started](./getting-started.md) leads to archives and your selected sandbox.
 
-Between a card processor, a bank, a hosted page, hosted fields, a wallet and a QR code, only two
-things differ: **which action the provider returned** and **which runner executes it**. That is
-checked, not claimed - one Playwright spec, naming no provider anywhere, runs against all six.
+## Choose your path
 
-| Integration        | instrument | first action                    | completes via  |
-| ------------------ | ---------- | ------------------------------- | -------------- |
-| Card processor     | `card`     | `redirect` into a frame         | `post_message` |
-| Acquiring bank     | `card`     | `redirect` with a `PaReq`       | `post_message` |
-| Bank payment page  | `none`     | `redirect` taking the window    | `return_url`   |
-| Hosted card fields | `none`     | `collect_fields` in a frame     | `post_message` |
-| Wallet             | `none`     | `sdk_handoff` to another script | `sdk_callback` |
-| Instant transfer   | `none`     | `display` a QR or a code        | `poll`         |
+| Starting point | Guide |
+| --- | --- |
+| Stripe / Adyen / PayPal | [Stripe](./providers/stripe.md), [Adyen](./providers/adyen.md), [PayPal](./providers/paypal.md). |
+| Existing React interface | [React](./react.md), [UI](./ui.md), [runtime](./runtime.md). |
+| Another PSP or bank | [References](./plugins/index.md), [contract](./plugin-authoring.md), [testing](./testing.md). |
+| Native app | [WebView](./webview.md) and the host example. |
 
-## Status
+## One lifecycle, explicit boundaries
 
-Installable Stripe, Adyen and PayPal adapters ship alongside six generic protocol references.
-Run the local integration with `npm run dev:integration`, or build archives with
-`npm run pack:packages`. [Getting started](./getting-started.md) covers installation, SDK
-fields and the merchant server. Tests use fixtures and explicit simulators; live provider
-sandbox verification requires your own account keys. Registry publishing is a separate owner action.
+The engine creates an intent, confirms an instrument, runs actions and verifies the result. Providers own wire protocols, runners own surfaces and merchants own prices, buyers and payment truth.
+
+All 16 packages have ESM archives, declarations, API and tests. Generic references do not certify named banks. Account verification and publishing remain separate steps. [Merchant integration](./merchant-integration.md) describes responsibilities; [troubleshooting](./troubleshooting.md) helps resolve failures.
