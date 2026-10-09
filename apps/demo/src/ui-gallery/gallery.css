@@ -87,7 +87,6 @@ main:has(> .gallery) {
 }
 
 .gallery-heading h1 {
-  max-inline-size: 22ch;
   font-size: clamp(30px, 4vw, 48px);
   font-weight: 650;
   line-height: 1.12;

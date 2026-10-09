@@ -433,7 +433,7 @@ function Specimens() {
         />
         <OptionCardGroup label="Plan" value={plan} onChange={setPlan}>
           <OptionCard value="monthly" label="Monthly" aside="$25" />
-          <OptionCard value="yearly" label="Yearly" badge="Save 32%" aside="$125" />
+          <OptionCard value="yearly" label="Yearly" badge="Save 32%" aside="$204" />
         </OptionCardGroup>
         <SavedInstrumentList
           instruments={[
@@ -473,7 +473,7 @@ function Specimens() {
             {
               id: 'team',
               name: 'Team plan',
-              amount: 9900,
+              amount: 19800,
               quantity: 2,
               description: 'Billed monthly',
             },
@@ -483,7 +483,7 @@ function Specimens() {
             { id: 'discount', name: 'Discount', amount: -1980 },
             { id: 'tax', name: 'Tax', amount: 1584 },
           ]}
-          total={{ id: 'total', name: 'Total due', amount: 197_04 }}
+          total={{ id: 'total', name: 'Total due', amount: 194_04 }}
           footer={
             <PromoCodeInput
               value={promo}

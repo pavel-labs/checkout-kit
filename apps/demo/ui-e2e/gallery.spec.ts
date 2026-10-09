@@ -26,7 +26,7 @@ for (const theme of ['light', 'dark']) {
     }
     await page.getByRole('button', { name: 'Blue accent' }).click()
     await info.attach(`${theme}-checkout`, {
-      body: await page.screenshot({ fullPage: true }),
+      body: await page.locator('.gallery-preview').screenshot({ scale: 'css' }),
       contentType: 'image/png',
     })
   })
@@ -119,7 +119,7 @@ test('narrow containers and compact density fit without page overflow or small t
     expect(metrics.buttonHeight).toBeGreaterThanOrEqual(44)
   }
   await info.attach('compact-narrow-checkout', {
-    body: await page.locator('.gallery-preview').screenshot(),
+    body: await page.locator('.gallery-preview').screenshot({ scale: 'css' }),
     contentType: 'image/png',
   })
 })
@@ -138,7 +138,7 @@ test('RTL and reduced motion preserve field and result layouts', async ({ page }
   }))
   expect(layout).toEqual({ overflow: false, direction: 'rtl', iconAnimation: 'none' })
   await info.attach('rtl-result', {
-    body: await page.locator('.gallery-preview').screenshot(),
+    body: await page.locator('.gallery-preview').screenshot({ scale: 'css' }),
     contentType: 'image/png',
   })
 })
