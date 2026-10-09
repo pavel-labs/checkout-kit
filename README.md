@@ -48,26 +48,25 @@ for building your own integration; they do not connect to banks by themselves.
 
 ## Install in another project
 
-Build installable archives without registry credentials:
+Download and extract `checkout-kit-0.1.0.tar.gz` from [GitHub Releases](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.1.0). From your application's directory, select the packages you need:
 
 ```bash
-npm run pack:packages
+node /path/to/checkout-kit-0.1.0/install.mjs runtime-browser provider-stripe react ui
 ```
 
-The `.tgz` files and integrity manifest appear in `artifacts/packages`. Install the needed
-archives in your application; include their peer packages in the same command:
+The installer verifies SHA-512 integrity and includes required checkout-kit peers automatically.
+Use `provider-adyen` or `provider-paypal` for those adapters. Omit `react ui` for a host without
+React. npm resolves external peers normally. `--list` lists packages and `--dry-run` verifies
+without installing. Individual `.tgz` assets can also be installed together with their peers.
 
-```bash
-npm install /path/to/checkout-kit-core-0.0.0.tgz /path/to/checkout-kit-runtime-browser-0.0.0.tgz /path/to/checkout-kit-provider-stripe-0.0.0.tgz
-```
+To build the current source instead, run `npm run pack:packages` in a clone and use
+`artifacts/packages/install.mjs`. CI uploads the same files as `checkout-kit-packages`.
+`npm run verify:consumer` tests all 16 archives, minimal headless/React installations, strict
+TypeScript, exports, checkout and SSR, and rejection of damaged downloads.
 
-Add the React and UI archives for a React checkout. Successful CI runs also offer the
-`checkout-kit-packages` artifact. `npm run verify:consumer` installs all archives in a
-fresh project and checks strict TypeScript, exports, a payment flow and React server rendering.
-
-Versions remain `0.0.0` until the release changesets are applied. The release workflow is
-configured for GitHub Packages; a registry release requires the owner to configure the
-package scope and credentials. See [Releasing](./RELEASING.md).
+Version `0.1.0` is an early release. GitHub archives need no private registry access. The
+separate registry workflow still requires access to the `@checkout-kit` scope and credentials;
+archive publication does not imply npm publication. See [Releasing](./RELEASING.md).
 
 ## Integrate
 

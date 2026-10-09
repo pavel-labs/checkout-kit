@@ -1,6 +1,6 @@
 {
   "name": "@checkout-kit/react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "React bindings for the checkout engine: a provider, hooks built on useSyncExternalStore, and a mount point for payment actions.",
   "license": "Apache-2.0",
@@ -12,14 +12,15 @@
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsdown"
   },
   "peerDependencies": {
-    "@checkout-kit/core": "*",
-    "@checkout-kit/runtime-browser": "*",
+    "@checkout-kit/core": "^0.1.0",
+    "@checkout-kit/runtime-browser": "^0.1.0",
     "react": "^19.0.0"
   },
   "devDependencies": {

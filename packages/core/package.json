@@ -1,6 +1,6 @@
 {
   "name": "@checkout-kit/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Headless checkout core: domain vocabulary, the payment plugin contract, and an HTTP client with no opinions about payments.",
   "license": "Apache-2.0",
@@ -12,7 +12,8 @@
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "exports": {
     ".": {

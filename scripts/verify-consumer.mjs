@@ -1,6 +1,15 @@
 // No workspace links, source condition, or access to this repo's node_modules.
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import assert from 'node:assert/strict'
+import {
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -130,6 +139,108 @@ try {
   )
   run(process.execPath, [join(consumer, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json'])
   run(process.execPath, ['smoke.mjs'])
+  for (const { name, version } of packages) {
+    const installed = join(consumer, 'node_modules', name)
+    for (const notice of ['LICENSE', 'NOTICE']) {
+      assert.equal(
+        readFileSync(join(installed, 'dist', notice), 'utf8'),
+        readFileSync(notice, 'utf8'),
+      )
+    }
+    assert.ok(readFileSync(join(installed, 'CHANGELOG.md'), 'utf8').includes(`## ${version}`))
+  }
+  for (const { names, expected, smoke } of [
+    {
+      names: ['runtime-browser', 'provider-paypal'],
+      expected: ['core', 'provider-paypal', 'runtime-browser'],
+      smoke: `
+import assert from 'node:assert/strict'
+import { createCheckout, createRunnerRegistry, defineProvider } from '@checkout-kit/core'
+import { createBrowserRuntime } from '@checkout-kit/runtime-browser'
+import { payPalProvider } from '@checkout-kit/provider-paypal'
+assert.equal(typeof createBrowserRuntime, 'function')
+const checkout = createCheckout({ providers: [defineProvider({ id: 'paypal', config: { baseUrl: '/api' }, load: async () => ({ default: payPalProvider }) })], runners: createRunnerRegistry(), returnUrl: 'https://merchant.test/payment/return' })
+assert.equal(checkout.getSnapshot().phase, 'idle')
+`,
+    },
+    {
+      names: ['provider-paypal', 'react', 'ui'],
+      expected: ['core', 'provider-paypal', 'react', 'runtime-browser', 'ui'],
+      smoke: `
+import assert from 'node:assert/strict'
+import { createCheckout, createRunnerRegistry } from '@checkout-kit/core'
+import { CheckoutProvider } from '@checkout-kit/react'
+import { Money } from '@checkout-kit/ui'
+import { createElement } from 'react'
+import { renderToString } from 'react-dom/server'
+const engine = createCheckout({ providers: [], runners: createRunnerRegistry(), returnUrl: 'https://merchant.test/payment/return' })
+const html = renderToString(createElement(CheckoutProvider, { engine }, createElement(Money, { amount: 2500, currency: 'USD' })))
+assert.ok(html.includes('25'))
+`,
+    },
+  ]) {
+    const project = mkdtempSync(join(tmpdir(), 'checkout-kit-selection-'))
+    try {
+      writeFileSync(
+        join(project, 'package.json'),
+        JSON.stringify({ private: true, type: 'module' }),
+      )
+      const result = spawnSync(process.execPath, [join(archives, 'install.mjs'), ...names], {
+        cwd: project,
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          npm_config_ignore_scripts: 'true',
+          npm_config_audit: 'false',
+          npm_config_fund: 'false',
+        },
+      })
+      assert.equal(result.status, 0, `Installer failed for ${names.join(', ')}`)
+      assert.deepEqual(readdirSync(join(project, 'node_modules/@checkout-kit')).sort(), expected)
+      // React DOM is a host dependency, not a checkout-kit peer. Supply the same
+      // version as the first consumer so the SSR smoke can resolve it locally.
+      if (names.includes('react')) {
+        const args = ['install', '--ignore-scripts', '--no-audit', '--no-fund', 'react-dom@^19']
+        const installed = spawnSync(
+          npmCli ? process.execPath : 'npm',
+          npmCli ? [npmCli, ...args] : args,
+          { cwd: project, stdio: 'inherit' },
+        )
+        assert.equal(installed.status, 0)
+      }
+      writeFileSync(join(project, 'smoke.mjs'), smoke)
+      const checked = spawnSync(process.execPath, ['smoke.mjs'], { cwd: project, stdio: 'inherit' })
+      assert.equal(checked.status, 0, `Selected package smoke failed: ${names.join(', ')}`)
+    } finally {
+      rmSync(project, { recursive: true, force: true })
+    }
+  }
+  // Reject a damaged download and an invalid selection before invoking npm.
+  const damaged = mkdtempSync(join(tmpdir(), 'checkout-kit-damaged-'))
+  try {
+    for (const filename of ['manifest.json', 'install.mjs'])
+      copyFileSync(join(archives, filename), join(damaged, filename))
+    const core = packages.find(({ name }) => name === '@checkout-kit/core')
+    writeFileSync(join(damaged, core.filename), 'damaged download')
+    for (const [selection, expectedError] of [
+      ['core', /Integrity check failed/],
+      ['../outside', /Unknown package/],
+    ]) {
+      const result = spawnSync(process.execPath, [join(damaged, 'install.mjs'), selection], {
+        cwd: damaged,
+        encoding: 'utf8',
+      })
+      assert.equal(result.status, 1)
+      assert.match(result.stderr, expectedError)
+      assert.equal(existsSync(join(damaged, 'package.json')), false)
+      assert.equal(existsSync(join(damaged, 'node_modules')), false)
+    }
+  } finally {
+    rmSync(damaged, { recursive: true, force: true })
+  }
+  console.log(
+    'Archive installer: headless and React selections resolve peers; invalid and damaged archives fail before installation.',
+  )
   rmSync(consumer, { recursive: true, force: true })
 } catch (error) {
   console.error(error.message)

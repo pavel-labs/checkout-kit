@@ -6,13 +6,13 @@ Start with phase, provider, intent id, action kind and error code, then inspect 
 
 ## Setup
 
-| Symptom                      | Check / fix                                                                                                            |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Unpublished peer download    | Install selected archives and peers in one command; see [installation](./getting-started.md#install-package-archives). |
-| Unstyled UI                  | Import `@checkout-kit/ui/styles.css` and use CheckoutRoot / .ck-root.                                                  |
-| SSR window error             | Instantiate runtime/bridge on the client; React/UI import and render separately.                                       |
-| Unknown provider             | Import its config type and register its actual id/module.                                                              |
-| Missing cookie / API failure | Verify baseUrl, origin, credentials, hostname and buyer session.                                                       |
+| Symptom                      | Check / fix                                                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unpublished peer download    | Use the release installer to include required peers, or install archives together; see [installation](./getting-started.md#install-package-archives). |
+| Unstyled UI                  | Import `@checkout-kit/ui/styles.css` and use CheckoutRoot / .ck-root.                                                                                 |
+| SSR window error             | Instantiate runtime/bridge on the client; React/UI import and render separately.                                                                      |
+| Unknown provider             | Import its config type and register its actual id/module.                                                                                             |
+| Missing cookie / API failure | Verify baseUrl, origin, credentials, hostname and buyer session.                                                                                      |
 
 ## Pending actions
 

@@ -1,8 +1,8 @@
 {
   "name": "@checkout-kit/ui",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "description": "The checkout's visual kit: a handful of themable components and one small stylesheet, with no framework asked of the consumer.",
+  "description": "Composable React 19 checkout components and scoped styles.",
   "license": "Apache-2.0",
   "author": "pavel-labs",
   "repository": {
@@ -16,13 +16,14 @@
   "files": [
     "dist",
     "styles.css",
-    "styles"
+    "styles",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsdown"
   },
   "peerDependencies": {
-    "@checkout-kit/core": "*",
+    "@checkout-kit/core": "^0.1.0",
     "react": "^19.0.0"
   },
   "devDependencies": {

@@ -6,13 +6,13 @@
 
 ## Настройка
 
-| Симптом                         | Проверка / исправление                                                                                |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Загрузка неопубликованного peer | Установите архивы и peers одной командой: [установка](./getting-started.md#install-package-archives). |
-| Нет CSS                         | Импортируйте `@checkout-kit/ui/styles.css`, используйте CheckoutRoot / .ck-root.                      |
-| window error при SSR            | Runtime/bridge создаётся на клиенте, React/UI могут рендериться отдельно.                             |
-| Неизвестный provider            | Импортируйте config type, зарегистрируйте фактические id и module.                                    |
-| Нет cookie / API error          | Проверьте baseUrl, origin, credentials, hostname и session.                                           |
+| Симптом                         | Проверка / исправление                                                                                                                    |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Загрузка неопубликованного peer | Используйте установщик релиза для выбора peers либо установите архивы вместе: [установка](./getting-started.md#install-package-archives). |
+| Нет CSS                         | Импортируйте `@checkout-kit/ui/styles.css`, используйте CheckoutRoot / .ck-root.                                                          |
+| window error при SSR            | Runtime/bridge создаётся на клиенте, React/UI могут рендериться отдельно.                                                                 |
+| Неизвестный provider            | Импортируйте config type, зарегистрируйте фактические id и module.                                                                        |
+| Нет cookie / API error          | Проверьте baseUrl, origin, credentials, hostname и session.                                                                               |
 
 ## Действия
 

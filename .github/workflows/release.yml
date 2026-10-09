@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   release:
-    name: Publish to GitHub Packages
+    name: Verify or publish to the configured package registry
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -56,6 +56,7 @@ jobs:
           npm run verify:dist
           npm run check:types
           npm run verify:consumer
+          npm run release:archives
 
       - name: Upload verified packages
         uses: actions/upload-artifact@v7
@@ -64,9 +65,9 @@ jobs:
           path: artifacts/packages/
           retention-days: 14
 
-      # PACKAGES_TOKEN, not GITHUB_TOKEN: the packages belong to the `checkout-kit`
-      # organisation while this repository belongs to a personal account, and a workflow token
-      # only has rights over its own repository's owner. See RELEASING.md.
+      # Registry scope ownership is separate from repository write access. The
+      # owner configures PACKAGES_TOKEN for @checkout-kit; do not assume that this
+      # repository's GITHUB_TOKEN has access to that package scope.
       - name: Publish
         if: ${{ !inputs.dry-run }}
         run: npx changeset publish

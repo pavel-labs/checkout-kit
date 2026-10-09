@@ -30,25 +30,35 @@ The [site demo](/demo/) exercises six reference protocols with an in-browser MSW
 
 ## Install package archives
 
-Until a registry version is published, build archives or download `checkout-kit-packages` from a successful [CI run](https://github.com/pavel-labs/checkout-kit/actions/workflows/ci.yml):
+Download `checkout-kit-0.1.0.tar.gz` from [the GitHub release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.1.0), then extract it. The release contains all 16 packages, an integrity manifest, checksums and a standalone installer. No clone or registry token is needed.
+
+Run the installer **from your app's directory**:
+
+```sh
+node /path/to/checkout-kit-0.1.0/install.mjs runtime-browser provider-paypal react ui
+```
+
+It verifies each selected archive and adds required checkout-kit peers automatically, including core. npm resolves external peers such as React 19 normally. Keep your app's `react-dom` compatible with React. Replace `provider-paypal` with `provider-stripe` or `provider-adyen` for those adapters.
+
+```sh
+# Inspect the available packages or verify a selection without installing:
+node /path/to/checkout-kit-0.1.0/install.mjs --list
+node /path/to/checkout-kit-0.1.0/install.mjs provider-paypal react ui --dry-run
+```
+
+For a host without React, select `runtime-browser` and your provider. Individual `.tgz` assets can also be installed with `npm install`; include their checkout-kit peers in the same command.
+
+To build development archives from a clone:
 
 ```sh
 npm run pack:packages
+# From your application's directory:
+node /path/to/checkout-kit/artifacts/packages/install.mjs runtime-browser provider-paypal react ui
 ```
 
-Archives and an integrity manifest appear in `artifacts/packages`. Install selected packages and their peers together in your React app; replace the archive location/version:
+Successful [CI runs](https://github.com/pavel-labs/checkout-kit/actions/workflows/ci.yml) also provide the `checkout-kit-packages` development artifact. Tagged release assets stay available beyond CI artifact retention. Registry publication remains separately configured.
 
-```sh
-npm install \
-  ../checkout-kit/artifacts/packages/checkout-kit-core-0.0.0.tgz \
-  ../checkout-kit/artifacts/packages/checkout-kit-runtime-browser-0.0.0.tgz \
-  ../checkout-kit/artifacts/packages/checkout-kit-provider-paypal-0.0.0.tgz \
-  ../checkout-kit/artifacts/packages/checkout-kit-react-0.0.0.tgz \
-  ../checkout-kit/artifacts/packages/checkout-kit-ui-0.0.0.tgz \
-  react@^19 react-dom@^19
-```
-
-The packages are ESM with declarations. [The catalog](./packages.md) covers all 16. A host without React needs core, runtime and its provider. See [Releasing](../RELEASING.md) for registry setup and versioning.
+The packages are ESM with declarations. [The catalog](./packages.md) covers all 16. See [Releasing](../RELEASING.md) for versioning, archive releases and registry setup.
 
 ## Connect your app
 

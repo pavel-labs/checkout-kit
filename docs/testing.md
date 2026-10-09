@@ -6,15 +6,15 @@ Fixtures validate adapter protocols. Simulators exercise application lifecycle. 
 
 ## Repository checks
 
-| Command                                                    | Verifies                                                                                              |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `npm test`                                                 | Engine, HTTP merchant server, provider contracts, React/UI, runners and bridge.                       |
-| `npm run test:e2e`                                         | Six reference protocols in a browser, with capability-specific scenarios.                             |
-| `npm run test:integration`                                 | Stripe/Adyen/PayPal through the HTTP server: approval, decline, polling, redirect, capture and retry. |
-| `npm run typecheck` / `npm run examples:typecheck`         | Package and consuming example types.                                                                  |
-| `npm run verify:consumer`                                  | Install all 16 archives separately; strict types, exports, Node checkout and React SSR.               |
-| `npm run lint` / `npm run format:check` / `npm run purity` | Code checks and platform-neutral core/native entry points.                                            |
-| `npm run docs:api` / `npm run docs:build`                  | API from built declarations; site, page and anchor checks.                                            |
+| Command                                                    | Verifies                                                                                                                                 |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                                 | Engine, HTTP merchant server, provider contracts, React/UI, runners and bridge.                                                          |
+| `npm run test:e2e`                                         | Six reference protocols in a browser, with capability-specific scenarios.                                                                |
+| `npm run test:integration`                                 | Stripe/Adyen/PayPal through the HTTP server: approval, decline, polling, redirect, capture and retry.                                    |
+| `npm run typecheck` / `npm run examples:typecheck`         | Package and consuming example types.                                                                                                     |
+| `npm run verify:consumer`                                  | Install all 16 archives and minimal headless/React selections; strict types, exports, Node checkout, SSR and damaged-download rejection. |
+| `npm run lint` / `npm run format:check` / `npm run purity` | Code checks and platform-neutral core/native entry points.                                                                               |
+| `npm run docs:api` / `npm run docs:build`                  | API from built declarations; site, page and anchor checks.                                                                               |
 
 Browser suites need Playwright Chromium: run `npx playwright install chromium` locally; CI installs it. Build declarations before API generation.
 
