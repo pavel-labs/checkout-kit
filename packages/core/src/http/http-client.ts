@@ -26,6 +26,7 @@ export class HttpError extends Error {
 export interface RequestOptions {
   headers?: Record<string, string>
   signal?: AbortSignal
+  credentials?: RequestCredentials
 }
 
 export interface HttpClient {
@@ -42,6 +43,8 @@ export interface HttpClientConfig {
   baseUrl: string
   /** Defaults sent with every request; a per-request header of the same name wins. */
   headers?: Record<string, string>
+  /** Include merchant-session cookies when the API is on another origin. */
+  credentials?: RequestCredentials
   encoding?: 'json' | 'form'
   /** Turn a failed response into an error payload. Defaults to the `{ error: {...} }` envelope. */
   parseError?: (response: Response, payload: unknown) => ApiErrorPayload
@@ -85,7 +88,16 @@ const isErrorEnvelope = (value: unknown): value is { error: ApiErrorPayload } =>
 const defaultParseError = (response: Response, payload: unknown): ApiErrorPayload =>
   isErrorEnvelope(payload)
     ? payload.error
-    : { type: 'api_error', message: `Request failed with status ${response.status}` }
+    : {
+        type: 'api_error',
+        message:
+          typeof payload === 'object' &&
+          payload !== null &&
+          'message' in payload &&
+          typeof payload.message === 'string'
+            ? payload.message
+            : `Request failed with status ${response.status}`,
+      }
 
 export const createHttpClient = (config: HttpClientConfig): HttpClient => {
   const {
@@ -109,18 +121,19 @@ export const createHttpClient = (config: HttpClientConfig): HttpClient => {
     options: RequestOptions = {},
   ): Promise<Response> => {
     const hasBody = body !== undefined
+    const headers = new Headers(defaultHeaders)
+    if (hasBody && !headers.has('Content-Type')) headers.set('Content-Type', encoder.contentType)
+    for (const [name, value] of Object.entries(options.headers ?? {})) headers.set(name, value)
     try {
-      return await doFetch(`${baseUrl}${path}`, {
+      return await doFetch(`${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`, {
         method,
-        headers: {
-          ...(hasBody ? { 'Content-Type': encoder.contentType } : {}),
-          ...defaultHeaders,
-          ...options.headers,
-        },
+        headers,
         body: hasBody ? encoder.encode(body) : undefined,
         signal: options.signal,
+        credentials: options.credentials ?? config.credentials,
       })
     } catch (cause) {
+      if (options.signal?.aborted) throw cause
       // fetch rejects only on network-level failures (offline, DNS, CORS...).
       throw new HttpError(0, {
         type: 'network_error',

@@ -143,3 +143,49 @@ describe('<PaymentActionHost>', () => {
     expect(engine.getSnapshot().phase).toBe('action_pending')
   })
 })
+
+it('runs consecutive actions with the same provider-assigned id', async () => {
+  const action = fakeAction()
+  const fake = createFakeProvider({
+    confirm: [{ status: 'requires_action', intent: fakeIntent(), action }],
+    resume: [
+      {
+        status: 'requires_action',
+        intent: fakeIntent(),
+        action: { ...action },
+      },
+      { status: 'succeeded', intent: fakeIntent({ status: 'succeeded' }) },
+    ],
+  })
+  const runners = createRunnerRegistry()
+  runners.register({
+    kind: 'redirect',
+    surfaces: ['iframe', 'top'],
+    run: async (next) => ({ via: 'return_url', actionId: next.id, params: {} }),
+  })
+  const checkout = createCheckout({
+    providers: [
+      {
+        id: 'fake',
+        config: {},
+        load: () => ({
+          ...fake.provider,
+          capabilities: {
+            ...fake.provider.capabilities,
+            actions: ['redirect'],
+            surfaces: ['iframe', 'top'],
+          },
+        }),
+      },
+    ],
+    defaultProviderId: 'fake',
+    runners,
+    returnUrl: 'https://shop.test/return',
+  })
+  await checkout.pay({ input: { planId: 'starter' }, instrument: { kind: 'none' } })
+  render(<PaymentActionHost />, { wrapper: wrapper(checkout) })
+  await settle()
+  await settle()
+  expect(fake.calls.resume).toHaveLength(2)
+  expect(checkout.getSnapshot().phase).toBe('succeeded')
+})

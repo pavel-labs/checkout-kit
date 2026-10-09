@@ -153,7 +153,10 @@ describe('checkout engine', () => {
     )
 
     const { engine, calls } = setup(
-      { resume: [{ status: 'succeeded', intent: fakeIntent({ status: 'succeeded' }) }] },
+      {
+        resume: [{ status: 'succeeded', intent: fakeIntent({ status: 'succeeded' }) }],
+        getIntent: () => fakeIntent({ status: 'requires_action' }),
+      },
       { storage },
     )
 

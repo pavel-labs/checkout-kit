@@ -72,6 +72,10 @@ export interface ProviderRegistryConfig {
 }
 
 export const createProviderRegistry = (config: ProviderRegistryConfig): ProviderRegistry => {
+  const ids = config.registrations.map(({ id }) => id)
+  if (ids.some((id) => !id.trim()) || new Set(ids).size !== ids.length) {
+    throw new Error('Payment provider ids must be non-empty and unique.')
+  }
   const byId = new Map(config.registrations.map((registration) => [registration.id, registration]))
   const loaded = new Map<string, LoadedProvider>()
   const loading = new Map<string, Promise<LoadedProvider>>()

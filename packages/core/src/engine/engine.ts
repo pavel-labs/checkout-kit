@@ -122,6 +122,24 @@ const toPaymentError = (cause: unknown): PaymentError => ({
   message: cause instanceof Error ? cause.message : 'The payment could not be completed.',
 })
 
+const inputKey = (input: CreateIntentInput): string =>
+  JSON.stringify([
+    input.planId,
+    input.amount,
+    input.currency,
+    Object.entries(input.metadata ?? {}).sort(([a], [b]) => a.localeCompare(b)),
+  ])
+
+const stoppedResult = (): PaymentResult => ({
+  status: 'error',
+  error: { code: 'canceled', message: 'This payment attempt is no longer active.' },
+})
+
+const busyResult = (): PaymentResult => ({
+  status: 'error',
+  error: { code: 'busy', message: 'A payment operation is already running.' },
+})
+
 export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => {
   const log = config.log ?? silentLogger
   const storage = config.storage ?? memoryStorage()
@@ -162,6 +180,22 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
   // Payment state that is not worth re-rendering over.
   let idempotencyKey: string | null = null
   let abortController: AbortController | null = null
+  let version = 0
+  let selection = 0
+  let preparedInput: string | null = null
+  let actionRun = 0
+  let runningSurface: ActionSurface | null = null
+  let stopAction: AbortController | null = null
+
+  const current = (started: number): boolean =>
+    started === version && !abortController?.signal.aborted
+
+  const begin = (): number => {
+    abortController?.abort('superseded')
+    abortController = new AbortController()
+    selection++
+    return ++version
+  }
 
   const transition = (event: Parameters<typeof nextPhase>[1]): boolean => {
     const previous = store.getSnapshot().phase
@@ -225,22 +259,28 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
     })
   }
 
-  const applyResult = async (result: PaymentResult): Promise<PaymentResult> => {
+  const applyResult = async (result: PaymentResult, started = version): Promise<PaymentResult> => {
+    if (!current(started)) return stoppedResult()
     emit({ type: 'result', result })
+    if (!current(started)) return stoppedResult()
 
     switch (result.status) {
       case 'requires_action': {
         if (store.getSnapshot().attempt >= maxActions) {
-          return applyResult({
-            status: 'error',
-            intent: result.intent,
-            error: {
-              code: 'too_many_actions',
-              message: 'The payment asked for too many authentication steps.',
+          return applyResult(
+            {
+              status: 'error',
+              intent: result.intent,
+              error: {
+                code: 'too_many_actions',
+                message: 'The payment asked for too many authentication steps.',
+              },
             },
-          })
+            started,
+          )
         }
         transition('action_required')
+        if (!current(started)) return stoppedResult()
         store.set({ intent: result.intent, action: result.action, error: null })
         emit({ type: 'action_required', action: result.action })
         return result
@@ -248,12 +288,14 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
 
       case 'processing': {
         transition('processing')
+        if (!current(started)) return stoppedResult()
         store.set({ intent: result.intent, action: null, error: null })
-        return await pollUntilSettled(result)
+        return await pollUntilSettled(result, started)
       }
 
       case 'succeeded': {
         transition('succeeded')
+        if (!current(started)) return stoppedResult()
         store.set({ intent: result.intent, action: null, error: null })
         clearPendingCheckout(storage)
         return result
@@ -261,6 +303,7 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
 
       case 'declined': {
         transition('declined')
+        if (!current(started)) return stoppedResult()
         store.set({ intent: result.intent, action: null, error: result.error })
         clearPendingCheckout(storage)
         return result
@@ -268,6 +311,7 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
 
       case 'error': {
         transition('failed')
+        if (!current(started)) return stoppedResult()
         store.set({
           intent: result.intent ?? store.getSnapshot().intent,
           action: null,
@@ -296,7 +340,13 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
       if (signal.aborted) break
 
       // A hiccup mid-poll is not an answer: keep asking until the deadline says otherwise.
-      const intent = await instance.getIntent(intentId, callOptions()).catch(() => null)
+      const intent = await instance
+        .getIntent(intentId, {
+          ...callOptions(),
+          signal: anySignal([signal, ...(abortController ? [abortController.signal] : [])]),
+        })
+        .catch(() => null)
+      if (signal.aborted) break
       if (intent && TERMINAL.includes(intent.status)) {
         return { via: 'poll', actionId: action.id }
       }
@@ -329,49 +379,95 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
    * `processing` means accepted but not settled. The only way to learn the outcome is to
    * keep asking the provider.
    */
-  const pollUntilSettled = async (initial: PaymentResult & { status: 'processing' }) => {
+  const pollUntilSettled = async (
+    initial: PaymentResult & { status: 'processing' },
+    started: number,
+  ): Promise<PaymentResult> => {
     const providerId = providerIdOrThrow()
     const loaded = await registry.load(providerId)
+    if (!current(started)) return stoppedResult()
+    const opts = callOptions()
     if (!loaded.provider.capabilities.poll) {
-      return await applyResult({
-        status: 'error',
-        intent: initial.intent,
-        error: {
-          code: 'processing_not_settled',
-          message: 'The payment is still processing. You will be notified once it completes.',
+      return await applyResult(
+        {
+          status: 'error',
+          intent: initial.intent,
+          error: {
+            code: 'processing_not_settled',
+            message: 'The payment is still processing. You will be notified once it completes.',
+          },
         },
-      })
+        started,
+      )
     }
 
     const deadline = now() + poll.timeoutMs
-    while (now() < deadline) {
+    while (now() < deadline && current(started)) {
       await sleep(poll.intervalMs)
-      const intent = await loaded.instance.getIntent(initial.intent.id, callOptions())
-      if (intent.status === 'succeeded') return await applyResult({ status: 'succeeded', intent })
+      if (!current(started)) return stoppedResult()
+      const intent = await loaded.instance.getIntent(initial.intent.id, opts).catch(() => null)
+      if (!current(started)) return stoppedResult()
+      if (!intent) continue
+      if (intent.status === 'succeeded')
+        return await applyResult({ status: 'succeeded', intent }, started)
       if (intent.status === 'declined') {
-        return await applyResult({
-          status: 'declined',
-          intent,
-          error: { code: 'declined', message: 'The payment was declined.' },
-        })
+        return await applyResult(
+          {
+            status: 'declined',
+            intent,
+            error: { code: 'declined', message: 'The payment was declined.' },
+          },
+          started,
+        )
       }
       if (intent.status === 'canceled') {
-        return await applyResult({
-          status: 'error',
-          intent,
-          error: { code: 'canceled', message: 'The payment was canceled.' },
-        })
+        return await applyResult(
+          {
+            status: 'error',
+            intent,
+            error: { code: 'canceled', message: 'The payment was canceled.' },
+          },
+          started,
+        )
       }
     }
 
-    return await applyResult({
-      status: 'error',
-      intent: initial.intent,
-      error: {
-        code: 'processing_timeout',
-        message: 'The payment is taking longer than expected. Check back shortly.',
+    return await applyResult(
+      {
+        status: 'error',
+        intent: initial.intent,
+        error: {
+          code: 'processing_timeout',
+          message: 'The payment is taking longer than expected. Check back shortly.',
+        },
       },
-    })
+      started,
+    )
+  }
+
+  const resumeEvidence = async (
+    evidence: ActionEvidence,
+    started: number,
+  ): Promise<PaymentResult> => {
+    if (!current(started)) return stoppedResult()
+    const providerId = providerIdOrThrow()
+    const intent = store.getSnapshot().intent
+    if (!intent) return stoppedResult()
+    if (evidence.via === 'aborted' && evidence.reason === 'user') return engine.abort('user')
+    const opts = callOptions()
+    const result = await safely(async () => {
+      const instance = await instanceOf(providerId)
+      if (!current(started)) return stoppedResult()
+      const result = await instance.resume(intent.id, evidence, opts)
+      if (!current(started)) return stoppedResult()
+      if (result.status === 'error') {
+        const authoritative = await instance.getIntent(intent.id, opts).catch(() => null)
+        if (authoritative?.status === 'succeeded')
+          return { status: 'succeeded', intent: authoritative }
+      }
+      return result
+    }, 'resume')
+    return applyResult(result, started)
   }
 
   const engine: CheckoutEngine = {
@@ -393,63 +489,98 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
       if (!registry.has(providerId)) {
         throw new Error(`Unknown payment provider "${providerId}".`)
       }
-      if (isBusyPhase(store.getSnapshot().phase)) {
+      const inFlight = (): boolean =>
+        isBusyPhase(store.getSnapshot().phase) || store.getSnapshot().phase === 'action_pending'
+      if (inFlight()) {
         throw new Error('Cannot switch provider while a payment is in flight.')
       }
+      const selected = ++selection
       const loaded = await registry.load(providerId)
+      if (selected !== selection) return
+      if (inFlight()) throw new Error('Cannot switch provider while a payment is in flight.')
+      if (store.getSnapshot().providerId !== providerId) engine.reset()
       store.set({ providerId, capabilities: loaded.provider.capabilities })
       emit({ type: 'provider_changed', providerId })
     },
 
     prepare: async (input) => {
       const providerId = providerIdOrThrow()
+      const beforeLoad = version
       const loaded = await registry.load(providerId)
+      if (beforeLoad !== version || store.getSnapshot().providerId !== providerId) return
       if (loaded.provider.capabilities.session !== 'eager') return
 
-      if (!transition('prepare')) return
+      if (!nextPhase(store.getSnapshot().phase, 'prepare')) return
+      const started = begin()
       idempotencyKey = uuid()
+      preparedInput = inputKey(input)
+      store.set({ intent: null, error: null })
+      transition('prepare')
+      if (!current(started)) return
+      const opts = callOptions()
       try {
-        const intent = await loaded.instance.createIntent(input, callOptions())
+        const intent = await loaded.instance.createIntent(input, opts)
+        if (!current(started)) return
         store.set({ intent })
         emit({ type: 'intent_created', intent })
         transition('prepared')
       } catch (cause) {
-        await applyResult({ status: 'error', error: toPaymentError(cause) })
+        await applyResult({ status: 'error', error: toPaymentError(cause) }, started)
       }
     },
 
     pay: async (request) => {
-      const providerId = providerIdOrThrow()
-      if (!transition('pay')) {
+      const { providerId, phase, intent: previousIntent } = store.getSnapshot()
+      if (!providerId) {
         return {
           status: 'error',
-          error: { code: 'busy', message: 'A payment is already running.' },
+          error: { code: 'no_provider', message: 'Select a payment provider first.' },
         }
       }
+      if (!nextPhase(phase, 'pay')) return busyResult()
+      // A timeout is not evidence of failure. Reconcile an accepted payment instead of
+      // creating a second charge when the shopper presses Pay again.
+      if (previousIntent?.status === 'processing') {
+        const started = begin()
+        return applyResult({ status: 'processing', intent: previousIntent }, started)
+      }
+      const existing =
+        (phase === 'ready' || phase === 'failed') &&
+        preparedInput === inputKey(request.input) &&
+        (!request.idempotencyKey || request.idempotencyKey === idempotencyKey)
+          ? previousIntent
+          : null
 
-      abortController = new AbortController()
-      idempotencyKey = request.idempotencyKey ?? idempotencyKey ?? uuid()
-      store.set({ error: null, action: null, attempt: 0 })
+      const started = begin()
+      idempotencyKey = request.idempotencyKey ?? (existing ? idempotencyKey : null) ?? uuid()
+      preparedInput = inputKey(request.input)
+      store.set({ intent: existing, error: null, action: null, attempt: 0 })
+      transition('pay')
+      const opts = callOptions()
 
       return await applyResult(
         await safely(async () => {
           const instance = await instanceOf(providerId)
-          const existing = store.getSnapshot().intent
-          const intent = existing ?? (await instance.createIntent(request.input, callOptions()))
+          if (!current(started)) return stoppedResult()
+          const intent = existing ?? (await instance.createIntent(request.input, opts))
+          if (!current(started)) return stoppedResult()
           if (!existing) {
             store.set({ intent })
             emit({ type: 'intent_created', intent })
           }
-          transition('created')
+          if (store.getSnapshot().phase === 'creating') transition('created')
 
-          return await instance.confirm(intent.id, request.instrument, callOptions())
+          if (!current(started)) return stoppedResult()
+          return await instance.confirm(intent.id, request.instrument, opts)
         }, 'confirm'),
+        started,
       )
     },
 
     runPendingAction: async (options = {}) => {
-      const { action, intent } = store.getSnapshot()
-      providerIdOrThrow()
+      const { action, intent, phase } = store.getSnapshot()
+      const started = version
+      if (phase !== 'action_pending' && phase !== 'action_running') return busyResult()
 
       if (!action || !intent) {
         return await applyResult({
@@ -459,6 +590,7 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
       }
 
       const surface = options.surface ?? action.surface
+      if (phase === 'action_running' && surface === runningSurface) return busyResult()
       const runner = config.runners.resolve(action, surface)
       if (!runner) {
         return await applyResult({
@@ -471,29 +603,34 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
         })
       }
 
-      persistPending(action)
       if (!transition('run_action')) {
-        return {
-          status: 'error',
-          error: { code: 'busy', message: 'The action is already running.' },
-        }
+        return busyResult()
       }
-      store.set({ attempt: store.getSnapshot().attempt + 1 })
+      stopAction?.abort('surface_changed')
+      const run = ++actionRun
+      runningSurface = surface
+      persistPending(action)
+      if (phase === 'action_pending') store.set({ attempt: store.getSnapshot().attempt + 1 })
       emit({ type: 'action_started', action, surface })
 
       abortController ??= new AbortController()
       // Cuts the runner short when the payment finishes somewhere else - see below.
       const stopRunner = new AbortController()
+      stopAction = stopRunner
+      const signal = anySignal([abortController.signal, stopRunner.signal])
 
-      const fromRunner = runner
-        .run(action, {
-          surface,
-          signal: anySignal([abortController.signal, stopRunner.signal]),
-          returnUrl: config.returnUrl,
-          mount: options.mount ?? null,
-          deadline: now() + actionTimeoutMs,
-          report: (progress) => log.debug('action progress', { ...progress, actionId: action.id }),
-        })
+      const fromRunner = Promise.resolve()
+        .then(() =>
+          runner.run(action, {
+            surface,
+            signal,
+            returnUrl: config.returnUrl,
+            mount: options.mount ?? null,
+            deadline: now() + actionTimeoutMs,
+            report: (progress) =>
+              log.debug('action progress', { ...progress, actionId: action.id }),
+          }),
+        )
         .catch((cause: unknown): ActionEvidence => ({
           via: 'aborted',
           actionId: action.id,
@@ -509,6 +646,8 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
           ? await raceWithPolling(action, intent.id, fromRunner, stopRunner)
           : await fromRunner
 
+      if (!current(started) || run !== actionRun) return stoppedResult()
+      runningSurface = null
       emit({ type: 'action_finished', action, evidence })
 
       // Cancelled while the action was running: the runner still reports back, and that
@@ -522,49 +661,27 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
       }
 
       transition('action_done')
-      return await engine.resumeWith(evidence)
+      return await resumeEvidence(evidence, started)
     },
 
     resumeWith: async (evidence) => {
-      const providerId = providerIdOrThrow()
-      const intent = store.getSnapshot().intent
-
-      if (!intent) {
-        return await applyResult({
+      const { action, intent, phase } = store.getSnapshot()
+      if (phase !== 'action_pending' || !action || !intent) return busyResult()
+      if (evidence.actionId !== action.id) {
+        return {
           status: 'error',
-          error: {
-            code: 'no_payment_in_flight',
-            message: 'There is no payment waiting to be finished.',
-          },
-        })
+          error: { code: 'invalid_evidence', message: 'The evidence belongs to another action.' },
+        }
       }
-
-      if (evidence.via === 'aborted' && evidence.reason === 'user') {
-        return await engine.abort('user')
-      }
-
-      return await applyResult(
-        await safely(async () => {
-          const instance = await instanceOf(providerId)
-          const result = await instance.resume(intent.id, evidence, callOptions())
-
-          // Evidence is a hint. Anything short of a terminal answer gets re-read from the
-          // provider before we tell the shopper their money moved.
-          if (result.status === 'requires_action' || result.status === 'processing') return result
-          if (result.status === 'error') {
-            const current = await instance.getIntent(intent.id, callOptions()).catch(() => null)
-            if (current?.status === 'succeeded') return { status: 'succeeded', intent: current }
-          }
-          return result
-        }, 'resume'),
-      )
+      const started = version
+      transition('resume')
+      return resumeEvidence(evidence, started)
     },
 
     hydrate: async (params = {}) => {
       const pending = readPendingCheckout(storage)
       if (!pending) return null
 
-      clearPendingCheckout(storage)
       if (!registry.has(pending.providerId)) {
         log.warn('a payment was left in flight for a provider this page does not register', {
           providerId: pending.providerId,
@@ -573,22 +690,45 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
       }
 
       if (!transition('hydrate')) return null
+      const started = begin()
       idempotencyKey = pending.idempotencyKey || uuid()
       store.set({ providerId: pending.providerId })
+      const opts = callOptions()
 
-      return await applyResult(
+      const result = await applyResult(
         await safely(async () => {
           const instance = await instanceOf(pending.providerId)
-          const intent = await instance.getIntent(pending.intentId, callOptions())
+          if (!current(started)) return stoppedResult()
+          const intent = await instance.getIntent(pending.intentId, opts)
+          if (!current(started)) return stoppedResult()
           store.set({ intent })
+          if (intent.status === 'succeeded') return { status: 'succeeded', intent }
+          if (intent.status === 'declined')
+            return {
+              status: 'declined',
+              intent,
+              error: { code: 'declined', message: 'The payment was declined.' },
+            }
+          if (intent.status === 'canceled')
+            return {
+              status: 'error',
+              intent,
+              error: { code: 'canceled', message: 'The payment was canceled.' },
+            }
 
           return await instance.resume(
             pending.intentId,
             { via: 'return_url', actionId: pending.actionId, params },
-            callOptions(),
+            opts,
           )
         }, 'hydrate'),
+        started,
       )
+      // A temporary outage must not erase the only handle for a redirected payment.
+      if (current(started) && result.status === 'error' && result.intent?.status !== 'canceled') {
+        writePendingCheckout(storage, pending)
+      }
+      return result
     },
 
     fetchIntent: async (intentId, providerId) => {
@@ -608,8 +748,19 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
       // Aborting an already-aborted payment must not cancel the intent twice: the runner
       // that was interrupted reports back with `aborted` evidence, which lands here again.
       if (phase === 'canceled') return canceled
+      if (phase === 'succeeded' && intent) return { status: 'succeeded', intent }
+      if (phase === 'declined' && intent)
+        return {
+          status: 'declined',
+          intent,
+          error: store.getSnapshot().error ?? { message: 'The payment was declined.' },
+        }
+      if (phase === 'idle') return canceled
 
+      const canceledVersion = ++version
+      selection++
       abortController?.abort(reason)
+      stopAction?.abort(reason)
 
       // Move the phase first, synchronously: the interrupted runner re-enters here in the
       // same tick, and without it we would send a second cancellation.
@@ -622,11 +773,18 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
         if (loaded?.provider.capabilities.cancel && loaded.instance.cancel) {
           // No abort signal here: it was just fired to stop the runner, and reusing it
           // would kill this request before it left. Best effort - the shopper has gone.
-          await loaded.instance
+          const authoritative = await loaded.instance
             .cancel(intent.id, { idempotencyKey: idempotencyKey ?? uuid() })
             .catch((cause: unknown) => {
               log.warn('could not cancel the intent after an abort', { cause })
             })
+          if (version === canceledVersion && authoritative) {
+            store.set({ intent: authoritative })
+            if (authoritative.status === 'succeeded') {
+              const started = begin()
+              return applyResult({ status: 'succeeded', intent: authoritative }, started)
+            }
+          }
         }
       }
 
@@ -634,9 +792,14 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
     },
 
     reset: () => {
+      version++
+      selection++
       abortController?.abort('reset')
+      stopAction?.abort('reset')
       abortController = null
       idempotencyKey = null
+      preparedInput = null
+      runningSurface = null
       clearPendingCheckout(storage)
       transition('reset')
       const { providerId, capabilities } = store.getSnapshot()
@@ -645,6 +808,8 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
   }
 
   if (config.defaultProviderId) {
+    if (!registry.has(config.defaultProviderId))
+      throw new Error(`Unknown default payment provider "${config.defaultProviderId}".`)
     store.set({ providerId: config.defaultProviderId })
   }
   for (const registration of config.providers) {

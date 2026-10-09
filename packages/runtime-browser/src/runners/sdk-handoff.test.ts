@@ -119,3 +119,22 @@ describe('the SDK handoff runner', () => {
     expect(appended[0]?.crossOrigin).toBe('anonymous')
   })
 })
+
+it('stops waiting for an SDK that ignores cancellation', async () => {
+  const controller = new AbortController()
+  const runner = createSdkHandoffRunner({
+    adapters: [{ sdk: 'wallet', request: () => new Promise(() => {}) }],
+  })
+  const evidence = runner.run(action(), { ...context(), signal: controller.signal })
+  controller.abort()
+  await expect(evidence).resolves.toMatchObject({ via: 'aborted', reason: 'user' })
+})
+
+it('honors the action deadline when an SDK never answers', async () => {
+  const runner = createSdkHandoffRunner({
+    adapters: [{ sdk: 'wallet', request: () => new Promise(() => {}) }],
+  })
+  await expect(
+    runner.run(action(), { ...context(), deadline: Date.now() + 20 }),
+  ).resolves.toMatchObject({ via: 'aborted', reason: 'timeout' })
+})

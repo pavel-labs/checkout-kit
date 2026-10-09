@@ -26,15 +26,22 @@ export const PaymentActionHost = ({
   const mountRef = useRef<HTMLDivElement>(null)
   // React 19 mounts effects twice in development. Running a challenge twice would send
   // the shopper two authentication requests, so each action is started at most once.
-  const startedRef = useRef<string | null>(null)
+  const startedRef = useRef<{ engine: typeof engine; action: typeof action } | null>(null)
 
   useEffect(() => {
+    if (!action) startedRef.current = null
     if (!autoRun || !action || phase !== 'action_pending') return
-    if (startedRef.current === action.id) return
-    startedRef.current = action.id
+    if (startedRef.current?.engine === engine && startedRef.current.action === action) return
+    startedRef.current = { engine, action }
 
     const mount = mountRef.current ? createMount(mountRef.current) : null
     void engine.runPendingAction({ mount, surface }).then((result) => {
+      if (
+        result.status === 'error' &&
+        !result.intent &&
+        (result.error.code === 'canceled' || result.error.code === 'busy')
+      )
+        return
       onSettled?.(result)
     })
     // `onSettled` is in the dependency list only to satisfy the exhaustive-deps rule; the
