@@ -28,6 +28,8 @@ export interface WebViewBridgeOptions {
   /** Reports the document height so the host can size the WebView. */
   readonly reportHeight?: boolean
   readonly onCommand?: (command: BridgeCommand) => void
+  /** Bridge delivery failures do not interrupt the payment engine. */
+  readonly onError?: (error: unknown) => void
 }
 
 export interface WebViewBridge {
@@ -69,7 +71,12 @@ export const createWebViewBridge = (
   }
 
   let sequence = 0
-  const envelope = <T extends BridgeEvent['type'], P>(type: T, payload: P) =>
+  let stopped = false
+  const envelope = <T extends BridgeEvent['type'], P>(
+    type: T,
+    payload: P,
+    correlationId?: string,
+  ) =>
     ({
       source: 'checkout-kit' as const,
       v: BRIDGE_VERSION,
@@ -78,14 +85,38 @@ export const createWebViewBridge = (
       ts: Date.now(),
       type,
       payload,
+      correlationId,
     }) as BridgeEvent
 
   const send = (event: BridgeEvent): void => {
-    target.postMessage(JSON.stringify(event))
+    if (stopped) return
+    try {
+      target.postMessage(JSON.stringify(event))
+    } catch (error) {
+      options.onError?.(error)
+    }
   }
 
-  const emit = <T extends BridgeEvent['type'], P>(type: T, payload: P): void => {
-    send(envelope(type, payload))
+  const emit = <T extends BridgeEvent['type'], P>(
+    type: T,
+    payload: P,
+    correlationId?: string,
+  ): void => {
+    send(envelope(type, payload, correlationId))
+  }
+
+  const ready = (correlationId?: string) => {
+    const snapshot = engine.getSnapshot()
+    emit(
+      'PAYMENT_READY',
+      {
+        bridgeVersion: BRIDGE_VERSION,
+        providerId: snapshot.providerId,
+        instruments: snapshot.capabilities?.instruments ?? [],
+        actions: snapshot.capabilities?.actions ?? [],
+      },
+      correlationId,
+    )
   }
 
   const stops: (() => void)[] = []
@@ -164,21 +195,32 @@ export const createWebViewBridge = (
     }),
   )
 
+  const seen = new Set<string>()
   const handleCommand = (event: MessageEvent | Event): void => {
-    const data = (event as MessageEvent).data
+    const message = event as MessageEvent
+    // Native injections have no source. A provider iframe is never a command channel.
+    if (message.source && message.source !== window) return
+    if (message.origin && message.origin !== 'null' && message.origin !== window.location.origin)
+      return
+    const data = message.data
     const parsed = parseBridgeCommand(data)
     if (!parsed.ok) return
 
     const command = parsed.message
+    if (command.sessionId !== sessionId || seen.has(command.id)) return
+    seen.add(command.id)
+    if (seen.size > 256) seen.delete(seen.values().next().value!)
     switch (command.type) {
       case 'PAYMENT_CANCEL':
-        void engine.abort('user')
+        void engine.abort('user').catch((error: unknown) => options.onError?.(error))
         break
       case 'PAYMENT_RETRY':
         engine.reset()
         break
       case 'PAYMENT_RESUME':
-        void engine.hydrate(command.payload.params)
+        void engine
+          .hydrate(command.payload.params)
+          .catch((error: unknown) => options.onError?.(error))
         break
       case 'PAYMENT_SET_THEME':
         document.documentElement
@@ -186,6 +228,7 @@ export const createWebViewBridge = (
           ?.setAttribute('data-ck-theme', command.payload.theme)
         break
       case 'PAYMENT_PING':
+        ready(command.id)
         break
     }
 
@@ -208,18 +251,14 @@ export const createWebViewBridge = (
     stops.push(() => observer.disconnect())
   }
 
-  const snapshot = engine.getSnapshot()
-  emit('PAYMENT_READY', {
-    bridgeVersion: BRIDGE_VERSION,
-    providerId: snapshot.providerId,
-    instruments: snapshot.capabilities?.instruments ?? [],
-    actions: snapshot.capabilities?.actions ?? [],
-  })
+  ready()
 
   return {
     isHosted: true,
     send,
     stop: () => {
+      if (stopped) return
+      stopped = true
       for (const stop of stops) stop()
     },
   }

@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import { BRIDGE_VERSION } from '../protocol'
-import { createCheckoutMessageHandler, createNavigationPolicy, parseReturnDeepLink } from './index'
+import {
+  createBridgeCommand,
+  createCommandScript,
+  createCheckoutMessageHandler,
+  createNavigationPolicy,
+  parseReturnDeepLink,
+} from './index'
 
 const envelope = (type: string, payload: object = {}, overrides: object = {}) =>
   JSON.stringify({
@@ -52,7 +58,13 @@ describe('createCheckoutMessageHandler', () => {
   it('remembers the session, so a reloaded WebView can be told apart', () => {
     const handle = createCheckoutMessageHandler({})
 
-    handle(envelope('PAYMENT_READY', {}, { sessionId: 'sess_2' }))
+    handle(
+      envelope(
+        'PAYMENT_READY',
+        { bridgeVersion: 1, providerId: null, instruments: [], actions: [] },
+        { sessionId: 'sess_2' },
+      ),
+    )
 
     expect(handle.sessionId).toBe('sess_2')
   })
@@ -132,5 +144,62 @@ describe('trimming the path', () => {
     parseReturnDeepLink(`myapp://${'/'.repeat(50_000)}x`, { scheme: 'myapp', path: 'nope' })
 
     expect(Date.now() - started).toBeLessThan(1000)
+  })
+})
+
+describe('session routing', () => {
+  const ready = { bridgeVersion: 1, providerId: null, instruments: [], actions: [] }
+  const paid = { intentId: 'pi', amount: 2500, currency: 'USD' }
+  it('ignores duplicate events and messages from a retired document', () => {
+    const onEvent = vi.fn()
+    const handle = createCheckoutMessageHandler({ onEvent })
+    handle(envelope('PAYMENT_READY', ready, { id: 'ready1' }))
+    handle(envelope('PAYMENT_READY', ready, { id: 'ready1' }))
+    handle(envelope('PAYMENT_READY', ready, { sessionId: 'sess_2', id: 'ready2' }))
+    handle(envelope('PAYMENT_SUCCEEDED', paid, { id: 'old-payment' }))
+    handle(envelope('PAYMENT_READY', ready, { id: 'old-ready' }))
+    expect(handle.sessionId).toBe('sess_2')
+    expect(onEvent).toHaveBeenCalledTimes(2)
+  })
+
+  it('requires a new handshake before a different session can take over', () => {
+    const onEvent = vi.fn()
+    const handle = createCheckoutMessageHandler({ onEvent })
+    handle(envelope('PAYMENT_READY', ready))
+    handle(envelope('PAYMENT_SUCCEEDED', paid, { sessionId: 'unknown', id: 'foreign' }))
+    expect(handle.sessionId).toBe('sess_1')
+    expect(onEvent).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not treat a similarly named path as an allowed directory', () => {
+    const policy = createNavigationPolicy({ allow: ['https://shop.test/checkout/'] })
+    expect(policy.decide('https://shop.test/checkout')).toBe('allow')
+    expect(policy.decide('https://shop.test/checkout/card')).toBe('allow')
+    expect(policy.decide('https://shop.test/checkout-admin')).toBe('block')
+    expect(policy.decide('https://user:password@shop.test/checkout')).toBe('block')
+  })
+})
+
+describe('native command scripts', () => {
+  it('round-trips arbitrary return parameters as data', () => {
+    const command = createBridgeCommand(
+      'PAYMENT_RESUME',
+      { params: { token: "'); globalThis.compromised = true; // </script> \u2028" } },
+      { sessionId: 'session', id: 'command' },
+    )
+    const dispatchEvent = vi.fn()
+    const Message = class {
+      readonly type: string
+      readonly options: { data: string }
+      constructor(type: string, options: { data: string }) {
+        this.type = type
+        this.options = options
+      }
+    }
+    const script = createCommandScript(command)
+    new Function('globalThis', 'MessageEvent', script)({ dispatchEvent }, Message)
+    expect(JSON.parse(dispatchEvent.mock.calls[0]![0].options.data)).toEqual(command)
+    expect(script).not.toContain('</script>')
+    expect((globalThis as Record<string, unknown>).compromised).toBeUndefined()
   })
 })

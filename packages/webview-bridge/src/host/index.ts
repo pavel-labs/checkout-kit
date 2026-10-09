@@ -1,7 +1,15 @@
 // The React Native side. No DOM, no engine, no react-native import: it takes the string a
 // WebView handed over and gives back something typed.
 
-import { parseBridgeEvent, type BridgeEvent, type BridgeEventType } from '../protocol'
+import {
+  BRIDGE_VERSION,
+  parseBridgeCommand,
+  parseBridgeEvent,
+  type BridgeCommand,
+  type BridgeCommandType,
+  type BridgeEvent,
+  type BridgeEventType,
+} from '../protocol'
 
 export type BridgeEventHandlers = {
   [T in BridgeEventType]?: (event: Extract<BridgeEvent, { type: T }>) => void
@@ -28,6 +36,8 @@ export const createCheckoutMessageHandler = (
   handlers: BridgeEventHandlers,
 ): CheckoutMessageHandler => {
   let sessionId: string | null = null
+  const retired = new Set<string>()
+  const seen = new Set<string>()
 
   const handle = (raw: unknown): void => {
     const result = parseBridgeEvent(raw)
@@ -37,6 +47,17 @@ export const createCheckoutMessageHandler = (
     }
 
     const event = result.message
+    if (retired.has(event.sessionId)) return
+    if (sessionId !== null && event.sessionId !== sessionId) {
+      // Only the next document's handshake can replace a live checkout session.
+      if (event.type !== 'PAYMENT_READY') return
+      retired.add(sessionId)
+      if (retired.size > 16) retired.delete(retired.values().next().value!)
+      seen.clear()
+    }
+    if (seen.has(event.id)) return
+    seen.add(event.id)
+    if (seen.size > 256) seen.delete(seen.values().next().value!)
     sessionId = event.sessionId
 
     const handler = handlers[event.type] as ((value: BridgeEvent) => void) | undefined
@@ -70,7 +91,12 @@ const matches = (url: URL, prefix: string): boolean => {
 
   // Origin compared for equality, never as a substring: `https://evil.test/#https://bank.test`
   // passes any check that looks at the whole URL as text.
-  return url.origin === allowed.origin && url.pathname.startsWith(allowed.pathname)
+  if (url.username || url.password || allowed.username || allowed.password) return false
+  // A path prefix is a directory boundary: /checkout must not grant /checkout-admin.
+  const path = allowed.pathname.replace(/\/+$/, '')
+  return (
+    url.origin === allowed.origin && (url.pathname === path || url.pathname.startsWith(`${path}/`))
+  )
 }
 
 /**
@@ -138,4 +164,34 @@ export const parseReturnDeepLink = (
   }
 
   return Object.fromEntries(url.searchParams)
+}
+
+/** Build a command using the session reported by PAYMENT_READY. Ids must be unique within it. */
+export const createBridgeCommand = <T extends BridgeCommandType>(
+  type: T,
+  payload: Extract<BridgeCommand, { type: T }>['payload'],
+  options: { readonly sessionId: string; readonly id: string; readonly ts?: number },
+): Extract<BridgeCommand, { type: T }> => {
+  const command = {
+    source: 'checkout-kit',
+    v: BRIDGE_VERSION,
+    type,
+    payload,
+    sessionId: options.sessionId,
+    id: options.id,
+    ts: options.ts ?? Date.now(),
+  }
+  const parsed = parseBridgeCommand(command)
+  if (!parsed.ok) throw new TypeError('Invalid checkout bridge command.')
+  return parsed.message as Extract<BridgeCommand, { type: T }>
+}
+
+/** Safe JavaScript for React Native WebView.injectJavaScript; no raw query-string interpolation. */
+export const createCommandScript = (command: BridgeCommand): string => {
+  if (!parseBridgeCommand(command).ok) throw new TypeError('Invalid checkout bridge command.')
+  const data = JSON.stringify(JSON.stringify(command))
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
+  return `globalThis.dispatchEvent(new MessageEvent('message', { data: ${data} })); true;`
 }

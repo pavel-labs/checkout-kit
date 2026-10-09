@@ -1,7 +1,7 @@
 // React binding over the engine. It works because the engine returns the same snapshot
 // object until something changes - see the store.
 
-import { useCallback, useSyncExternalStore } from 'react'
+import { useMemo, useSyncExternalStore } from 'react'
 import {
   isBusyPhase,
   isSettledPhase,
@@ -18,13 +18,34 @@ export const useCheckoutSnapshot = (): CheckoutSnapshot => {
   return useSyncExternalStore(engine.subscribe, engine.getSnapshot, engine.getSnapshot)
 }
 
-/**
- * Subscribe to one derived value. Use it for anything that re-renders often: a component
- * reading the whole snapshot re-renders on every phase change, whether it cares or not.
- */
-export const useCheckoutSelector = <T>(selector: (snapshot: CheckoutSnapshot) => T): T => {
+// A selector reader belongs to the external store subscription, not to render state.
+const createSelectorReader = <T>(
+  engine: CheckoutEngine,
+  selector: (snapshot: CheckoutSnapshot) => T,
+  isEqual: (previous: T, next: T) => boolean,
+): (() => T) => {
+  let previous: { snapshot: CheckoutSnapshot; value: T } | undefined
+  return () => {
+    const snapshot = engine.getSnapshot()
+    if (previous?.snapshot === snapshot) return previous.value
+    const value = selector(snapshot)
+    const selected = previous && isEqual(previous.value, value) ? previous.value : value
+    previous = { snapshot, value: selected }
+    return selected
+  }
+}
+
+/** Subscribe to one derived value. Object selections can provide an equality function. */
+export const useCheckoutSelector = <T>(
+  selector: (snapshot: CheckoutSnapshot) => T,
+  isEqual: (previous: T, next: T) => boolean = Object.is,
+): T => {
   const engine = useCheckoutEngine()
-  const select = useCallback(() => selector(engine.getSnapshot()), [engine, selector])
+  // Repeated React reads of one immutable snapshot must return the same selection.
+  const select = useMemo(
+    () => createSelectorReader(engine, selector, isEqual),
+    [engine, selector, isEqual],
+  )
   return useSyncExternalStore(engine.subscribe, select, select)
 }
 

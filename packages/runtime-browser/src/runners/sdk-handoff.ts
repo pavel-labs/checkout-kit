@@ -22,7 +22,7 @@ export interface SdkHandoffRunnerOptions {
   readonly loadTimeoutMs?: number
 }
 
-const loading = new Map<string, Promise<void>>()
+const loading = new Map<string, { integrity: string | undefined; promise: Promise<void> }>()
 
 const loadScript = (
   url: string,
@@ -30,7 +30,15 @@ const loadScript = (
   timeoutMs: number,
 ): Promise<void> => {
   const existing = loading.get(url)
-  if (existing) return existing
+  if (existing) {
+    if (existing.integrity !== integrity)
+      return Promise.reject(
+        new Error(
+          `The payment SDK at ${url} was already requested with different integrity settings.`,
+        ),
+      )
+    return existing.promise
+  }
 
   const started = new Promise<void>((resolve, reject) => {
     const script = document.createElement('script')
@@ -61,14 +69,14 @@ const loadScript = (
   })
 
   // A failed load must not be remembered as done; the next attempt should try again.
-  loading.set(
-    url,
-    started.catch((cause: unknown) => {
+  loading.set(url, {
+    integrity,
+    promise: started.catch((cause: unknown) => {
       loading.delete(url)
       throw cause
     }),
-  )
-  return loading.get(url) ?? started
+  })
+  return loading.get(url)?.promise ?? started
 }
 
 export const createSdkHandoffRunner = (

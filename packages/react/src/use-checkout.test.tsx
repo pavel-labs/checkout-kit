@@ -115,6 +115,37 @@ describe('useCheckout', () => {
 })
 
 describe('useCheckoutSelector', () => {
+  it('supports selectors that allocate an object without looping', async () => {
+    const engine = setup()
+    const Amount = () => {
+      const selected = useCheckoutSelector((s) => ({ amount: s.intent?.amount ?? 0 }))
+      return <p data-testid="amount">{selected.amount}</p>
+    }
+    render(<Amount />, { wrapper: wrapper(engine) })
+    expect(screen.getByTestId('amount').textContent).toBe('0')
+    await pay(engine)
+    expect(screen.getByTestId('amount').textContent).toBe(
+      String(engine.getSnapshot().intent?.amount),
+    )
+  })
+
+  it('keeps an equal derived object stable across unrelated payment changes', async () => {
+    const engine = setup()
+    let commits = 0
+    const Form = () => {
+      useCommitCounter(() => {
+        commits += 1
+      })
+      const selected = useCheckoutSelector(
+        (s) => ({ provider: s.providerId }),
+        (a, b) => a.provider === b.provider,
+      )
+      return <p>{selected.provider}</p>
+    }
+    render(<Form />, { wrapper: wrapper(engine) })
+    await pay(engine)
+    expect(commits).toBe(1)
+  })
   it('does not re-render while the selected value is unchanged', async () => {
     const engine = setup()
     let selectorCommits = 0

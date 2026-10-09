@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { cx } from './cx'
 
 export interface CountdownProps {
@@ -20,7 +20,7 @@ const format = (totalSeconds: number): string => {
 }
 
 const secondsUntil = (target: number): number =>
-  Math.max(0, Math.ceil((target - Date.now()) / 1000))
+  Number.isFinite(target) ? Math.max(0, Math.ceil((target - Date.now()) / 1000)) : 0
 
 /**
  * How long is left to pay - a QR window, a transfer deadline. Silent while it runs: a live
@@ -40,10 +40,22 @@ export const Countdown = ({
   // `expiresAt`. The interval only asks for a re-render.
   const [, tick] = useState(0)
   const secondsLeft = secondsUntil(target)
+  const expire = useRef(onExpire)
+  const notified = useRef<number | null>(null)
 
   useEffect(() => {
+    expire.current = onExpire
+  }, [onExpire])
+
+  useEffect(() => {
+    if (!Number.isFinite(target)) return
+    const notify = () => {
+      if (notified.current === target) return
+      notified.current = target
+      expire.current?.()
+    }
     if (secondsUntil(target) === 0) {
-      onExpire?.()
+      notify()
       return
     }
 
@@ -52,12 +64,12 @@ export const Countdown = ({
       tick((count) => count + 1)
       if (secondsUntil(target) === 0) {
         clearInterval(id)
-        onExpire?.()
+        notify()
       }
     }, 1000)
 
     return () => clearInterval(id)
-  }, [target, onExpire])
+  }, [target])
 
   const expired = secondsLeft === 0
   const remaining = format(secondsLeft)
