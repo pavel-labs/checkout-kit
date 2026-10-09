@@ -1,127 +1,66 @@
-# The checkout in a native app
+# WebView and native hosts
 
-> Русская версия: [ru/webview.md](./ru/webview.md)
+> [Русская версия](./ru/webview.md)
 
-The same web checkout, opened in a WebView, with the native app around it.
-`@checkout-kit/webview-bridge` is the contract between the two.
+Typed events and commands between a web checkout and its React Native WebView host. The package has three entry points; native code imports `/host` or `/protocol`, which run without DOM globals or a React Native dependency.
 
-Why a WebView: a payment page changes when a provider changes and has to pass PCI scrutiny.
-One checkout for the browser and the app means one place to update and one thing to review.
-The parts a shopper expects to feel native - the header, the cancel button, the result
-screen - stay native, because those never talk to a provider.
+| Import                                  | Environment                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------- |
+| `@checkout-kit/webview-bridge`          | Web page: `createWebViewBridge(engine, options)`.                         |
+| `@checkout-kit/webview-bridge/host`     | Native host: message routing, commands, navigation and deep-link helpers. |
+| `@checkout-kit/webview-bridge/protocol` | Types, version and strict message parsers.                                |
 
-The exception is a wallet. Apple Pay and Google Pay have to be presented by the OS, so take
-those natively and let the WebView cover the rest.
-
-## Three entry points
-
-| Import                                  | Runs where       | Contains                                 |
-| --------------------------------------- | ---------------- | ---------------------------------------- |
-| `@checkout-kit/webview-bridge`          | the web checkout | subscribes to the engine, posts events   |
-| `@checkout-kit/webview-bridge/host`     | React Native     | the message parser and navigation policy |
-| `@checkout-kit/webview-bridge/protocol` | both             | the message types                        |
-
-The last two have no DOM in them, which CI checks: `npm run purity` fails if a `window`
-appears. That is what lets them bundle into React Native.
-
-## The web side
-
-One line at the composition root. Outside a WebView it returns a no-op, so the same build
-serves the browser:
+## Web page
 
 ```ts
 import { createWebViewBridge } from '@checkout-kit/webview-bridge'
-
-export const bridge = createWebViewBridge(checkout, { reportHeight: true })
+const bridge = createWebViewBridge(engine, { reportHeight: true })
+// Register once for this document, and call bridge.stop() when disposing the checkout.
 ```
 
-It subscribes only to the engine public events, so nothing in `@checkout-kit/core` knows the
-bridge exists.
+The bridge detects `window.ReactNativeWebView` and is a no-op in a normal browser. It emits `PAYMENT_READY`, state/action events and verified outcomes. Payloads are selected field by field and do not include card data. `onError` can report a native delivery failure without affecting payment execution.
 
-## The native side
+## Native host
 
-```tsx
+```ts
 import {
+  createBridgeCommand,
   createCheckoutMessageHandler,
-  createNavigationPolicy,
-  parseReturnDeepLink,
+  createCommandScript,
 } from '@checkout-kit/webview-bridge/host'
 
 const handle = createCheckoutMessageHandler({
-  PAYMENT_STATE_CHANGED: (event) => setHeading(event.payload.state),
-  PAYMENT_SUCCEEDED: () => navigate('Receipt'),
-  PAYMENT_DECLINED: (event) => Alert.alert('Declined', event.payload.message),
+  PAYMENT_SUCCEEDED: (event) => showReceipt(event.payload.intentId),
 })
+// WebView.onMessage: handle(event.nativeEvent.data), only for the merchant checkout URL.
 
-const policy = createNavigationPolicy({
-  allow: ['https://pay.example.com/checkout'],
-  openExternally: ['https://help.example.com'],
-  returnScheme: 'myapp',
-})
-
-<WebView
-  source={{ uri: 'https://pay.example.com/checkout' }}
-  onMessage={(event) => handle(event.nativeEvent.data)}
-  onShouldStartLoadWithRequest={(request) => policy.decide(request.url) !== 'block'}
-/>
+if (handle.sessionId) {
+  const command = createBridgeCommand(
+    'PAYMENT_CANCEL',
+    {},
+    {
+      sessionId: handle.sessionId,
+      id: 'native:1', // unique within this session
+    },
+  )
+  webview.injectJavaScript(createCommandScript(command))
+}
 ```
 
-A full screen is in [`examples/react-native-checkout`](../examples/react-native-checkout).
+Commands must carry the session received from `PAYMENT_READY`, not an arbitrary native id. The bridge rejects another session, duplicate ids, malformed payloads and commands sent by provider frames. A ping returns `PAYMENT_READY` with the command id as `correlationId`. The native handler retires the previous session only when a new ready handshake arrives and drops repeated events.
 
-## Messages
+Use `createCommandScript` rather than interpolating a return token into JavaScript. It serializes parameters as data and works with `WebView.injectJavaScript`. Filter `onMessage` by the merchant document URL even when navigation permits bank pages.
 
-Every message carries `source: 'checkout-kit'`, a version, an id and a session id - a
-WebView receives traffic from everything on the page, and a reloaded WebView leaves stale
-messages behind. A version the host does not understand is refused as
-`unsupported_version` rather than half-read.
+`createNavigationPolicy({ allow, openExternally, returnScheme })` compares HTTPS origins and path directory boundaries; `/checkout` does not permit `/checkout-admin`. Feed matching deep links through `parseReturnDeepLink` and send `PAYMENT_RESUME` with the parsed parameters. Resume re-reads the merchant's order; a deep link does not establish success.
 
-| Event                                                                             | When                                                              |
-| --------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `PAYMENT_READY`                                                                   | first, always: bridge version, provider, what it accepts          |
-| `PAYMENT_STATE_CHANGED`                                                           | one of the nine UI states                                         |
-| `PAYMENT_INTENT_CREATED`                                                          | amount and currency confirmed                                     |
-| `PAYMENT_REQUIRES_ACTION`                                                         | carries the URL for a redirect, so the host may open it elsewhere |
-| `PAYMENT_ACTION_STARTED` / `PAYMENT_ACTION_FINISHED`                              | around an authentication step                                     |
-| `PAYMENT_SUCCEEDED` / `PAYMENT_DECLINED` / `PAYMENT_CANCELLED` / `PAYMENT_FAILED` | the outcome                                                       |
-| `PAYMENT_HEIGHT_CHANGED`                                                          | document height, when `reportHeight` is on                        |
+[Native example](https://github.com/pavel-labs/checkout-kit/tree/main/examples/react-native-checkout) · [WebView guide](https://pavel-labs.github.io/checkout-kit/webview.html)
 
-Commands going the other way: `PAYMENT_CANCEL`, `PAYMENT_RETRY`, `PAYMENT_RESUME`,
-`PAYMENT_SET_THEME`, `PAYMENT_PING`.
+## Navigation and return handling
 
-## Coming back from a bank
+Use the four navigation decisions explicitly: allow merchant/permitted provider URLs in the WebView, open external URLs with the OS, block parsed custom-scheme returns and send PAYMENT_RESUME, and reject all other URLs. Match exact origin and directory boundaries; no URL credentials.
 
-**Preferred: never leave the WebView.** A redirect happens inside it, the return URL comes
-back through `onShouldStartLoadWithRequest`, the policy calls it `return`, and the app does
-nothing - the web checkout hydrates itself exactly as it does after a browser redirect. The
-bank keeps its cookies, which matters: an access control server that set a device-binding
-cookie in the WebView will not see it from anywhere else.
+Install the native return handler before SDK/redirect navigation. Handle both initial Linking URL and future events, queue returns before PAYMENT_READY and clear readiness on a new document load. A POST redirect includes form fields and cannot be replaced by opening its URL alone.
 
-**Fallback: a deep link.** For a bank that refuses to be framed, open the URL in
-`ASWebAuthenticationSession` or a Custom Tab, catch the return, and post it back:
+## Verify on the actual device
 
-```ts
-Linking.addEventListener('url', ({ url }) => {
-  const params = parseReturnDeepLink(url, { scheme: 'myapp', path: 'payment/return' })
-  if (params) send('PAYMENT_RESUME', { params })
-})
-```
-
-The checkout wrote the provider, intent and action ids to session storage before the action
-started, so `hydrate(params)` picks the payment up with no new engine API involved.
-
-## Security
-
-**Set a navigation policy.** Without one, any link the page offers runs inside your app.
-`createNavigationPolicy` compares origins for equality and then matches a path prefix -
-never a substring, because `https://evil.test/#https://pay.example.com` passes anything that
-searches the whole URL as text. `http:` is always blocked.
-
-**No card data crosses the bridge.** Payloads are built field by field from a whitelist, and
-a test runs a real card payment through the bridge and asserts that the number, the security
-code and the cardholder name appear in none of the messages.
-
-**Check the source.** The host parser drops anything without `source: 'checkout-kit'`, and
-the web side ignores commands that fail the same check.
-
-**Serve the checkout over https, from an origin you control**, and put only that origin in
-`allow`. A WebView pointed at a URL a server can change is a WebView someone else can aim.
+The [React Native example](../examples/react-native-checkout/README.md) shows session routing, queued returns and onMessage filtering. Its React Native/WebView dependencies and custom-scheme registration belong to your native application. Build and exercise iOS/Android; browser/Node validation does not build a device app.

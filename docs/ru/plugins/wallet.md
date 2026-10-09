@@ -1,135 +1,53 @@
-# Кошелёк
+# SDK кошелька
 
-> English version: [plugins/wallet.md](../../plugins/wallet.md)
+> [English](../../plugins/wallet.md)
 
-`@checkout-kit/provider-wallet` — id `wallet`
+`@checkout-kit/provider-wallet` — исполняемый референсный протокол API мерчанта и симулятора. Сам по себе он не подключается к конкретному банку.
 
-Apple Pay, Google Pay, PayPal и локальные аналоги. Чужой скрипт рисует собственный шит,
-покупатель подтверждает лицом или отпечатком, обратно приходит payload.
+## Поток и граница
 
-**Берите этот, если** хотите самый быстрый чекаут, какой бывает. Печатать нечего, поэтому он
-конвертит лучше всего остального в этом списке.
+SDK handoff с adapter, чей sdk id совпадает с action. Callback возвращает непустой строковый walletToken. Apple Pay, Google Pay и PayPal SDK не включены.
 
-Стоит помнить: **кошелёк — это способ предъявить карту, а не способ обойтись без неё.** Карта за
-ним всё так же решает исход, и отказ по ней всё так же возможен.
+Цена, владелец и результат определяются сервером. Проверка адаптера до мутации сохраняет конечный результат; сервер обеспечивает переходы и идемпотентность атомарно. Cancel не переписывает paid, повтор confirm/resume не создаёт второе списание.
 
-## Что видит покупатель
-
-Он жмёт кнопку кошелька. Снизу выезжает шит самой операционной системы — его карты, его адрес,
-Face ID. Он подтверждает. Готово, обычно секунды за три.
-
-Ничего из этого рисуете не вы. Шит принадлежит кошельку.
-
-## Адаптер — это то, что пишете вы
-
-Чекаут не знает, как управлять конкретным SDK кошелька, и не должен. Вы даёте ему одну функцию,
-которая знает:
+## Регистрация
 
 ```ts
-const runtime = createBrowserRuntime({
-  returnPath: '/payment/return',
-  sdk: {
-    adapters: [
-      {
-        // Должно совпадать с `sdk` в конфиге ниже.
-        sdk: 'apple-pay',
-        // Вызывается, когда скрипт загрузился. Покажите шит, верните то, что он дал.
-        request: async (params) => {
-          const session = window.ApplePaySession /* ...настроить из params... */
-          return await showTheSheet(session)
-        },
-      },
-    ],
-  },
-})
-```
-
-Эта функция — вся связь между чекаутом и тем кошельком. Она живёт в вашем приложении, потому что
-SDK — это ваши отношения, а не кита.
-
-**Если покупатель закрыл шит — бросайте исключение.** Раннер читает throw как «покупатель
-передумал», а не как ошибку, и возвращает его на форму, ничего не списав.
-
-## Как подключить
-
-```ts
+import { defineProvider } from '@checkout-kit/core'
 import type { WalletConfig } from '@checkout-kit/provider-wallet'
 
-const wallet: WalletConfig = {
+const config: WalletConfig = {
   baseUrl: '/api',
-  // Ключ адаптера выше.
-  sdk: 'apple-pay',
-  scriptUrl: 'https://applepay.cdn-apple.com/jsapi/1.0/apple-pay-sdk.js',
-  // Если кошелёк публикует SRI-хеш — используйте. Вы грузите чужой скрипт на свою
-  // платёжную страницу.
-  integrity: 'sha384-...',
-  merchantName: 'Ваш магазин',
+  sdk: 'merchant-wallet',
+  scriptUrl: 'https://wallet.example.com/sdk.js',
+  merchantName: 'Shop',
 }
 
-defineProvider({
+const provider = defineProvider({
   id: 'wallet',
-  config: wallet,
+  config: { ...config, credentials: 'include' },
   load: () => import('@checkout-kit/provider-wallet'),
 })
+// Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-### Оплата
+Config type регистрирует id в TypeScript; динамический import загружает реализацию. Подключите runners, storage и return URL, как в [React](../react.md) или [runtime](../runtime.md). Для видимой поверхности нужен mount.
 
-```ts
-await engine.pay({
-  input: { planId: 'monthly' },
-  instrument: { kind: 'none' },
-  idempotencyKey: crypto.randomUUID(),
-})
-```
+## Точный HTTP-контракт
 
-### Кнопка
+Маршруты, fields и ключи ниже совпадают с [README пакета](../../../packages/provider-wallet/README.md); protocol names сохранены в исходной форме:
 
-Кит её не поставляет и не будет. Apple и Google публикуют требования к размеру, скруглению и
-надписи своих кнопок, и оба могут отозвать доступ за перерисованную. Используйте ту, что даёт их
-SDK; `ExpressCheckout` держит место:
+| Method | Path                         | Contract                                             |
+| ------ | ---------------------------- | ---------------------------------------------------- |
+| POST   | `/wallet/charges`            | `{ planId }`; return a charge.                       |
+| GET    | `/wallet/charges/:id`        | Authoritative charge.                                |
+| POST   | `/wallet/charges/:id/pay`    | `{ walletToken }`; verify and charge on your server. |
+| POST   | `/wallet/charges/:id/cancel` | Cancel an unfinished charge.                         |
 
-```tsx
-<ExpressCheckout layout="row">
-  <div ref={applePayButtonContainer} />
-  <div ref={googlePayButtonContainer} />
-</ExpressCheckout>
-```
+Все шесть reference configs поддерживают credentials и headers API мерчанта. Повтор операции сохраняет прежний ключ. После reload сервер возвращает состояние и активное действие.
 
-## Что должен уметь ваш бэкенд
+## Проверка
 
-| Вызов                             | Что делает                               |
-| --------------------------------- | ---------------------------------------- |
-| `POST /wallet/charges`            | открывает списание                       |
-| `POST /wallet/charges/:id/pay`    | списывает по payload, который вернул шит |
-| `GET  /wallet/charges/:id`        | читает исход                             |
-| `POST /wallet/charges/:id/cancel` | отменяет                                 |
+Запустите `npm run dev:mock` / `npm run dev:bank` либо [демо сайта](/demo/). Проверьте success, decline, action, processing, retry и чужое evidence. [Conformance](../testing.md) проверяет контракт без account credentials.
 
-## Как попробовать
-
-`npm run dev:mock`, затем выберите «Wallet SDK». Демо регистрирует поддельный кошелёк, который
-показывает свой маленький шит, — можно пройти сценарий целиком, включая закрытие, без аккаунта
-разработчика Apple.
-
-## Что может пойти не так
-
-**«The wallet SDK did not register itself».** Скрипт загрузился, но не положил в `window` то,
-чего ждёт ваш адаптер. Проверьте `scriptUrl` и опирайтесь на собственный колбэк готовности SDK,
-а не на то, что тег скрипта догрузился.
-
-**Закрытие шита показывает экран ошибки.** Ваш адаптер возвращает или отклоняет промис так, что
-раннер читает это как сбой. Бросайте исключение при закрытии — это сигнал «отменено».
-
-**Apple Pay вообще не появляется.** Нужен зарегистрированный домен мерчанта и реальное
-устройство или Safari. Обойти это на стороне чекаута нельзя.
-
-## Что он объявляет
-
-|                |                                               |
-| -------------- | --------------------------------------------- |
-| инструменты    | `none` — payload приходит из SDK, а не от вас |
-| действия       | `sdk_handoff`                                 |
-| поверхности    | `none` — ничего вашего не рисуется            |
-| аутентификация | своя, кошелька                                |
-| отмена         | да                                            |
-| поллинг        | да                                            |
+[Окружение](./setup.md) · [Восстановление](../runtime.md) · [Каталог](../packages.md)

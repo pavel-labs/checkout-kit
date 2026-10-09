@@ -1,135 +1,66 @@
-# Wallet
+# Wallet SDK
 
-> Русская версия: [ru/plugins/wallet.md](../ru/plugins/wallet.md)
+> [Русская версия](../ru/plugins/wallet.md)
 
-`@checkout-kit/provider-wallet` — id `wallet`
+Reference adapter for **registered wallet SDK, no kit-owned surface**. Provider id: `wallet`. Instruments: **none**.
 
-Apple Pay, Google Pay, PayPal, and the local equivalents. A third-party script draws its own
-sheet, the shopper approves with a face or a fingerprint, and a payload comes back.
+This package implements checkout-kit's example merchant protocol. It is useful as an executable integration template and with `@checkout-kit/testing/backend`; it is not a certified adapter for a named bank or payment network. For Stripe, Adyen and PayPal, use their dedicated provider packages.
 
-**Pick this one when** you want the fastest checkout there is. There is nothing to type, so it
-converts better than anything else on this list.
+## Configure
 
-Worth remembering: **a wallet is a way of presenting a card, not a way of avoiding one.** The
-card behind it still decides the outcome, and it can still be declined.
-
-## What the shopper sees
-
-They tap the wallet button. The operating system's own sheet slides up — their cards, their
-address, Face ID. They approve. Done, usually in about three seconds.
-
-You draw none of that. The sheet belongs to the wallet.
-
-## The adapter is the part you write
-
-The checkout does not know how to drive any particular wallet SDK, and it should not. You give
-it one function that does:
+Follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html) for package archives or registry setup.
 
 ```ts
-const runtime = createBrowserRuntime({
-  returnPath: '/payment/return',
-  sdk: {
-    adapters: [
-      {
-        // Must match `sdk` in the config below.
-        sdk: 'apple-pay',
-        // Called once the script has loaded. Show the sheet, return what it gives you.
-        request: async (params) => {
-          const session = window.ApplePaySession /* ...set up from params... */
-          return await showTheSheet(session)
-        },
-      },
-    ],
-  },
-})
-```
-
-That function is the entire coupling between this checkout and that wallet. It lives in your
-app, because the SDK is your relationship, not the kit's.
-
-**If the shopper closes the sheet, throw.** The runner reads a throw as "the shopper backed
-out", not as a failure, and puts them back on the form with nothing charged.
-
-## Setting it up
-
-```ts
+import { defineProvider } from '@checkout-kit/core'
 import type { WalletConfig } from '@checkout-kit/provider-wallet'
 
-const wallet: WalletConfig = {
+const config: WalletConfig = {
   baseUrl: '/api',
-  // The adapter key above.
-  sdk: 'apple-pay',
-  scriptUrl: 'https://applepay.cdn-apple.com/jsapi/1.0/apple-pay-sdk.js',
-  // If the wallet publishes a subresource integrity hash, use it. You are loading
-  // somebody else's script into your payment page.
-  integrity: 'sha384-...',
-  merchantName: 'Your Store',
+  sdk: 'merchant-wallet',
+  scriptUrl: 'https://wallet.example.com/sdk.js',
+  merchantName: 'Shop',
 }
 
-defineProvider({
+const provider = defineProvider({
   id: 'wallet',
-  config: wallet,
+  config: { ...config, credentials: 'include' },
   load: () => import('@checkout-kit/provider-wallet'),
 })
+// Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-### Paying
+`baseUrl` is your merchant API. Optional `headers` carry merchant session or CSRF headers; `credentials` controls cookies. Keep payment-service secrets on the server. The host supplies the browser runtime, return URL and any SDK adapter.
 
-```ts
-await engine.pay({
-  input: { planId: 'monthly' },
-  instrument: { kind: 'none' },
-  idempotencyKey: crypto.randomUUID(),
-})
+## Merchant API
+
+Paths below are relative to `baseUrl`. Authenticate the shopper, resolve price from `planId`, verify order ownership, and enforce allowed state transitions on the server. Monetary amounts are integers in the currency's minor units.
+
+| Method | Path                         | Contract                                             |
+| ------ | ---------------------------- | ---------------------------------------------------- |
+| POST   | `/wallet/charges`            | `{ planId }`; return a charge.                       |
+| GET    | `/wallet/charges/:id`        | Authoritative charge.                                |
+| POST   | `/wallet/charges/:id/pay`    | `{ walletToken }`; verify and charge on your server. |
+| POST   | `/wallet/charges/:id/cancel` | Cancel an unfinished charge.                         |
+
+Intent/order/charge responses include `{ id, amount, currency, status, error? }`. Statuses use checkout-kit's `PaymentStatus`; declines may include `{ code?, message }` in `error`.
+
+Register an SDK adapter named by `sdk` in `createBrowserRuntime({ sdk: { adapters: [...] }, ... })`. Its `request(params, signal)` method receives merchant name, amount and currency and returns `{ walletToken: 'opaque-token' }`. Numeric, empty or whitespace-only tokens are refused before an API call. This package does not implement Apple Pay or Google Pay SDKs itself.
+
+## Retries and verification
+
+The adapter reads the authoritative order before reopening payment, spending another token or canceling. Successful, declined and canceled orders retain their outcome; processing orders continue to be polled. A retry after a lost reply checks the same order before issuing another mutation.
+
+Creation forwards `CallOptions.idempotencyKey` as `Idempotency-Key`. Mutations scope it with an operation and intent id (`:confirm:`, `:resume:`, `:pay:`, `:code:` or `:cancel:` as applicable). Your backend must honor the key and reject a changed payload under the same key; sending a header alone cannot guarantee a single charge.
+
+Run this package's contract and regression tests from the repository:
+
+```sh
+npm ci
+npm test -- packages/provider-wallet
 ```
 
-### The button
+[Provider guide](https://pavel-labs.github.io/checkout-kit/plugins/wallet.html) · [Architecture](https://pavel-labs.github.io/checkout-kit/architecture.html)
 
-The kit does not ship one, and will not. Apple and Google both publish rules about the size,
-corner radius and wording of their buttons, and both can withdraw your access over a redrawn
-one. Use the button their SDK gives you; `ExpressCheckout` holds the space:
+## Run and verify
 
-```tsx
-<ExpressCheckout layout="row">
-  <div ref={applePayButtonContainer} />
-  <div ref={googlePayButtonContainer} />
-</ExpressCheckout>
-```
-
-## What your backend must provide
-
-| Call                              | What it does                           |
-| --------------------------------- | -------------------------------------- |
-| `POST /wallet/charges`            | opens a charge                         |
-| `POST /wallet/charges/:id/pay`    | charges the payload the sheet returned |
-| `GET  /wallet/charges/:id`        | reads the outcome                      |
-| `POST /wallet/charges/:id/cancel` | gives up on it                         |
-
-## Trying it
-
-`npm run dev:mock`, then pick "Wallet SDK". The demo registers a fake wallet that shows a small
-sheet of its own, so you can walk the flow — including closing it — without an Apple developer
-account.
-
-## What can go wrong
-
-**"The wallet SDK did not register itself."** The script loaded but did not put what your
-adapter expects on `window`. Check `scriptUrl`, and check the SDK's own readiness callback
-rather than assuming it is ready when the script tag finishes.
-
-**Closing the sheet shows an error screen.** Your adapter is returning or rejecting in a way the
-runner reads as a failure. Throw on dismissal; that is the signal for "cancelled".
-
-**Apple Pay does not appear at all.** It needs a registered merchant domain and a real device or
-Safari. Nothing in the checkout can work around that.
-
-## What it declares
-
-|                |                                                         |
-| -------------- | ------------------------------------------------------- |
-| instruments    | `none` — the payload arrives from the SDK, not from you |
-| actions        | `sdk_handoff`                                           |
-| surfaces       | `none` — nothing of yours is rendered                   |
-| authentication | the wallet's own                                        |
-| cancel         | yes                                                     |
-| polling        | yes                                                     |
+Run `npm run dev:mock` plus `npm run dev:bank`, or use [the site demo](/demo/). This is a reference merchant protocol, not a named-bank integration. [Environment](./setup.md), [runtime](../runtime.md) and [testing](../testing.md) cover mounts, recovery and contract verification.

@@ -1,5 +1,9 @@
 # Real providers, mapped onto the contract
 
+::: info Integration design examples
+This page describes possible adaptations. Shipped Stripe, Adyen, PayPal packages and support boundaries are listed in [the catalog](./packages.md). Regional names here do not imply shipped integrations.
+:::
+
 > Русская версия: [ru/real-world-providers.md](./ru/real-world-providers.md)
 
 The six plugins in this repository are modelled on real integrations. This page shows the

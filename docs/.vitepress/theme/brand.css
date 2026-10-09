@@ -20,3 +20,43 @@
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: linear-gradient(120deg, #aa3bff, #c689ff);
 }
+.VPHome .vp-doc {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 24px 24px 64px;
+}
+.VPHome .vp-doc h2 {
+  border-top: 0;
+  margin-top: 40px;
+}
+.VPHome .vp-doc table {
+  width: 100%;
+  display: table;
+}
+.VPFeature {
+  transition: border-color 0.15s ease;
+}
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-2);
+}
+.VPDoc .vp-doc table {
+  font-size: 14px;
+}
+@media (min-width: 960px) {
+  .VPHome .vp-doc {
+    padding-right: 64px;
+    padding-left: 64px;
+  }
+  .VPHero .text {
+    max-width: 850px;
+    font-size: 52px;
+    line-height: 1.12;
+    letter-spacing: -1.5px;
+  }
+}
+@media (max-width: 639px) {
+  .VPHome .vp-doc table {
+    display: block;
+    overflow-x: auto;
+  }
+}

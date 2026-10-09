@@ -2,6 +2,8 @@
 
 > Русская версия: [ru/backend.md](./ru/backend.md)
 
+[Merchant integration](./merchant-integration.md) describes runnable routes, sessions, idempotency and notification verification.
+
 The browser adapters call your merchant API; the API calls the payment provider. The runnable
 [server example](../examples/server/README.md) implements Stripe, Adyen and PayPal routes,
 with official sandbox SDKs and a separate local simulator. This guide explains the general

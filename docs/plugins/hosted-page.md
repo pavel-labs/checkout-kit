@@ -1,119 +1,59 @@
-# Hosted payment page
+# Hosted page
 
-> Русская версия: [ru/plugins/hosted-page.md](../ru/plugins/hosted-page.md)
+> [Русская версия](../ru/plugins/hosted-page.md)
 
-`@checkout-kit/provider-hpp` — id `hpp`
+Reference adapter for **hosted payment page, top window**. Provider id: `hpp`. Instruments: **none**.
 
-The shopper leaves your site for the bank's own payment page, pays there, and comes back. Your
-code never sees a card at any point.
+This package implements checkout-kit's example merchant protocol. It is useful as an executable integration template and with `@checkout-kit/testing/backend`; it is not a certified adapter for a named bank or payment network. For Stripe, Adyen and PayPal, use their dedicated provider packages.
 
-**Pick this one when** you want the smallest possible PCI footprint and can live with sending
-the shopper away. It is the least work of any option here and the one that puts the least of you
-in the card's path.
+## Configure
 
-## What the shopper sees
-
-1. They press Pay. There are no card fields on your page — nothing to fill in.
-2. The whole tab goes to the bank's page.
-3. They pay there, including any confirmation step.
-4. The bank sends them back to your return URL.
-5. Your checkout picks the payment back up and shows the outcome.
-
-## The one thing you must get right
-
-**Step 4 destroys your tab.** Everything in memory is gone. When the shopper comes back, the
-checkout has to find the payment again — that is `hydrate()`, and without it this plugin can
-start a payment but never finish one:
+Follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html) for package archives or registry setup.
 
 ```ts
-// On the route your returnPath points at.
-useEffect(() => {
-  void engine.hydrate(runtime.readReturnParams())
-}, [engine])
-```
-
-The engine wrote what it needed to session storage before the redirect. `hydrate` reads it back,
-takes the parameters the bank put on the URL, and asks the provider what actually happened.
-
-## It does not trust the return URL
-
-The bank sends the shopper back to something like `?status=success`. The shopper could have
-typed that. So the plugin ignores it and re-reads the order from your backend instead.
-
-That is worth copying if you write your own plugin. **A query parameter is a claim, not a fact.**
-
-## Setting it up
-
-```ts
+import { defineProvider } from '@checkout-kit/core'
 import type { HostedPageConfig } from '@checkout-kit/provider-hpp'
 
-const hostedPage: HostedPageConfig = {
-  // Your backend: registers orders and reads them back.
-  baseUrl: '/api',
-  // Where the bank's payment form lives. A different site, in production.
-  pageUrl: 'https://pay.yourbank.example/checkout',
-}
+const config: HostedPageConfig = { baseUrl: '/api', pageUrl: 'https://bank.example.com/pay' }
 
-defineProvider({
+const provider = defineProvider({
   id: 'hpp',
-  config: hostedPage,
+  config: { ...config, credentials: 'include' },
   load: () => import('@checkout-kit/provider-hpp'),
 })
+// Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-### Paying
+`baseUrl` is your merchant API. Optional `headers` carry merchant session or CSRF headers; `credentials` controls cookies. Keep payment-service secrets on the server. The host supplies the browser runtime, return URL and any SDK adapter.
 
-There is no card to send, so the instrument is `none`. That is not a missing value — it is what
-this provider expects:
+## Merchant API
 
-```ts
-await engine.pay({
-  input: { planId: 'monthly' },
-  instrument: { kind: 'none' },
-  idempotencyKey: crypto.randomUUID(),
-})
+Paths below are relative to `baseUrl`. Authenticate the shopper, resolve price from `planId`, verify order ownership, and enforce allowed state transitions on the server. Monetary amounts are integers in the currency's minor units.
+
+| Method | Path                 | Contract                                                  |
+| ------ | -------------------- | --------------------------------------------------------- |
+| POST   | `/hosted/orders`     | `{ planId }`; return `{ orderId }`.                       |
+| GET    | `/hosted/orders/:id` | Authoritative order with id, amount, currency and status. |
+
+Intent/order/charge responses include `{ id, amount, currency, status, error? }`. Statuses use checkout-kit's `PaymentStatus`; declines may include `{ code?, message }` in `error`.
+
+The runner navigates to `pageUrl` with `orderId` and `returnUrl`. Return evidence must use `via: 'return_url'` and the order id as `actionId`. The adapter ignores claimed payment status in the URL and re-reads the order. This example does not expose cancellation.
+
+## Retries and verification
+
+The adapter reads the authoritative order before reopening payment, spending another token or canceling. Successful, declined and canceled orders retain their outcome; processing orders continue to be polled. A retry after a lost reply checks the same order before issuing another mutation.
+
+Creation forwards `CallOptions.idempotencyKey` as `Idempotency-Key`. Mutations scope it with an operation and intent id (`:confirm:`, `:resume:`, `:pay:`, `:code:` or `:cancel:` as applicable). Your backend must honor the key and reject a changed payload under the same key; sending a header alone cannot guarantee a single charge.
+
+Run this package's contract and regression tests from the repository:
+
+```sh
+npm ci
+npm test -- packages/provider-hpp
 ```
 
-Your form should not render card fields for this provider. The engine tells you:
+[Provider guide](https://pavel-labs.github.io/checkout-kit/plugins/hosted-page.html) · [Architecture](https://pavel-labs.github.io/checkout-kit/architecture.html)
 
-```ts
-const { capabilities } = useCheckout()
-const collectsCard = capabilities?.instruments.includes('card') ?? true
-```
+## Run and verify
 
-## What your backend must provide
-
-| Call                      | What it does                       |
-| ------------------------- | ---------------------------------- |
-| `POST /hosted/orders`     | registers an order, returns its id |
-| `GET  /hosted/orders/:id` | reads the outcome after the return |
-
-## Trying it
-
-`npm run dev:mock`, then pick "Hosted payment page". The demo stands in a payment page of its
-own, because a browser-only mock cannot answer requests from a second origin — in production
-that page is genuinely somewhere else.
-
-## What can go wrong
-
-**The shopper comes back to a blank checkout.** `hydrate()` is not being called on the return
-route. This is the mistake, and it is invisible until you test the real flow.
-
-**It works locally and breaks in production.** Your `returnPath` is relative to the app's base
-path. If the app is served from a sub-path, build the return URL from that base rather than
-hardcoding `/payment/return`.
-
-**The payment page refuses to load in a frame.** Correct, and deliberate. This plugin only
-declares the `top` surface: a bank's payment page should not be frameable, because a frame is
-how a fake one is built.
-
-## What it declares
-
-|                |                                                         |
-| -------------- | ------------------------------------------------------- |
-| instruments    | `none`                                                  |
-| actions        | `redirect`                                              |
-| surfaces       | `top` only                                              |
-| authentication | none, 3-D Secure 1 and 2                                |
-| cancel         | no — once they are on the bank's page, it is the bank's |
-| polling        | yes                                                     |
+Run `npm run dev:mock` plus `npm run dev:bank`, or use [the site demo](/demo/). This is a reference merchant protocol, not a named-bank integration. [Environment](./setup.md), [runtime](../runtime.md) and [testing](../testing.md) cover mounts, recovery and contract verification.

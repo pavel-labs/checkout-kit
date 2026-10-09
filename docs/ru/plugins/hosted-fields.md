@@ -1,127 +1,52 @@
 # Хостед-поля
 
-> English version: [plugins/hosted-fields.md](../../plugins/hosted-fields.md)
+> [English](../../plugins/hosted-fields.md)
 
-`@checkout-kit/provider-hosted-fields` — id `hostedfields`
+`@checkout-kit/provider-hosted-fields` — исполняемый референсный протокол API мерчанта и симулятора. Сам по себе он не подключается к конкретному банку.
 
-Поля карты рисует провайдер, в своём собственном фрейме, который стоит внутри вашего чекаута.
-Покупатель печатает в этот фрейм; вы получаете токен. Карта вашей страницы не касается.
+## Поток и граница
 
-**Берите этот, если** хотите, чтобы покупатель остался на вашем сайте — в отличие от
-[платёжной страницы банка](./hosted-page.md), — но не хотите держать карту в своём DOM. Это
-обычный компромисс и ровно то, чем являются Stripe Elements и Braintree Hosted Fields.
+Provider-owned iframe, exact-origin postMessage и непустой непрозрачный card token. Credential/header относится к API мерчанта.
 
-## Что видит покупатель
+Цена, владелец и результат определяются сервером. Проверка адаптера до мутации сохраняет конечный результат; сервер обеспечивает переходы и идемпотентность атомарно. Cancel не переписывает paid, повтор confirm/resume не создаёт второе списание.
 
-Форму карты в вашей вёрстке, которая выглядит частью вашего чекаута. Фрейм он не заметит.
-Печатает, жмёт «Оплатить», готово.
-
-## Что происходит на самом деле
-
-```text
-ваша страница                       origin провайдера
-┌────────────────────────┐
-│  Номер карты  ┌───────────────┐
-│               │   их фрейм    │  ← покупатель печатает сюда
-│               └───────────────┘
-│                        │   │
-│  Оплатить ─────────────┼───┘  токен приходит через postMessage
-└────────────────────────┘
-```
-
-Ваш JavaScript не может заглянуть внутрь этого фрейма. **В этом весь смысл** — именно это
-убирает вашу страницу с пути карты, и по этой же причине вы не можете сами провалидировать номер
-или подставить его заранее.
-
-## Как подключить
+## Регистрация
 
 ```ts
+import { defineProvider } from '@checkout-kit/core'
 import type { HostedFieldsConfig } from '@checkout-kit/provider-hosted-fields'
 
-const hostedFields: HostedFieldsConfig = {
+const config: HostedFieldsConfig = {
   baseUrl: '/api',
-  // Откуда провайдер отдаёт фрейм с полями.
-  fieldsUrl: 'https://fields.yourprovider.example/v1/fields',
-  // Его origin. Сообщение откуда-либо ещё игнорируется — эта проверка не даёт чужой
-  // странице выдать себя за форму карты.
-  fieldsOrigin: 'https://fields.yourprovider.example',
+  fieldsUrl: 'https://fields.example.com/card',
+  fieldsOrigin: 'https://fields.example.com',
 }
 
-const runtime = createBrowserRuntime({
-  returnPath: '/payment/return',
-  collectFields: { frameTitle: () => 'Данные карты' },
-})
-
-defineProvider({
+const provider = defineProvider({
   id: 'hostedfields',
-  config: hostedFields,
+  config: { ...config, credentials: 'include' },
   load: () => import('@checkout-kit/provider-hosted-fields'),
 })
+// Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-### Куда он рисует
+Config type регистрирует id в TypeScript; динамический import загружает реализацию. Подключите runners, storage и return URL, как в [React](../react.md) или [runtime](../runtime.md). Для видимой поверхности нужен mount.
 
-Фрейму нужно место. Он рисуется inline, в форме, там, где были бы поля карты:
+## Точный HTTP-контракт
 
-```tsx
-{
-  action?.surface === 'inline' ? (
-    <ActionFrame variant="inline">
-      <PaymentActionHost onSettled={settle} className="ck-action-host" />
-    </ActionFrame>
-  ) : null
-}
-```
+Маршруты, fields и ключи ниже совпадают с [README пакета](../../../packages/provider-hosted-fields/README.md); protocol names сохранены в исходной форме:
 
-### Оплата
+| Method | Path                                | Contract                                               |
+| ------ | ----------------------------------- | ------------------------------------------------------ |
+| POST   | `/hosted-fields/charges`            | `{ planId }`; return a charge.                         |
+| GET    | `/hosted-fields/charges/:id`        | Authoritative charge.                                  |
+| POST   | `/hosted-fields/charges/:id/pay`    | `{ token }`; exchange the opaque token on your server. |
+| POST   | `/hosted-fields/charges/:id/cancel` | Cancel an unfinished charge.                           |
 
-Передавать нечего — токен рождается внутри фрейма и приходит как evidence:
+Все шесть reference configs поддерживают credentials и headers API мерчанта. Повтор операции сохраняет прежний ключ. После reload сервер возвращает состояние и активное действие.
 
-```ts
-await engine.pay({
-  input: { planId: 'monthly' },
-  instrument: { kind: 'none' },
-  idempotencyKey: crypto.randomUUID(),
-})
-```
+## Проверка
 
-Своих полей карты для этого провайдера не рисуйте. Проверяйте `capabilities.instruments`, как в
-[платёжной странице](./hosted-page.md#оплата).
+Запустите `npm run dev:mock` / `npm run dev:bank` либо [демо сайта](/demo/). Проверьте success, decline, action, processing, retry и чужое evidence. [Conformance](../testing.md) проверяет контракт без account credentials.
 
-## Что должен уметь ваш бэкенд
-
-| Вызов                                    | Что делает                             |
-| ---------------------------------------- | -------------------------------------- |
-| `POST /hosted-fields/charges`            | открывает списание и сессию полей      |
-| `POST /hosted-fields/charges/:id/pay`    | списывает по токену, который дал фрейм |
-| `GET  /hosted-fields/charges/:id`        | читает исход                           |
-| `POST /hosted-fields/charges/:id/cancel` | отменяет                               |
-
-## Как попробовать
-
-`npm run dev:mock`, затем выберите «Hosted fields». Демо отдаёт фрейм со своего же origin,
-потому что мок, живущий только в браузере, не может отдать второй, — в продакшене `fieldsOrigin`
-это по-настоящему чужой домен, и в этой разнице вся модель безопасности.
-
-## Что может пойти не так
-
-**Фрейм загрузился, а «Оплатить» ничего не делает.** `fieldsOrigin` не совпадает с origin,
-который отдаёт `fieldsUrl`, поэтому сообщение с токеном отбрасывается. Это origin, а не URL —
-без пути.
-
-**Хочется провалидировать карту до отправки.** Нельзя, и не надо пытаться. Фрейм сам сообщает о
-валидности; всё, что смог бы прочитать ваш скрипт, прочитал бы и чужой скрипт на вашей странице.
-
-**У фрейма не та высота.** У `ActionFrame` три варианта. `inline` — для полей, `content`
-подстраивается под содержимое, `challenge` — для полноэкранного экрана банка.
-
-## Что он объявляет
-
-|                |                                                |
-| -------------- | ---------------------------------------------- |
-| инструменты    | `none` — токен приходит из фрейма, а не от вас |
-| действия       | `collect_fields`                               |
-| поверхности    | `inline`                                       |
-| аутентификация | нет, 3-D Secure 2                              |
-| отмена         | да                                             |
-| поллинг        | да                                             |
+[Окружение](./setup.md) · [Восстановление](../runtime.md) · [Каталог](../packages.md)

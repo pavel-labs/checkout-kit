@@ -1,50 +1,43 @@
 # @checkout-kit/core
 
-The headless half of the checkout: the vocabulary a payment is described in, the contract
-a payment integration implements, and an HTTP client with no opinions about payments.
+Headless lifecycle, provider registry, immutable store, payment/action/evidence types, recovery and HTTP helpers. No DOM, React or bundler environment.
 
-No React, no DOM, no bundler environment. It compiles for a browser, a Node test and a
-worker, and `npm run purity` fails the build if a browser-only global gets in.
+## Run a checkout
 
-## What lives here
+```ts
+import { createCheckout, createRunnerRegistry, defineProvider } from '@checkout-kit/core'
+import type { StripeConfig } from '@checkout-kit/provider-stripe'
 
-| Import                        | Contents                                                      |
-| ----------------------------- | ------------------------------------------------------------- |
-| `@checkout-kit/core`          | domain types, the plugin contract, `Logger`                   |
-| `@checkout-kit/core/domain`   | just the domain: intent, instrument, action, evidence, result |
-| `@checkout-kit/core/provider` | just the plugin contract: `PaymentProvider`, capabilities     |
-| `@checkout-kit/core/http`     | `createHttpClient` - base URL, body encoding, error parsing   |
-
-## The idea
-
-Every integration - a card processor, a bank, a hosted payment page, hosted card fields, a
-wallet SDK - is the same loop:
-
+const engine = createCheckout({
+  providers: [
+    defineProvider({
+      id: 'stripe',
+      config: { baseUrl: 'https://merchant.example.com/stripe' } satisfies StripeConfig,
+      load: () => import('@checkout-kit/provider-stripe'),
+    }),
+  ],
+  runners: createRunnerRegistry(),
+  returnUrl: 'https://merchant.example.com/checkout/return',
+  defaultProviderId: 'stripe',
+})
+const result = await engine.pay({
+  input: { planId: 'starter' },
+  instrument: { kind: 'token', token: 'paymentmethod-from-stripe-js' },
+})
 ```
-createIntent → confirm(instrument) → [ action → run → evidence → resume ]* → terminal
-```
 
-Only two things differ: **which `PaymentAction` the provider returned** and **which runner
-executes it**. The core does not know the words "3-D Secure", "hosted payment page" or
-"Apple Pay", and adding a provider that uses them must not change anything here.
+This handles immediate outcomes; register action runners for redirect/SDK/display. Browser runtime assembles runners and session storage. The merchant API owns authenticated buyers, prices and payment truth.
 
-## Rules that the types alone cannot enforce
+| Entry point                   | Contents                                                              |
+| ----------------------------- | --------------------------------------------------------------------- |
+| `@checkout-kit/core`          | Engine, registry, store, contracts and helpers.                       |
+| `@checkout-kit/core/engine`   | Orchestration, events, phases, persistence and runner registry.       |
+| `@checkout-kit/core/domain`   | Intents, instruments, actions, evidence, results, money/card helpers. |
+| `@checkout-kit/core/provider` | Provider/context/capability contracts.                                |
+| `@checkout-kit/core/http`     | Encoding, headers/cookies, abort and structured HTTP errors.          |
 
-**`confirm` and `resume` never throw.** A network failure, a bad reply, an unknown status -
-all of it comes back as `{ status: 'error' }`. These two report what happened to the money,
-and an exception cannot. `createIntent`, `getIntent` and `cancel` may reject; the engine
-turns that into an error result.
+Pay stops at a pending action; the host calls runPendingAction or resumeWith. Processing polls. Hydrate restores saved metadata and re-reads the order. Retry keeps the same key after a lost create/confirm reply, even without a returned id.
 
-**Capabilities are for validation and copy, not control flow.** Writing
-`if (caps.authentication.includes('3ds2'))` is a bug: the issuer decides whether a payment
-needs authentication, during the transaction. The only reliable signal is the
-`PaymentAction` the provider returned.
+Abort requests supported cancellation and preserves verified success. Reset clears local state; it does not cancel/refund a charge. Confirm/resume return error data; the engine also catches third-party exceptions. Server atomicity, ownership, prices and fulfillment remain merchant responsibilities.
 
-**Evidence is a hint, not the truth.** What comes back from a redirect or a `postMessage`
-says where the browser has been, not whether money moved. A status is only believed after
-the intent has been re-read from the provider.
-
-**Errors are data.** `PaymentError` carries a `code`, and consumers branch on that. Classes
-do not survive a package boundary reliably, which is also why this package is ESM only: a
-dual build puts two copies of every class in the graph and `instanceof` starts giving the
-wrong answer.
+[Getting started](https://pavel-labs.github.io/checkout-kit/getting-started.html) · [Recovery](https://pavel-labs.github.io/checkout-kit/runtime.html)
