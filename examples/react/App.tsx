@@ -237,16 +237,18 @@ export const App = () => {
   }
 
   if (phase === 'declined' || phase === 'failed' || phase === 'canceled') {
+    const canceled = phase === 'canceled' || intent?.status === 'canceled'
     const freshAttempt =
+      canceled ||
       phase !== 'failed' ||
       (error?.code === 'not_approved' && intent?.status === 'requires_payment_method')
     return (
       <CheckoutLayout>
         <FailureState
-          tone={phase === 'canceled' ? 'cancelled' : phase === 'declined' ? 'declined' : 'failed'}
+          tone={canceled ? 'cancelled' : phase === 'declined' ? 'declined' : 'failed'}
           actions={
             <Button
-              disabled={submitting || isLocked}
+              disabled={submitting}
               onClick={() => {
                 if (freshAttempt) resetAttempt()
                 else void retry()

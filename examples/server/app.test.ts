@@ -26,6 +26,7 @@ const start = async (gateways?: Gateways, extras = {}) => {
     origin: 'http://localhost:5173',
     returnUrl: 'http://localhost:5173/payment/return',
     mock: true,
+    mockOrigin: 'http://localhost:4000',
     ...extras,
   })
   servers.push(server)
@@ -178,9 +179,29 @@ describe('merchant HTTP boundary', () => {
     expect(await (await post(`/paypal/orders/${id}/capture`, {})).json()).toMatchObject({
       status: 'CREATED',
     })
+    expect(
+      (await request(`/paypal/orders/${id}`, { headers: { origin: 'http://localhost:4000' } }))
+        .status,
+    ).toBe(403)
+    expect(
+      (
+        await request(`/mock/paypal/${id}`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+            origin: 'https://evil.test',
+          },
+          body: 'outcome=approve',
+          redirect: 'manual',
+        })
+      ).status,
+    ).toBe(403)
     const approval = await request(`/mock/paypal/${id}`, {
       method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        origin: 'http://localhost:4000',
+      },
       body: 'outcome=approve',
       redirect: 'manual',
     })

@@ -41,6 +41,7 @@ export interface PaymentServerOptions {
   readonly origin: string
   readonly returnUrl: string
   readonly mock?: boolean
+  readonly mockOrigin?: string
   readonly adyenHmacKey?: string
   readonly adyenMerchantAccount?: string
 }
@@ -147,7 +148,11 @@ export const createPaymentServer = (options: PaymentServerOptions): Server => {
         }
         return json(200, { accepted: true })
       }
-      if (req.headers.origin && req.headers.origin !== options.origin)
+      const mockMatch = options.mock ? path.match(/^\/mock\/(stripe|adyen|paypal)\/([^/]+)$/) : null
+      // A browser posts the simulator's approval form from the API origin, rather than
+      // the checkout origin. This exception applies only to explicit simulator routes.
+      const mockFormOrigin = mockMatch && req.headers.origin === options.mockOrigin
+      if (req.headers.origin && req.headers.origin !== options.origin && !mockFormOrigin)
         throw new RequestError(403, 'Origin is not allowed.')
       if (req.method === 'OPTIONS') return json(204)
       if (path === '/health' && req.method === 'GET')
@@ -161,7 +166,6 @@ export const createPaymentServer = (options: PaymentServerOptions): Server => {
       const owner = ownerCookie ?? randomUUID()
       if (!ownerCookie)
         res.setHeader('set-cookie', `checkout_session=${owner}; Path=/; HttpOnly; SameSite=Lax`)
-      const mockMatch = options.mock ? path.match(/^\/mock\/(stripe|adyen|paypal)\/([^/]+)$/) : null
       if (mockMatch) {
         const protocol = mockMatch[1] as Protocol
         const record = records.get(recordKey(protocol, mockMatch[2]))
