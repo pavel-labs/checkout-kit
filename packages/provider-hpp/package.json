@@ -1,6 +1,6 @@
 {
   "name": "@checkout-kit/provider-hpp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Payment plugin for a hosted payment page: the shopper pays on the bank site and the merchant never sees a card.",
   "license": "Apache-2.0",
@@ -12,13 +12,14 @@
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsdown"
   },
   "peerDependencies": {
-    "@checkout-kit/core": "*"
+    "@checkout-kit/core": "^0.1.0"
   },
   "types": "./dist/index.d.mts",
   "exports": {

@@ -30,25 +30,35 @@ npm run dev:integration
 
 ## Установка архивов {#install-package-archives}
 
-До публикации версии в реестр соберите архивы либо скачайте `checkout-kit-packages` успешного [CI](https://github.com/pavel-labs/checkout-kit/actions/workflows/ci.yml):
+Скачайте `checkout-kit-0.1.0.tar.gz` из [GitHub Release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.1.0) и распакуйте его. В комплекте все 16 пакетов, manifest с хешами, checksums и отдельный установщик. Клонировать репозиторий или получать токен реестра не нужно.
+
+Запускайте установщик **из каталога своего приложения**:
+
+```sh
+node /path/to/checkout-kit-0.1.0/install.mjs runtime-browser provider-paypal react ui
+```
+
+Он проверяет выбранные архивы и автоматически добавляет необходимые checkout-kit peers, включая core. Внешние peers, например React 19, устанавливает npm. Версия `react-dom` приложения должна быть совместима с React. Для другого адаптера замените `provider-paypal` на `provider-stripe` или `provider-adyen`.
+
+```sh
+# Список пакетов или проверка выбора без установки:
+node /path/to/checkout-kit-0.1.0/install.mjs --list
+node /path/to/checkout-kit-0.1.0/install.mjs provider-paypal react ui --dry-run
+```
+
+Без React выберите `runtime-browser` и провайдера. Отдельные `.tgz` assets можно установить через `npm install`, указав их checkout-kit peers в той же команде.
+
+Архивы текущей разработки можно собрать из клона:
 
 ```sh
 npm run pack:packages
+# Из каталога своего приложения:
+node /path/to/checkout-kit/artifacts/packages/install.mjs runtime-browser provider-paypal react ui
 ```
 
-Архивы и integrity manifest появятся в `artifacts/packages`. В React-приложении установите выбранные пакеты и peers вместе, заменив путь/версию:
+Успешный [CI](https://github.com/pavel-labs/checkout-kit/actions/workflows/ci.yml) также предоставляет development artifact `checkout-kit-packages`. Архивы помеченного релиза доступны после окончания срока хранения CI artifacts. Публикация в реестр настраивается отдельно.
 
-```sh
-npm install \
-  ../checkout-kit/artifacts/packages/checkout-kit-core-0.0.0.tgz \
-  ../checkout-kit/artifacts/packages/checkout-kit-runtime-browser-0.0.0.tgz \
-  ../checkout-kit/artifacts/packages/checkout-kit-provider-paypal-0.0.0.tgz \
-  ../checkout-kit/artifacts/packages/checkout-kit-react-0.0.0.tgz \
-  ../checkout-kit/artifacts/packages/checkout-kit-ui-0.0.0.tgz \
-  react@^19 react-dom@^19
-```
-
-Пакеты — ESM с декларациями. [Каталог](./packages.md) описывает все 16. Без React нужны core, runtime и провайдер. [Releasing](../../RELEASING.md) описывает реестр и версии.
+Пакеты — ESM с декларациями. [Каталог](./packages.md) описывает все 16. [Releasing](../../RELEASING.md) описывает версии, архивы релизов и настройку реестра.
 
 ## Подключение приложения {#connect-your-app}
 

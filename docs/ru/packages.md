@@ -50,6 +50,6 @@ Checkout kit содержит 16 отдельных ESM-пакетов. Начн
 
 ## Установка и границы ответственности
 
-[Быстрый старт](./getting-started.md#install-package-archives) устанавливает архивы и peers вместе. Manifests настроены на GitHub Packages; до публикации владельцем используйте архивы сборки/CI.
+[Быстрый старт](./getting-started.md#install-package-archives) устанавливает архивы и peers вместе. Версия `0.1.0` распространяется через [GitHub Release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.1.0) с установщиком необходимых checkout-kit peers. Manifests настроены на GitHub Packages; публикация в реестр настраивается отдельно. Архивы сборки/CI также доступны.
 
 Библиотека организует клиентский цикл. Сервер отвечает за покупателя, цену, credentials, постоянное состояние, атомарную идемпотентность, проверку уведомлений и выдачу заказа. См. [интеграцию сервера](./merchant-integration.md).

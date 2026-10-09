@@ -1,7 +1,7 @@
 {
   "name": "checkout-kit",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "author": "pavel-labs",
   "repository": {
@@ -18,7 +18,7 @@
     "dev": "npm run dev -w @checkout-kit/demo",
     "dev:mock": "npm run dev:mock -w @checkout-kit/demo",
     "dev:bank": "npm run dev -w @checkout-kit/bank-sim",
-    "build:packages": "tsdown && node scripts/add-ui-styles-export.mjs && node scripts/check-package-manifests.mjs",
+    "build:packages": "tsdown && node scripts/add-ui-styles-export.mjs && node scripts/add-package-notices.mjs && node scripts/check-package-manifests.mjs",
     "build": "npm run build:packages && npm run build -w @checkout-kit/demo",
     "build:mock": "npm run build:packages && npm run build:mock -w @checkout-kit/demo",
     "verify:dist": "node scripts/verify-dist.mjs",
@@ -49,7 +49,8 @@
     "dev:integration": "node scripts/dev-integration.mjs",
     "pack:packages": "npm run build:packages && node scripts/pack-packages.mjs",
     "verify:consumer": "npm run pack:packages && node scripts/verify-consumer.mjs",
-    "test:integration": "npm run test:integration -w @checkout-kit/examples"
+    "test:integration": "npm run test:integration -w @checkout-kit/examples",
+    "release:archives": "node scripts/prepare-release.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

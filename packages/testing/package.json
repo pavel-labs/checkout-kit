@@ -1,6 +1,6 @@
 {
   "name": "@checkout-kit/testing",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Shared test material: the card table every provider is exercised with, and an in-memory payment backend built on MSW.",
   "license": "Apache-2.0",
@@ -12,13 +12,14 @@
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsdown"
   },
   "peerDependencies": {
-    "@checkout-kit/core": "*",
+    "@checkout-kit/core": "^0.1.0",
     "msw": "^2.15.0"
   },
   "peerDependenciesMeta": {

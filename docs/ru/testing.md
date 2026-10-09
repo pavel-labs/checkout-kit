@@ -6,15 +6,15 @@ Fixtures проверяют протокол, симуляторы — жизн�
 
 ## Проверки репозитория
 
-| Команда                                                    | Проверяет                                                                                 |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `npm test`                                                 | Движок, HTTP-сервер, контракты провайдеров, React/UI, runners, bridge.                    |
-| `npm run test:e2e`                                         | Шесть референсных протоколов в браузере, с учётом capabilities.                           |
-| `npm run test:integration`                                 | Stripe/Adyen/PayPal через HTTP: подтверждение, отказ, polling, возврат, capture, повторы. |
-| `npm run typecheck` / `npm run examples:typecheck`         | Типы пакетов и примеров.                                                                  |
-| `npm run verify:consumer`                                  | Отдельная установка всех 16 архивов, строгие типы, exports, Node checkout, React SSR.     |
-| `npm run lint` / `npm run format:check` / `npm run purity` | Код и отсутствие browser globals в core/native entry points.                              |
-| `npm run docs:api` / `npm run docs:build`                  | API из деклараций, сборка сайта, проверка страниц и anchors.                              |
+| Команда                                                    | Проверяет                                                                                                                      |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `npm test`                                                 | Движок, HTTP-сервер, контракты провайдеров, React/UI, runners, bridge.                                                         |
+| `npm run test:e2e`                                         | Шесть референсных протоколов в браузере, с учётом capabilities.                                                                |
+| `npm run test:integration`                                 | Stripe/Adyen/PayPal через HTTP: подтверждение, отказ, polling, возврат, capture, повторы.                                      |
+| `npm run typecheck` / `npm run examples:typecheck`         | Типы пакетов и примеров.                                                                                                       |
+| `npm run verify:consumer`                                  | Все 16 архивов и минимальные headless/React наборы; строгие типы, exports, Node checkout, SSR и отказ при повреждённом архиве. |
+| `npm run lint` / `npm run format:check` / `npm run purity` | Код и отсутствие browser globals в core/native entry points.                                                                   |
+| `npm run docs:api` / `npm run docs:build`                  | API из деклараций, сборка сайта, проверка страниц и anchors.                                                                   |
 
 Для браузера нужен Chromium: `npx playwright install chromium`; CI устанавливает его. До генерации API соберите декларации.
 

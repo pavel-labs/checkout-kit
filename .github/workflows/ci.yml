@@ -90,6 +90,10 @@ jobs:
       - name: Install tarballs in a separate consumer and verify types, SSR and checkout
         run: npm run verify:consumer
 
+      - name: Verify the complete release bundle when changesets have been applied
+        if: hashFiles('.changeset/*.md') == ''
+        run: npm run release:archives
+
       - name: Upload installable packages
         uses: actions/upload-artifact@v7
         with:
