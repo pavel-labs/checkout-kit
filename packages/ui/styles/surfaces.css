@@ -36,8 +36,9 @@
 
 .ck-dialog--center .ck-dialog__panel {
   inset-block-start: 50%;
-  inset-inline-start: 50%;
-  transform: translate(-50%, -50%);
+  inset-inline: 0;
+  margin-inline: auto;
+  transform: translateY(-50%);
   inline-size: min(100% - var(--ck-space-8), var(--ck-layout-max));
   max-block-size: min(100% - var(--ck-space-8), 44rem);
   border-radius: var(--ck-radius-lg);
@@ -60,6 +61,27 @@
   display: flex;
   flex-direction: column;
   gap: var(--ck-space-4);
+}
+
+.ck-dialog__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--ck-space-4);
+}
+
+.ck-dialog__close {
+  margin-block-start: calc(var(--ck-space-2) * -1);
+  margin-inline-end: calc(var(--ck-space-2) * -1);
+  margin-inline-start: auto;
+}
+
+@media (min-width: 40rem) {
+  .ck-dialog--sheet .ck-dialog__panel {
+    inset-inline: 0;
+    margin-inline: auto;
+    inline-size: min(100% - var(--ck-space-8), var(--ck-layout-max));
+  }
 }
 
 .ck-dialog__footer {

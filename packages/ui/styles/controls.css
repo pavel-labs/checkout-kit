@@ -77,22 +77,24 @@
 }
 
 .ck-button {
+  --ck-button-bg: var(--ck-accent);
+  --ck-button-hover: var(--ck-accent-hover);
+  --ck-button-active: var(--ck-accent-active);
   display: flex;
   box-sizing: border-box;
-  min-block-size: var(--ck-tap-target);
-  block-size: var(--ck-button-height);
+  min-block-size: max(var(--ck-tap-target), var(--ck-button-height));
   inline-size: 100%;
   align-items: center;
   justify-content: center;
   gap: var(--ck-space-2);
-  padding-inline: var(--ck-space-8);
+  padding: var(--ck-space-3) var(--ck-space-6);
   border: 0;
   border-radius: var(--ck-button-radius, var(--ck-radius));
-  background: var(--ck-accent);
+  background: var(--ck-button-bg);
   color: var(--ck-text-on-accent);
   font: inherit;
-  font-size: var(--ck-font-size-lg);
-  font-weight: var(--ck-weight-medium);
+  font-size: var(--ck-font-size-md);
+  font-weight: var(--ck-weight-semibold);
   line-height: var(--ck-line-tight);
   text-align: center;
   cursor: pointer;
@@ -106,23 +108,30 @@
 }
 
 .ck-button--secondary {
-  background: var(--ck-accent-subtle);
+  --ck-button-bg: var(--ck-surface);
+  --ck-button-hover: color-mix(in srgb, var(--ck-text) 8%, var(--ck-surface));
+  --ck-button-active: color-mix(in srgb, var(--ck-text) 14%, var(--ck-surface));
   color: var(--ck-text);
 }
 
 .ck-button--ghost {
-  background: transparent;
+  --ck-button-bg: transparent;
+  --ck-button-hover: color-mix(in srgb, var(--ck-text) 6%, transparent);
+  --ck-button-active: color-mix(in srgb, var(--ck-text) 12%, transparent);
   color: var(--ck-text);
   box-shadow: inset 0 0 0 1px var(--ck-border);
 }
 
 .ck-button--danger {
-  background: var(--ck-danger);
-  color: var(--ck-p-neutral-1000);
+  --ck-button-bg: var(--ck-danger);
+  --ck-button-hover: color-mix(in srgb, var(--ck-danger) 92%, black);
+  --ck-button-active: color-mix(in srgb, var(--ck-danger) 84%, black);
+  color: var(--ck-danger-contrast);
 }
 
 .ck-button--sm {
-  block-size: var(--ck-control-height-sm);
+  --ck-button-height: var(--ck-control-height-sm);
+  padding-block: var(--ck-space-2);
   padding-inline: var(--ck-space-4);
   font-size: var(--ck-font-size-sm);
 }
@@ -135,22 +144,14 @@
    looks permanently pressed. */
 @media (hover: hover) {
   .ck-button:hover:not(:disabled):not([aria-disabled='true']) {
-    background: var(--ck-accent-hover);
-  }
-
-  .ck-button--secondary:hover:not(:disabled):not([aria-disabled='true']) {
-    background: color-mix(in srgb, var(--ck-accent) 26%, transparent);
-  }
-
-  .ck-button--ghost:hover:not(:disabled):not([aria-disabled='true']) {
-    background: var(--ck-accent-subtle);
+    background: var(--ck-button-hover);
   }
 }
 
 /* Without this a button in an Android WebView feels dead - the tap highlight is off above.
    What a press looks like is the platform's business. */
 .ck-button:active:not(:disabled):not([aria-disabled='true']) {
-  background: var(--ck-accent-active);
+  background: var(--ck-button-active);
   background-image: linear-gradient(var(--ck-press-tint), var(--ck-press-tint));
   opacity: var(--ck-press-opacity);
   transform: scale(var(--ck-press-scale));
@@ -175,6 +176,45 @@
 /* Busy is not disabled: the button keeps focus while the payment runs. */
 .ck-button[aria-busy='true'] {
   cursor: progress;
+  opacity: 1;
+}
+
+.ck-button__label {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.ck-button__icon {
+  display: flex;
+  flex: 0 0 1.25rem;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}
+
+.ck-button__icon > svg,
+.ck-icon-button svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}
+
+.ck-icon-button {
+  flex: 0 0 auto;
+  inline-size: max(var(--ck-tap-target), var(--ck-button-height));
+  padding: var(--ck-space-2);
+  box-shadow: none;
+}
+
+.ck-icon-button .ck-button__label,
+.ck-icon-button .ck-button__label > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ck-icon-button[aria-busy='true'] .ck-button__label {
+  display: none;
 }
 
 .ck-tabs {
@@ -203,6 +243,7 @@
   min-block-size: var(--ck-tap-target);
   align-items: center;
   justify-content: center;
+  gap: var(--ck-space-2);
   scroll-snap-align: start;
   border: 0;
   border-radius: var(--ck-radius-small);
@@ -218,6 +259,13 @@
   transition:
     background-color var(--ck-duration-fast) var(--ck-ease-standard),
     color var(--ck-duration-fast) var(--ck-ease-standard);
+}
+
+.ck-tab__icon {
+  display: flex;
+  flex: 0 0 auto;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
 }
 
 /* Wide enough for all of them: share the row instead of scrolling. */

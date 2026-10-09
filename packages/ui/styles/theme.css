@@ -3,9 +3,9 @@
  * second one. No attribute at all means dark, which is what the kit shipped with.
  */
 .ck-root[data-ck-theme='light'] {
-  --ck-accent-hover: var(--ck-p-accent-600);
-  --ck-accent-active: var(--ck-p-accent-700);
-  --ck-surface: var(--ck-p-neutral-100);
+  --ck-accent-hover: color-mix(in srgb, var(--ck-accent) 92%, black);
+  --ck-accent-active: color-mix(in srgb, var(--ck-accent) 84%, black);
+  --ck-surface: var(--ck-p-neutral-50);
   --ck-surface-raised: var(--ck-p-neutral-0);
   --ck-surface-sunken: var(--ck-p-neutral-50);
   --ck-surface-overlay: var(--ck-p-neutral-0);
@@ -13,8 +13,10 @@
   --ck-border-strong: color-mix(in srgb, var(--ck-p-neutral-1000) 28%, transparent);
   --ck-text: var(--ck-p-neutral-900);
   --ck-text-muted: var(--ck-p-neutral-500);
-  --ck-text-subtle: var(--ck-p-neutral-400);
+  --ck-text-subtle: var(--ck-p-neutral-500);
   --ck-danger: var(--ck-p-danger-700);
+  --ck-danger-contrast: var(--ck-p-neutral-0);
+  --ck-focus-ring-color: var(--ck-accent);
   --ck-success: var(--ck-p-success-700);
 
   --ck-scrim: var(--ck-p-neutral-0);
@@ -28,9 +30,9 @@
 
 @media (prefers-color-scheme: light) {
   .ck-root[data-ck-theme='auto'] {
-    --ck-accent-hover: var(--ck-p-accent-600);
-    --ck-accent-active: var(--ck-p-accent-700);
-    --ck-surface: var(--ck-p-neutral-100);
+    --ck-accent-hover: color-mix(in srgb, var(--ck-accent) 92%, black);
+    --ck-accent-active: color-mix(in srgb, var(--ck-accent) 84%, black);
+    --ck-surface: var(--ck-p-neutral-50);
     --ck-surface-raised: var(--ck-p-neutral-0);
     --ck-surface-sunken: var(--ck-p-neutral-50);
     --ck-surface-overlay: var(--ck-p-neutral-0);
@@ -38,8 +40,10 @@
     --ck-border-strong: color-mix(in srgb, var(--ck-p-neutral-1000) 28%, transparent);
     --ck-text: var(--ck-p-neutral-900);
     --ck-text-muted: var(--ck-p-neutral-500);
-    --ck-text-subtle: var(--ck-p-neutral-400);
+    --ck-text-subtle: var(--ck-p-neutral-500);
     --ck-danger: var(--ck-p-danger-700);
+    --ck-danger-contrast: var(--ck-p-neutral-0);
+    --ck-focus-ring-color: var(--ck-accent);
     --ck-success: var(--ck-p-success-700);
 
     --ck-scrim: var(--ck-p-neutral-0);
@@ -61,7 +65,7 @@
   /* Apple corners are rounder, and it is the first thing that reads as wrong. */
   --ck-radius-sm: 10px;
   --ck-radius-md: 12px;
-  --ck-radius-lg: 16px;
+  --ck-radius-lg: 20px;
 
   /* iOS dims a press; it does not shrink it. */
   --ck-press-opacity: 0.62;
@@ -73,7 +77,7 @@
 
   --ck-radius-sm: 8px;
   --ck-radius-md: 12px;
-  --ck-radius-lg: 16px;
+  --ck-radius-lg: 20px;
   /* Material buttons are pills. */
   --ck-button-radius: var(--ck-radius-full);
 
@@ -85,7 +89,7 @@
 .ck-root[data-ck-platform='desktop'] {
   /* A mouse affords a smaller target. */
   --ck-tap-target: 36px;
-  --ck-control-height-md: clamp(2.75rem, 2.4rem + 1vw, 3.25rem);
+  --ck-control-height-md: 3rem;
 }
 
 /* A phone draws its own overlay scrollbar. */
@@ -109,6 +113,7 @@
   .ck-root {
     --ck-border: color-mix(in srgb, currentcolor 45%, transparent);
     --ck-border-strong: currentcolor;
+    --ck-control-border: currentcolor;
     --ck-text-muted: var(--ck-text);
     --ck-focus-ring-width: 3px;
   }

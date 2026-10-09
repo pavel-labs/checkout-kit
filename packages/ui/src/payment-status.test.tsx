@@ -7,6 +7,11 @@ import { PaymentMethodSelector } from './payment-method-selector'
 afterEach(cleanup)
 
 describe('PaymentStatus', () => {
+  it('keeps static specimens visible without announcing them', () => {
+    render(<PaymentStatus state="processing" announce={false} />)
+    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.getByText('Confirming your payment').getAttribute('aria-live')).toBe('off')
+  })
   it('is the live region the payment speaks through', () => {
     render(<PaymentStatus state="submitting" />)
 
@@ -37,6 +42,19 @@ describe('PaymentStatus', () => {
 })
 
 describe('payment state screens', () => {
+  it('does not move focus when rendering a catalog of result specimens', () => {
+    const { rerender } = render(<input aria-label="Focus target" />)
+    const input = screen.getByLabelText('Focus target')
+    input.focus()
+    rerender(
+      <>
+        <input aria-label="Focus target" />
+        <SuccessState autoFocus={false} />
+        <FailureState autoFocus={false} />
+      </>,
+    )
+    expect(document.activeElement).toBe(input)
+  })
   it('lead with a heading, so the answer is the first thing read', () => {
     render(<SuccessState>Your receipt is on its way.</SuccessState>)
 

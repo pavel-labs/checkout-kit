@@ -30,6 +30,7 @@ export const Button = ({
   rightIcon,
   className,
   onClick,
+  'aria-disabled': ariaDisabled,
   ref,
   ...props
 }: ButtonProps): ReactElement => (
@@ -39,9 +40,16 @@ export const Button = ({
     type={type}
     disabled={disabled}
     // Not `disabled`: that drops focus to the top of the page mid-payment.
-    aria-disabled={busy || undefined}
+    aria-disabled={busy || ariaDisabled || undefined}
     aria-busy={busy || undefined}
-    onClick={busy ? undefined : onClick}
+    onClick={(event) => {
+      // Removing onClick alone still lets a busy submit button submit its form.
+      if (busy || ariaDisabled === true || ariaDisabled === 'true') {
+        event.preventDefault()
+        return
+      }
+      onClick?.(event)
+    }}
     className={cx(
       'ck-button',
       variant !== 'primary' && `ck-button--${variant}`,
@@ -50,8 +58,16 @@ export const Button = ({
       className,
     )}
   >
-    {busy ? <Spinner /> : leftIcon}
-    <span>{children}</span>
-    {rightIcon}
+    {busy || leftIcon ? (
+      <span className="ck-button__icon" aria-hidden="true">
+        {busy ? <Spinner /> : leftIcon}
+      </span>
+    ) : null}
+    <span className="ck-button__label">{children}</span>
+    {rightIcon ? (
+      <span className="ck-button__icon" aria-hidden="true">
+        {rightIcon}
+      </span>
+    ) : null}
   </button>
 )

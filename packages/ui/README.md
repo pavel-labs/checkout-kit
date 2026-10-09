@@ -9,7 +9,7 @@ import { CheckoutRoot } from '@checkout-kit/react'
 
 export function Summary() {
   return (
-    <CheckoutRoot theme="auto" style={appearanceToStyle({ accent: '#0a7', radius: 8 })}>
+    <CheckoutRoot theme="auto" style={appearanceToStyle({ accent: '#047857', radius: 8 })}>
       <Panel>
         <Money amount={2500} currency="USD" />
         <Button
@@ -39,8 +39,12 @@ export function Summary() {
 
 For providers offering their own secure fields, use their SDK components. `CardFields` does not tokenize a card or replace provider-hosted fields.
 
-Use `busy` to keep focus on a submitting button; use `disabled` for an unavailable choice. `Dialog` is controlled by `open`; `onClose` requests a state change once per Escape dismissal. `Countdown` calls `onExpire` once per deadline, including React StrictMode. Expiry is a UI notification: check the server before deciding what happened to the payment.
+Add `InputGroup` around a native `Input` for an icon, suffix or clear action. `IconButton` requires a localized `label`; it has the same native form behavior and tap target as `Button`. Put Field control props and form-library refs on the input itself.
+
+Use `busy` to keep focus on a submitting button; use `disabled` for an unavailable choice. `Dialog` is controlled by `open`; `onClose` requests a state change once per dismissal. Its visible dismiss button is localized with `closeLabel`; `dismissible={false}` hides it and refuses Escape/backdrop dismissal. A description names the dialog's accessible description. `Countdown` calls `onExpire` once per deadline, including React StrictMode. Expiry is a UI notification: check the server before deciding what happened to the payment.
+
+For static result specimens use `SuccessState autoFocus={false}`, `FailureState autoFocus={false}` and `PaymentStatus announce={false}`. Real payment outcomes retain focus and announcements by default.
 
 Amounts passed to `Money` and `OrderSummary` are minor units from your merchant API. Accessible labels, error messages and locale-specific copy remain under your app's control. Components support SSR; browser-only APIs are used in effects or event handlers.
 
-[UI guide](https://pavel-labs.github.io/checkout-kit/ui.html) · [Installation](https://pavel-labs.github.io/checkout-kit/getting-started.html)
+[Live gallery](https://pavel-labs.github.io/checkout-kit/demo/gallery) · [UI guide](https://pavel-labs.github.io/checkout-kit/ui.html) · [Installation](https://pavel-labs.github.io/checkout-kit/getting-started.html)

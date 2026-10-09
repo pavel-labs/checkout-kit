@@ -40,23 +40,26 @@ otherwise reset the buttons it draws - and before utilities:
 @import 'tailwindcss/utilities.css' layer(utilities);
 ```
 
+## Preview a complete checkout
+
+Open the [live gallery](https://pavel-labs.github.io/checkout-kit/demo/gallery). The first
+example combines an order, editable contact details, saved/new card choices and bank
+transfer. Switch **Preview state** to inspect waiting, success and decline; use **Frame
+width** for 390px and 320px containers. This workshop never creates a payment or stores a card.
+
+The default styling uses neutral surfaces, a blue accent, pill actions and 16px input text.
+Controls keep native form behavior and keyboard access. The catalog below the preview shows
+individual components with the same theme, platform, density and accent.
+
 ## Theming
 
 Three tiers of custom property. You normally touch one of them.
 
-```text
-  --ck-p-accent-500: #aa3bff       primitives   the raw ramps
-          |
-          v
-  --ck-accent                      semantics    what the rules read
-  --ck-accent-hover  (derived)
-  --ck-accent-subtle (derived)
-  --ck-focus-ring-color
-          |
-          v
-  --ck-button-radius               per-component knobs
-  --ck-input-height
-```
+| Tier       | Examples                                          | Changes                                           |
+| ---------- | ------------------------------------------------- | ------------------------------------------------- |
+| Primitives | `--ck-p-accent-500`                               | The brand color used to derive interactive tones. |
+| Semantics  | `--ck-accent`, `--ck-control-border`, `--ck-text` | A role shared across components.                  |
+| Component  | `--ck-button-radius`, `--ck-input-height`         | One control's geometry.                           |
 
 Move a primitive and everything below it moves. Set a semantic token and only that changes.
 
@@ -65,7 +68,7 @@ derived from it, so they move together and stay in step:
 
 ```css
 .ck-root {
-  --ck-p-accent-500: #0a7;
+  --ck-p-accent-500: #047857;
 }
 ```
 
@@ -78,6 +81,10 @@ derived from it, so they move together and stay in step:
   --ck-font: 'Inter', system-ui, sans-serif;
 }
 ```
+
+Choose an accent with readable text in every state. The kit does not calculate contrast at
+runtime. For a light accent set `--ck-accent-contrast` (or `accentContrast`) to dark text. The
+gallery's Ink example uses a dark action in light mode and a light action in dark mode.
 
 The semantic tier is what the rules read: `--ck-accent`, `--ck-surface{,-raised,-sunken}`,
 `--ck-border{,-strong}`, `--ck-text{,-muted,-subtle}`, `--ck-danger`, `--ck-success`, plus
@@ -99,7 +106,7 @@ cannot know your page's real background, so override it if the default is wrong:
 ```tsx
 import { appearanceToStyle } from '@checkout-kit/ui'
 
-;<CheckoutRoot theme="auto" style={appearanceToStyle({ accent: '#0a7', radius: 8 })}>
+;<CheckoutRoot theme="auto" style={appearanceToStyle({ accent: '#047857', radius: 8 })}>
 ```
 
 Numbers are pixels, strings are used as written. Anything it does not cover is still one
@@ -144,39 +151,13 @@ page, with switches for theme, platform, density and accent.
 
 Where the main ones sit on a checkout screen:
 
-```text
-+--------------------------------------+  +------------------+
-|  Steps                               |  |  Panel           |
-|                                      |  |   OrderSummary   |
-|  ExpressCheckout                     |  |    LineItem      |
-|  ---------- Divider "or" ----------  |  |    LineItem      |
-|                                      |  |    DetailItem    |
-|  Section "Contact"                   |  |     (total)      |
-|   ContactFields                      |  |   PromoCodeInput |
-|                                      |  +------------------+
-|  Section "Payment method"            |
-|   PaymentMethodSelector              |     aside: above the form on a
-|   SavedInstrumentList                |     phone, beside it from 48rem
-|                                      |
-|  Section "Card details"              |
-|   CardFields                         |
-|    Field > CardNumberInput           |
-|    Field > ExpiryInput | CvcInput    |
-|   Disclosure "What is a CVC?"        |
-|                                      |
-|  Section "Billing address"           |
-|   AddressFields                      |
-|   Checkbox "Save this card"          |
-|                                      |
-|  ActionFrame  <- a provider draws here
-|                                      |
-|  ValidationSummary                   |
-|  StickyActions                       |
-|   PaymentStatus / ErrorText          |
-|   PaymentButton                      |
-|   TrustStrip                         |
-+--------------------------------------+
-```
+| Part of the screen              | Compose with                                                      |
+| ------------------------------- | ----------------------------------------------------------------- |
+| Order and amount                | `OrderSummary`, `Money`, `Panel`, `PromoCodeInput`                |
+| Payment choice                  | `PaymentMethodSelector`, `SavedInstrumentList`, `OptionCardGroup` |
+| Shopper details                 | `Field`, `InputGroup`, `Input`, `ContactFields`, `AddressFields`  |
+| Provider collection / challenge | SDK-owned fields inside `ActionFrame`                             |
+| Submit and outcome              | `PaymentButton`, `PaymentStatus`, result screens and `Receipt`    |
 
 The payment then ends on one of the state screens - `ProcessingState`,
 `AuthenticationState`, `SuccessState`, `FailureState` - which replace the form rather than
@@ -200,6 +181,32 @@ Besides `Input` there is `Select`, `Textarea` and `Checkbox`. `Checkbox` does no
 `Field`: its label belongs beside the box, not above it, so it takes its own `label`,
 `description` and `error`. It is what accepts terms and saves cards.
 
+**Input composition and icon actions.** `InputGroup` supplies a shared surface for a
+leading decorative icon and trailing text or action. It carries the input's focus and error
+styling. Spread `Field` props and your form ref onto `Input`, so labels and errors stay wired.
+`IconButton` requires `label`; its children are decorative. Keep leading content decorative
+and label every interactive trailing control.
+
+```tsx
+<Field label="Receipt email" error={emailError}>
+  {(control) => (
+    <InputGroup
+      leading={<MailIcon />}
+      trailing={
+        <IconButton label="Clear email" onClick={clearEmail}>
+          <CloseIcon />
+        </IconButton>
+      }
+    >
+      <Input {...control} type="email" ref={emailRef} autoComplete="email" />
+    </InputGroup>
+  )}
+</Field>
+```
+
+When a clear action removes itself, return focus to the input in its handler. Disable its
+trailing actions when your form requires them to be unavailable.
+
 **Address and contact.** `AddressFields` and `ContactFields` exist for one reason:
 `autocomplete`. Every token they set is one a browser recognises, and one wrong token turns
 autofill off for the whole form. The country list is yours - the kit ships no data.
@@ -222,7 +229,10 @@ expires), `CopyButton`, `Disclosure`, `Divider`, `Panel` and `Receipt`.
 
 `Dialog` is a real `<dialog>` opened with `showModal()`. That is why the kit has no
 focus-trap code: focus, Tab, inertness, Escape and focus restore are all the browser's.
-`variant="sheet"` slides it up from the bottom edge, where a thumb can reach it.
+`variant="sheet"` anchors it to the bottom edge and limits its width on desktop.
+The visible close button uses `closeLabel`, and `description` is connected with
+`aria-describedby`. `dismissible={false}` hides the close button and refuses backdrop/Escape
+dismissal; provide an explicit completion action for that step.
 
 `ValidationSummary` is the other half of `Field`'s polite errors. Since those do not
 interrupt, nothing otherwise says how many problems a long form has on submit. It takes
@@ -254,12 +264,15 @@ methods come from you - the kit has no list of its own.
 **Payment.** `PaymentStatus` is the single live region on the page: what happens to the money
 is what gets announced, and field errors stay polite so they do not drown it out.
 `PaymentButton` shows a spinner and stops responding while a payment runs, but keeps its
-label and its focus - a label that changes mid-payment moves the target under the cursor,
+label and its focus. It also prevents the native submit action while busy; `Button` honors
+`aria-disabled` supplied by the host. A label that changes mid-payment moves the target under the cursor,
 and a disabled button drops focus to the top of the page.
 
 `ProcessingState`, `AuthenticationState`, `SuccessState` and `FailureState` are the screens a
-payment ends on. Each leads with a heading and takes focus on arrival, so a screen reader
-starts at the answer. Cancellation is a tone of `FailureState`, not a fifth screen.
+payment ends on. Each leads with a heading. `SuccessState` and `FailureState` take focus on arrival; processing
+and authentication focus remain under the host's control. For a static catalog set
+`autoFocus={false}` on result screens and `announce={false}` on `PaymentStatus`. Actual
+outcomes retain those defaults. Cancellation uses a neutral icon and color.
 
 `CheckoutLayout` is the column, with an optional `aside` for an order summary: above the
 form on a phone, sticky beside it from 48rem. `ck-panel` is an opt-in raised surface for
@@ -278,8 +291,8 @@ page and a QR code want three different sizes:
 
 The kit gives you: a label and an error tied to every field, one alert and one status region
 rather than a scatter of them, a visible focus ring on every control, a real tab pattern with
-arrow keys, radio groups the keyboard can reach, tap targets no smaller than 44px, and state
-screens that take focus.
+arrow keys, radio groups the keyboard can reach, 44px targets by default (48px for coarse pointers; desktop permits 36px small actions),
+and result screens that take focus. Compact density preserves the platform's target size.
 
 You still own: where focus goes when your routes change, and any announcement that belongs to
 your layout rather than to the payment. The kit does not own your page, so it cannot do those
@@ -302,3 +315,12 @@ The runners in `@checkout-kit/runtime-browser` take their strings the same way -
 What you should not translate is `PaymentError.message`: those are the issuer words, and
 they are what the shopper repeats to their bank. Branch on `PaymentError.code` if you need
 your own wording, and fall back to the message for codes you do not know.
+
+## Verify your composition
+
+Run `npm run test:ui` in a source checkout. The browser suite covers desktop Chromium,
+Android-sized Chromium, iPhone-sized WebKit and a 320px viewport. It checks WCAG A/AA rules
+with axe across both themes and five accents, keyboard tab/radio choices, sheet dismissal and
+focus restoration, narrow container overflow, target sizes, RTL and reduced-motion results.
+CI attaches screenshots and a Playwright report. Automated checks cover detectable rules;
+review your final copy, provider frames and screen-reader flow in your own application.

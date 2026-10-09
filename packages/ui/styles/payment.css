@@ -76,15 +76,22 @@
 }
 
 .ck-state__icon {
-  display: flex;
+  display: grid;
+  place-items: center;
+  inline-size: 4.5rem;
+  block-size: 4.5rem;
+  border-radius: var(--ck-radius-full);
+  background: var(--ck-surface);
   color: var(--ck-text-muted);
 }
 
 .ck-state--success .ck-state__icon {
+  background: var(--ck-success-surface);
   color: var(--ck-success);
 }
 
 .ck-state--failure .ck-state__icon {
+  background: var(--ck-danger-surface);
   color: var(--ck-danger);
 }
 
@@ -92,7 +99,7 @@
   margin: 0;
   letter-spacing: var(--ck-tracking-tight);
   font-size: var(--ck-font-size-xl);
-  font-weight: var(--ck-weight-medium);
+  font-weight: var(--ck-weight-semibold);
   line-height: var(--ck-line-tight);
   text-wrap: balance;
 }

@@ -3,7 +3,7 @@
 @property --ck-accent {
   syntax: '<color>';
   inherits: true;
-  initial-value: #aa3bff;
+  initial-value: #2563eb;
 }
 
 @property --ck-press-tint {
@@ -19,30 +19,30 @@
 }
 
 .ck-root {
-  /* The accent ramp. Move 500 and every state below moves with it. */
-  --ck-p-accent-100: #f2e3ff;
-  --ck-p-accent-200: #ddbcff;
-  --ck-p-accent-300: #c689ff;
-  --ck-p-accent-400: #b862ff;
-  --ck-p-accent-500: #aa3bff;
-  --ck-p-accent-600: #922ce0;
-  --ck-p-accent-700: #7621b8;
-  --ck-p-accent-800: #4d1578;
-  --ck-p-accent-900: #2a0f46;
+  /* The brand primitive. Interactive tones are derived from 500, including custom brands. */
+  --ck-p-accent-100: #eff6ff;
+  --ck-p-accent-200: #dbeafe;
+  --ck-p-accent-300: #93c5fd;
+  --ck-p-accent-400: #60a5fa;
+  --ck-p-accent-500: #2563eb;
+  --ck-p-accent-600: #1d4ed8;
+  --ck-p-accent-700: #1e40af;
+  --ck-p-accent-800: #1e3a8a;
+  --ck-p-accent-900: #172554;
 
-  /* Neutrals, carrying a trace of the same violet so greys never look muddy next to it. */
+  /* Neutral surfaces keep payment details, validation and merchant branding distinct. */
   --ck-p-neutral-0: #ffffff;
-  --ck-p-neutral-50: #f6f5f8;
-  --ck-p-neutral-100: #ebe9ef;
-  --ck-p-neutral-200: #d6d3dd;
-  --ck-p-neutral-300: #b0b0b8;
-  --ck-p-neutral-400: #8b8a95;
-  --ck-p-neutral-500: #6b6a76;
-  --ck-p-neutral-600: #4f4e59;
-  --ck-p-neutral-700: #3d3d47;
-  --ck-p-neutral-800: #2b2a33;
-  --ck-p-neutral-900: #16151c;
-  --ck-p-neutral-1000: #06040a;
+  --ck-p-neutral-50: #f7f8fa;
+  --ck-p-neutral-100: #eef0f4;
+  --ck-p-neutral-200: #dde1e9;
+  --ck-p-neutral-300: #b9c0ce;
+  --ck-p-neutral-400: #8590a3;
+  --ck-p-neutral-500: #596579;
+  --ck-p-neutral-600: #435067;
+  --ck-p-neutral-700: #2c3544;
+  --ck-p-neutral-800: #202837;
+  --ck-p-neutral-900: #111827;
+  --ck-p-neutral-1000: #0b101a;
 
   --ck-p-danger-300: #fca5a5;
   --ck-p-danger-500: #f87171;
@@ -55,9 +55,9 @@
   --ck-p-unit: 0.25rem;
 
   --ck-accent: var(--ck-p-accent-500);
-  --ck-accent-hover: var(--ck-p-accent-400);
-  --ck-accent-active: var(--ck-p-accent-600);
-  --ck-accent-subtle: color-mix(in srgb, var(--ck-accent) 16%, transparent);
+  --ck-accent-hover: color-mix(in srgb, var(--ck-accent) 92%, black);
+  --ck-accent-active: color-mix(in srgb, var(--ck-accent) 84%, black);
+  --ck-accent-subtle: color-mix(in srgb, var(--ck-accent) 12%, transparent);
   --ck-accent-contrast: var(--ck-p-neutral-0);
   --ck-text-on-accent: var(--ck-accent-contrast);
 
@@ -65,19 +65,21 @@
      override this if it is not close to the theme's. */
   --ck-scrim: var(--ck-p-neutral-1000);
 
-  --ck-surface: var(--ck-p-neutral-700);
-  --ck-surface-raised: var(--ck-p-neutral-600);
-  --ck-surface-sunken: var(--ck-p-neutral-800);
+  --ck-surface: var(--ck-p-neutral-800);
+  --ck-surface-raised: var(--ck-p-neutral-900);
+  --ck-surface-sunken: var(--ck-p-neutral-1000);
   --ck-surface-overlay: var(--ck-p-neutral-900);
 
   --ck-border: color-mix(in srgb, var(--ck-p-neutral-0) 12%, transparent);
   --ck-border-strong: color-mix(in srgb, var(--ck-p-neutral-0) 28%, transparent);
+  --ck-control-border: var(--ck-p-neutral-400);
 
   --ck-text: var(--ck-p-neutral-100);
   --ck-text-muted: var(--ck-p-neutral-300);
   --ck-text-subtle: var(--ck-p-neutral-400);
 
   --ck-danger: var(--ck-p-danger-500);
+  --ck-danger-contrast: var(--ck-p-neutral-1000);
   --ck-danger-surface: color-mix(in srgb, var(--ck-danger) 14%, transparent);
   --ck-danger-border: color-mix(in srgb, var(--ck-danger) 55%, transparent);
   --ck-success: var(--ck-p-success-500);
@@ -97,8 +99,8 @@
   --ck-font: system-ui, 'Segoe UI', Roboto, sans-serif;
   --ck-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --ck-font-size-xs: 0.6875rem;
-  --ck-font-size-sm: 0.8125rem;
+  --ck-font-size-xs: 0.75rem;
+  --ck-font-size-sm: 0.875rem;
   /* Never below 16px in practice: a smaller font makes iOS zoom the page on focus. */
   --ck-font-size-md: 1rem;
   --ck-font-size-lg: 1.125rem;
@@ -109,34 +111,34 @@
   --ck-line-normal: 1.45;
 
   /* Headings only. Body text at these sizes reads worse tightened. */
-  --ck-tracking-tight: -0.01em;
+  --ck-tracking-tight: -0.025em;
   --ck-weight-regular: 400;
   --ck-weight-medium: 500;
   --ck-weight-semibold: 600;
 
   --ck-control-height-sm: 2.25rem;
-  --ck-control-height-md: clamp(3rem, 2.6rem + 1.2vw, 3.5rem);
-  --ck-control-height-lg: clamp(3.25rem, 2.8rem + 1.6vw, 3.75rem);
+  --ck-control-height-md: 3.25rem;
+  --ck-control-height-lg: 3.5rem;
   --ck-control-padding-inline: var(--ck-space-4);
   /* The smallest thing a finger can reliably hit. Raised on touch screens, below. */
   --ck-tap-target: 44px;
 
   --ck-radius-xs: 6px;
   --ck-radius-sm: 8px;
-  --ck-radius-md: 10px;
-  --ck-radius-lg: 14px;
+  --ck-radius-md: 12px;
+  --ck-radius-lg: 20px;
   --ck-radius-full: 999px;
 
   --ck-focus-ring-width: 2px;
   --ck-focus-ring-offset: 2px;
-  --ck-focus-ring-color: var(--ck-accent);
+  --ck-focus-ring-color: color-mix(in srgb, var(--ck-accent) 80%, white);
 
   --ck-duration-fast: 120ms;
   --ck-duration-normal: 200ms;
   --ck-ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
-  --ck-shadow-sm: 0 1px 2px rgb(0 0 0 / 24%);
-  --ck-shadow-md: 0 8px 24px rgb(0 0 0 / 32%);
+  --ck-shadow-sm: 0 1px 3px rgb(0 0 0 / 16%);
+  --ck-shadow-md: 0 4px 16px rgb(0 0 0 / 18%);
   --ck-shadow-lg: 0 24px 64px rgb(0 0 0 / 40%);
 
   /* A one-pixel catch of light along a raised top edge: what makes a dark surface look drawn
@@ -162,11 +164,15 @@
   --ck-radius-small: var(--ck-radius-md);
   --ck-control-height: var(--ck-control-height-md);
 
+  --ck-button-radius: var(--ck-radius-full);
   --ck-button-height: var(--ck-control-height);
   --ck-input-height: var(--ck-control-height);
   --ck-tab-height: var(--ck-control-height-sm);
 
+  color-scheme: dark;
   font-family: var(--ck-font);
+  font-size: var(--ck-font-size-md);
+  line-height: var(--ck-line-normal);
   color: var(--ck-text);
   /* Native controls the kit does not draw: a select, a checkbox. */
   accent-color: var(--ck-accent);

@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { Button } from './button'
@@ -73,5 +74,34 @@ describe('Button', () => {
     screen.getByRole('button').click()
 
     expect(onClick).not.toHaveBeenCalled()
+  })
+
+  it.each([{ busy: true }, { 'aria-disabled': true }, { 'aria-disabled': 'true' as const }])(
+    'prevents native form submission while unavailable: %j',
+    (props) => {
+      const submit = vi.fn((event: FormEvent) => event.preventDefault())
+      const click = vi.fn()
+      render(
+        <form onSubmit={submit}>
+          <Button {...props} type="submit" onClick={click}>
+            Pay
+          </Button>
+        </form>,
+      )
+      screen.getByRole('button', { name: 'Pay' }).click()
+      expect(click).not.toHaveBeenCalled()
+      expect(submit).not.toHaveBeenCalled()
+    },
+  )
+
+  it('submits a native form when available', () => {
+    const submit = vi.fn((event: FormEvent) => event.preventDefault())
+    render(
+      <form onSubmit={submit}>
+        <Button type="submit">Pay</Button>
+      </form>,
+    )
+    screen.getByRole('button', { name: 'Pay' }).click()
+    expect(submit).toHaveBeenCalledTimes(1)
   })
 })

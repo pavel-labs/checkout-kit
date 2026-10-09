@@ -17,7 +17,8 @@
     "build:mock": "tsc -b && vite build --mode mock",
     "preview": "vite preview",
     "preview:mock": "vite preview --mode mock",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:ui": "playwright test --config playwright.ui.config.ts"
   },
   "dependencies": {
     "@checkout-kit/core": "*",
@@ -47,6 +48,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@checkout-kit/testing": "*",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",

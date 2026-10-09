@@ -8,6 +8,8 @@ export interface PaymentStatusProps {
   /** Replaces the default line, e.g. with the issuer's own decline message. */
   message?: string
   messages?: Partial<PaymentStatusMessages>
+  /** Off for a static specimen or a duplicate visual status. Defaults to true. */
+  announce?: boolean
   className?: string
 }
 
@@ -16,6 +18,7 @@ export const PaymentStatus = ({
   state,
   message,
   messages,
+  announce = true,
   className,
 }: PaymentStatusProps): ReactElement => {
   const copy = { ...PAYMENT_STATUS_MESSAGES, ...messages }
@@ -23,17 +26,12 @@ export const PaymentStatus = ({
     ? ''
     : (message ?? copy[state as keyof PaymentStatusMessages])
 
-  const tone =
-    state === 'success'
-      ? 'success'
-      : state === 'failure' || state === 'cancelled'
-        ? 'failure'
-        : null
+  const tone = state === 'success' ? 'success' : state === 'failure' ? 'failure' : null
 
   return (
     <p
-      role="status"
-      aria-live="polite"
+      role={announce ? 'status' : undefined}
+      aria-live={announce ? 'polite' : 'off'}
       className={cx('ck-payment-status', tone && `ck-payment-status--${tone}`, className)}
     >
       {text}
