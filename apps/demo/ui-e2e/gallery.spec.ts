@@ -55,6 +55,7 @@ test('the preview edits fields, switches methods and shows a result without call
   await expect(checkout(page).locator('.ck-state')).toBeFocused()
   await checkout(page).getByRole('button', { name: 'Back to preview' }).click()
   await expect(checkout(page).getByLabel('Email address')).toHaveValue('buyer@example.com')
+  await expect(checkout(page).getByLabel('Email address')).toBeFocused()
   expect(mutations).toEqual([])
 })
 

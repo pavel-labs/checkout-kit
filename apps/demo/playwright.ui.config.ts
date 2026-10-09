@@ -7,10 +7,11 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 2 : undefined,
   timeout: 90_000,
+  expect: { timeout: 10_000 },
   reporter: process.env.CI
     ? [['github'], ['html', { open: 'never', outputFolder: 'ui-playwright-report' }]]
     : 'list',
-  use: { baseURL: 'http://127.0.0.1:5173', trace: 'on-first-retry' },
+  use: { baseURL: 'http://127.0.0.1:5173', trace: 'on-first-retry', actionTimeout: 15_000 },
   projects: [
     {
       name: 'desktop',

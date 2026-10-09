@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Button,
   CardFields,
@@ -48,6 +48,12 @@ export function CheckoutPreview({
   const [expiry, setExpiry] = useState('')
   const [cvc, setCvc] = useState('')
   const [remember, setRemember] = useState(false)
+
+  const previousScreen = useRef(screen)
+  useEffect(() => {
+    if (screen === 'ready' && previousScreen.current !== 'ready') emailRef.current?.focus()
+    previousScreen.current = screen
+  }, [screen])
 
   return (
     <div className="preview-checkout">

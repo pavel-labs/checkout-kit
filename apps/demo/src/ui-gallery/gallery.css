@@ -201,6 +201,7 @@ main:has(> .gallery) {
 }
 
 .gallery-preview__toolbar {
+  color-scheme: light;
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -46,7 +46,7 @@ function RootComponent() {
             </div>
           ) : null}
           <Outlet />
-          {import.meta.env.DEV && <TanStackRouterDevtools />}
+          {import.meta.env.DEV && !isGallery && <TanStackRouterDevtools />}
         </Main>
       </MerchantProvider>
     </CheckoutProvider>

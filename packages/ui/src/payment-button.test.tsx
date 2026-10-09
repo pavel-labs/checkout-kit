@@ -48,6 +48,6 @@ describe('PaymentButton', () => {
       </PaymentButton>,
     )
 
-    expect(button().textContent).toContain('$19.99')
+    expect(screen.getByRole('button', { name: 'Pay $19.99' })).toBe(button())
   })
 })
