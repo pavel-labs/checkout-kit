@@ -1,4 +1,11 @@
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  cloneElement,
+  useId,
+  useState,
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+} from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { CheckoutRoot } from '@checkout-kit/react'
 import type { Platform } from '@checkout-kit/runtime-browser'
@@ -117,14 +124,23 @@ const Row = ({
 )
 
 /** Controls belong to the workshop, outside the checkout being inspected. */
-const Control = ({ label, children }: { label: string; children: ReactNode }) => (
-  <label className="gallery-control">
-    {label}
-    {children}
-  </label>
-)
+const Control = ({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactElement<{ id?: string }>
+}) => {
+  const id = useId()
+  return (
+    <div className="gallery-control">
+      <label htmlFor={id}>{label}</label>
+      {cloneElement(children, { id })}
+    </div>
+  )
+}
 
-export function GalleryPage() {
+function GalleryPage() {
   const [theme, setTheme] = useState<'dark' | 'light' | 'auto'>('light')
   const [platform, setPlatform] = useState<Platform | 'auto'>('auto')
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable')

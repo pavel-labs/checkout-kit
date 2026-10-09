@@ -602,7 +602,7 @@ main:has(> .gallery) {
     inline-size: 100%;
   }
 
-  .gallery-preview__controls > label {
+  .gallery-preview__controls > .gallery-control {
     flex: 1 1 100px;
     min-inline-size: 0;
   }
@@ -645,7 +645,7 @@ main:has(> .gallery) {
     min-inline-size: 0;
   }
 
-  .gallery-toolbar > label {
+  .gallery-toolbar > .gallery-control {
     flex: 1 1 120px;
   }
 
