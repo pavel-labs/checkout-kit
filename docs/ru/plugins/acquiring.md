@@ -45,7 +45,6 @@ Config type регистрирует id в TypeScript; динамический 
 | POST   | `/rest/finish3ds.do`              | Form `{ MD, PaRes }`; finish authentication.                             |
 | POST   | `/rest/reverse.do`                | Form `{ orderId }`; cancel an unfinished order.                          |
 
-
 Все шесть reference configs поддерживают credentials и headers API мерчанта. Повтор операции сохраняет прежний ключ. После reload сервер возвращает состояние и активное действие.
 
 ## Проверка

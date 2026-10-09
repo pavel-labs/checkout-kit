@@ -37,7 +37,6 @@ Config type регистрирует id в TypeScript; динамический 
 | POST   | `/hosted/orders`     | `{ planId }`; return `{ orderId }`.                       |
 | GET    | `/hosted/orders/:id` | Authoritative order with id, amount, currency and status. |
 
-
 Все шесть reference configs поддерживают credentials и headers API мерчанта. Повтор операции сохраняет прежний ключ. После reload сервер возвращает состояние и активное действие.
 
 ## Проверка

@@ -2,15 +2,15 @@
 
 Fixtures и симуляторы для разработки чекаута. Они не вызывают аккаунты провайдеров и не проводят реальные платежи.
 
-| Entry point | Экспорты |
-| --- | --- |
-| `@checkout-kit/testing` | SCENARIO_CARDS, outcomes, тексты отказов без backend. |
-| `@checkout-kit/testing/engine` | createFakeProvider, fakeIntent/action, scripted runners, abort helpers. |
-| `@checkout-kit/testing/backend` | MSW handlers, resetBackend, состояние симулятора мерчанта. |
+| Entry point                     | Экспорты                                                                |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| `@checkout-kit/testing`         | SCENARIO_CARDS, outcomes, тексты отказов без backend.                   |
+| `@checkout-kit/testing/engine`  | createFakeProvider, fakeIntent/action, scripted runners, abort helpers. |
+| `@checkout-kit/testing/backend` | MSW handlers, resetBackend, состояние симулятора мерчанта.              |
 
 ## Проверка движка
 
-~~~ts
+```ts
 import { createCheckout } from '@checkout-kit/core'
 import { createFakeProvider, createScriptedRunners } from '@checkout-kit/testing/engine'
 
@@ -26,8 +26,7 @@ const result = await engine.pay({
   instrument: { kind: 'none' },
 })
 console.log(result.status, calls.confirm.length)
-~~~
-
+```
 
 Настраивайте confirm/resume outcomes, задерживайте create/read и проверяйте calls для retries, abort и времени жизни хоста без сети.
 

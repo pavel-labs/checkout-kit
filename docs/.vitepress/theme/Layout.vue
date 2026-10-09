@@ -13,7 +13,8 @@ provide(dataSymbol, {
   theme: computed(() =>
     isSharedApi.value ? { ...data.theme.value, i18nRouting: false } : data.theme.value,
   ),
-  hash: computed(() => (isSharedApi.value ? '' : data.hash.value)),
+  // Translated headings use different ids; switch guides at the top of the same page.
+  hash: computed(() => ''),
 })
 </script>
 

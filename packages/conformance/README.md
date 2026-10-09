@@ -2,7 +2,7 @@
 
 Run the public payment-provider contract in Vitest with your provider, configuration, MSW handlers and scenario instruments/evidence. Install with core, testing, MSW 2 and Vitest 5 peers. See [installation](https://pavel-labs.github.io/checkout-kit/getting-started.html).
 
-~~~ts
+```ts
 import { describeProviderContract } from '@checkout-kit/conformance'
 import { paymentIntentHandlers, threeDsHandlers } from '@checkout-kit/testing/backend'
 import { SCENARIO_CARDS, declineMessage } from '@checkout-kit/testing'
@@ -32,18 +32,17 @@ describeProviderContract({
     },
   }),
 })
-~~~
+```
 
-
-| Fixture property | Purpose |
-| --- | --- |
-| `provider`, `config`, `handlers` | Adapter and merchant fixture. |
-| `instrumentFor(case)` | approve, decline, challengePass, challengeFail, processing. |
-| `evidenceFor(action, case)` | Correlated evidence; may perform provider-side actions asynchronously. |
-| `declineMessage` | Expected issuer text. |
-| `secrets?` | Additional sensitive strings that must not appear in results. |
-| `planId?` | Defaults to `1id`. |
-| `reset?` | Sync/async cleanup before each case; defaults to `resetBackend`. |
+| Fixture property                 | Purpose                                                                |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| `provider`, `config`, `handlers` | Adapter and merchant fixture.                                          |
+| `instrumentFor(case)`            | approve, decline, challengePass, challengeFail, processing.            |
+| `evidenceFor(action, case)`      | Correlated evidence; may perform provider-side actions asynchronously. |
+| `declineMessage`                 | Expected issuer text.                                                  |
+| `secrets?`                       | Additional sensitive strings that must not appear in results.          |
+| `planId?`                        | Defaults to `1id`.                                                     |
+| `reset?`                         | Sync/async cleanup before each case; defaults to `resetBackend`.       |
 
 The suite checks capabilities, replay, money, declines, processing, error data, supported actions, unknown/foreign evidence, repeated resume and paid confirmation/cancellation. Unhandled MSW requests fail.
 

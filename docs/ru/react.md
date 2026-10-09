@@ -26,21 +26,21 @@ React-экран:
 
 ## Подписки
 
-| Hook | Результат |
-| --- | --- |
-| `useCheckoutEngine()` | Команды без подписки. |
-| `useCheckoutSnapshot()` | Неизменяемые phase, intent, action, error, provider, capabilities. |
-| `useCheckout()` | Snapshot, engine, `isBusy`, `isSettled`, `isLocked`. |
-| `useCheckoutSelector(selector, isEqual?)` | Кешированный selector, включая объекты и своё равенство. |
-| `usePaymentState({ isDirty, isValidating })` | Состояние формы поверх движка. |
+| Hook                                         | Результат                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------ |
+| `useCheckoutEngine()`                        | Команды без подписки.                                              |
+| `useCheckoutSnapshot()`                      | Неизменяемые phase, intent, action, error, provider, capabilities. |
+| `useCheckout()`                              | Snapshot, engine, `isBusy`, `isSettled`, `isLocked`.               |
+| `useCheckoutSelector(selector, isEqual?)`    | Кешированный selector, включая объекты и своё равенство.           |
+| `usePaymentState({ isDirty, isValidating })` | Состояние формы поверх движка.                                     |
 
-~~~tsx
+```tsx
 import { useCheckoutSelector } from '@checkout-kit/react'
 const total = useCheckoutSelector(
   (s) => ({ amount: s.intent?.amount, currency: s.intent?.currency }),
   (a, b) => a.amount === b.amount && a.currency === b.currency,
 )
-~~~
+```
 
 Selectors должны быть чистыми. `isSettled` означает остановку автоматического продвижения, включая failed/неопределённую попытку; это не подтверждение оплаты. `isLocked` включает конечные фазы. Для восстановления и новой попытки используйте отдельное условие.
 

@@ -2,15 +2,15 @@
 
 Fixtures and simulators for checkout development. These do not call provider accounts or process real payments.
 
-| Entry point | Exports |
-| --- | --- |
-| `@checkout-kit/testing` | SCENARIO_CARDS, outcomes and decline copy, without the backend. |
-| `@checkout-kit/testing/engine` | createFakeProvider, fakeIntent/action, scripted runners and abort helpers. |
-| `@checkout-kit/testing/backend` | MSW handlers, resetBackend and simulated merchant state. |
+| Entry point                     | Exports                                                                    |
+| ------------------------------- | -------------------------------------------------------------------------- |
+| `@checkout-kit/testing`         | SCENARIO_CARDS, outcomes and decline copy, without the backend.            |
+| `@checkout-kit/testing/engine`  | createFakeProvider, fakeIntent/action, scripted runners and abort helpers. |
+| `@checkout-kit/testing/backend` | MSW handlers, resetBackend and simulated merchant state.                   |
 
 ## Engine fixtures
 
-~~~ts
+```ts
 import { createCheckout } from '@checkout-kit/core'
 import { createFakeProvider, createScriptedRunners } from '@checkout-kit/testing/engine'
 
@@ -26,8 +26,7 @@ const result = await engine.pay({
   instrument: { kind: 'none' },
 })
 console.log(result.status, calls.confirm.length)
-~~~
-
+```
 
 Script confirm/resume outcomes, delay creation/read responses and inspect calls to verify retries, aborts and host lifecycle without a network.
 

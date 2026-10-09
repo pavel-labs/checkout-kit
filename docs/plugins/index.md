@@ -6,20 +6,20 @@ Six packages implement generic merchant protocols against the mock API. Use them
 
 ## Match your protocol
 
-| Package | Contract |
-| --- | --- |
-| `provider-psp` | [JSON PSP](./psp.md) |
-| `provider-acquiring` | [Form acquiring](./acquiring.md) |
-| `provider-hpp` | [Hosted page](./hosted-page.md) |
+| Package                  | Contract                            |
+| ------------------------ | ----------------------------------- |
+| `provider-psp`           | [JSON PSP](./psp.md)                |
+| `provider-acquiring`     | [Form acquiring](./acquiring.md)    |
+| `provider-hpp`           | [Hosted page](./hosted-page.md)     |
 | `provider-hosted-fields` | [Hosted fields](./hosted-fields.md) |
-| `provider-wallet` | [Wallet SDK](./wallet.md) |
+| `provider-wallet`        | [Wallet SDK](./wallet.md)           |
 | `provider-bank-transfer` | [Bank transfer](./bank-transfer.md) |
 
 PSP/acquiring confirm cards; hosted/wallet/transfer flows use their own collection or approval actions. A matching shape does not automatically integrate a named bank or wallet. [The catalog](../packages.md) covers all packages.
 
 ## Configure and register
 
-~~~ts
+```ts
 import { defineProvider } from '@checkout-kit/core'
 import type { PspConfig } from '@checkout-kit/provider-psp'
 
@@ -32,7 +32,7 @@ const provider = defineProvider({
   } satisfies PspConfig,
   load: () => import('@checkout-kit/provider-psp'),
 })
-~~~
+```
 
 Supply provider, browser runners and storage to createCheckout. See [the demo composition](../../apps/demo/src/app/providers/checkout.ts) for all six and the wallet adapter.
 

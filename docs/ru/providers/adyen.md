@@ -14,7 +14,6 @@
 
 Уведомления проверяются official HMAC validator, account, суммой/валютой и порядком. Невалидный batch не применяется частично. Замените process-local state постоянным хранилищем.
 
-
 ## Регистрация
 
 ```ts
@@ -47,7 +46,6 @@ await checkout.pay({
 | `POST /payments/:id/details` with `{ details }` | Call `/payments/details`, binding merchant-stored paymentData       |
 | `GET /payments/:id`                             | Read authoritative merchant state, updated by verified webhooks     |
 | `POST /payments/:id/cancel`                     | Cancel using the provider reference when one exists                 |
-
 
 Проверяйте конечное состояние перед мутацией; cancel не переписывает paid. Сервер атомарно обеспечивает scoped-idempotency; callback не доказывает оплату. Установите runtime storage и hydrate на return route.
 

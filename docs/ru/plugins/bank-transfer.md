@@ -43,7 +43,6 @@ Config type регистрирует id в TypeScript; динамический 
 | POST   | `/transfer/orders/:id/code`   | Return `{ order, payload, qrImageUrl?, deeplink?, expiresAt? }`. |
 | POST   | `/transfer/orders/:id/cancel` | Cancel an unfinished order.                                      |
 
-
 Все шесть reference configs поддерживают credentials и headers API мерчанта. Повтор операции сохраняет прежний ключ. После reload сервер возвращает состояние и активное действие.
 
 ## Проверка

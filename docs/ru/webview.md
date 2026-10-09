@@ -6,17 +6,17 @@
 
 ## Страница
 
-~~~ts
+```ts
 import { createWebViewBridge } from '@checkout-kit/webview-bridge'
 const bridge = createWebViewBridge(engine, { reportHeight: true })
 // На завершении жизни документа: bridge.stop()
-~~~
+```
 
 Без ReactNativeWebView bridge ничего не делает. Внутри WebView отправляет PAYMENT_READY, state/action и проверенные outcomes. Card fields/SDK payload не копируются. OnError сообщает о доставке без изменения оплаты.
 
 ## Команды хоста
 
-~~~ts
+```ts
 import {
   createBridgeCommand,
   createCheckoutMessageHandler,
@@ -39,7 +39,7 @@ if (handle.sessionId) {
   )
   webview.injectJavaScript(createCommandScript(command))
 }
-~~~
+```
 
 ShowReceipt и webview принадлежат host app. Передавайте данные onMessage в handle только с URL документа мерчанта. Session берётся из PAYMENT_READY, id команды уникален. Чужая session, повтор id, malformed payload и provider frame отвергаются. Ping возвращает ready с correlationId.
 

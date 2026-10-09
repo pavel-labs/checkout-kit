@@ -8,21 +8,21 @@
 
 Нужны Node.js 24 и npm:
 
-~~~sh
+```sh
 git clone https://github.com/pavel-labs/checkout-kit.git
 cd checkout-kit
 npm ci
 npm run dev:integration
-~~~
+```
 
 Откройте `http://localhost:5173`. Команда запускает React и HTTP-сервер мерчанта в явном режиме **локального симулятора**, без ключей аккаунтов. Выберите Stripe, Adyen или PayPal. Цена определяется сервером по `planId`.
 
-| Сценарий | Mock-инструмент Stripe / Adyen | PayPal |
-| --- | --- | --- |
-| Оплачено | `pm_mock_approve` | Подтвердите на локальной странице. |
-| Отказ | `pm_mock_decline` | Выберите отказ на локальной странице. |
-| Challenge / redirect | `pm_mock_challenge` | Подтверждение уводит со страницы и возвращает. |
-| Обработка | `pm_mock_processing` | Pending capture проверяется fixtures. |
+| Сценарий             | Mock-инструмент Stripe / Adyen | PayPal                                         |
+| -------------------- | ------------------------------ | ---------------------------------------------- |
+| Оплачено             | `pm_mock_approve`              | Подтвердите на локальной странице.             |
+| Отказ                | `pm_mock_decline`              | Выберите отказ на локальной странице.          |
+| Challenge / redirect | `pm_mock_challenge`            | Подтверждение уводит со страницы и возвращает. |
+| Обработка            | `pm_mock_processing`           | Pending capture проверяется fixtures.          |
 
 Обновите страницу возврата для проверки восстановления. Callback передаёт evidence; результат определяет API мерчанта. Mock-идентификаторы используются только в этом режиме.
 
@@ -32,13 +32,13 @@ npm run dev:integration
 
 До публикации версии в реестр соберите архивы либо скачайте `checkout-kit-packages` успешного [CI](https://github.com/pavel-labs/checkout-kit/actions/workflows/ci.yml):
 
-~~~sh
+```sh
 npm run pack:packages
-~~~
+```
 
 Архивы и integrity manifest появятся в `artifacts/packages`. В React-приложении установите выбранные пакеты и peers вместе, заменив путь/версию:
 
-~~~sh
+```sh
 npm install \
   ../checkout-kit/artifacts/packages/checkout-kit-core-0.0.0.tgz \
   ../checkout-kit/artifacts/packages/checkout-kit-runtime-browser-0.0.0.tgz \
@@ -46,8 +46,7 @@ npm install \
   ../checkout-kit/artifacts/packages/checkout-kit-react-0.0.0.tgz \
   ../checkout-kit/artifacts/packages/checkout-kit-ui-0.0.0.tgz \
   react@^19 react-dom@^19
-~~~
-
+```
 
 Пакеты — ESM с декларациями. [Каталог](./packages.md) описывает все 16. Без React нужны core, runtime и провайдер. [Releasing](../../RELEASING.md) описывает реестр и версии.
 
@@ -55,7 +54,7 @@ npm install \
 
 Скопируйте два проверяемых модуля из [React-гайда](./react.md#complete-example), затем восстановите попытку в браузерном корне:
 
-~~~tsx
+```tsx
 import { createRoot } from 'react-dom/client'
 import { createPayPalCheckout } from './quickstart-engine'
 import { PayPalCheckout } from './quickstart'
@@ -65,27 +64,26 @@ await engine.hydrate(runtime.readReturnParams())
 const root = document.getElementById('root')
 if (!root) throw new Error('Missing checkout root')
 createRoot(root).render(<PayPalCheckout engine={engine} planId="1id" pay={pay} />)
-~~~
-
+```
 
 Создавайте один движок на чекаут. На маршруте возврата сервер должен отдавать то же приложение. `baseUrl` указывает на аутентифицированный API мерчанта.
 
-| Провайдер | Инструмент | Настройка |
-| --- | --- | --- |
-| Stripe | PaymentMethod id из Stripe.js как `token`. | [Stripe](./providers/stripe.md) |
-| Adyen | Component `state.data` как `wallet` Adyen либо stored token. | [Adyen](./providers/adyen.md) |
-| PayPal | `{ kind: 'none' }`; подтверждение на странице провайдера. | [PayPal](./providers/paypal.md) |
+| Провайдер | Инструмент                                                   | Настройка                       |
+| --------- | ------------------------------------------------------------ | ------------------------------- |
+| Stripe    | PaymentMethod id из Stripe.js как `token`.                   | [Stripe](./providers/stripe.md) |
+| Adyen     | Component `state.data` как `wallet` Adyen либо stored token. | [Adyen](./providers/adyen.md)   |
+| PayPal    | `{ kind: 'none' }`; подтверждение на странице провайдера.    | [PayPal](./providers/paypal.md) |
 
 ## Официальные sandbox API
 
-~~~sh
+```sh
 cp examples/server/.env.example examples/server/.env
 cp examples/react/.env.example examples/react/.env
 # Заполните test keys выбранного провайдера до запуска.
 npm run dev:server -w @checkout-kit/examples
 # Во втором терминале:
 npm run dev:react -w @checkout-kit/examples
-~~~
+```
 
 Используйте одинаковый hostname для app и API. Браузер хранит публичные ключи, сервер — секреты. Без ключей провайдер отключён. [Интеграция сервера](./merchant-integration.md) описывает настройки, маршруты, сессии и постоянное состояние.
 

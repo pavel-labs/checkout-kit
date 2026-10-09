@@ -6,26 +6,26 @@
 
 ## Wire the browser once
 
-~~~ts
+```ts
 import { createBrowserRuntime } from '@checkout-kit/runtime-browser'
 const runtime = createBrowserRuntime({ returnPath: '/checkout/payment/return' })
 // Give createCheckout runtime.runners, runtime.storage and runtime.returnUrl.
-~~~
+```
 
 Include the deployed base path in `returnPath`. It resolves against the current origin. Default engine memory storage cannot survive full-page navigation; use runtime storage.
 
-| Action | Behavior | Host setup |
-| --- | --- | --- |
-| `redirect` | GET/POST in an iframe or top window; preserve URL/form fields. | A mount for iframe; a working return route for top. |
-| `collect_fields` | Provider-owned iframe returns an opaque token by postMessage. | Mount and exact frame origin. |
-| `sdk_handoff` | Request a registered adapter, optionally load its SDK script. | Adapter matching `action.sdk`. |
-| `display` | Show QR/code/instructions while the engine polls. | Mount and optional provider-rendered QR URL. |
+| Action           | Behavior                                                       | Host setup                                          |
+| ---------------- | -------------------------------------------------------------- | --------------------------------------------------- |
+| `redirect`       | GET/POST in an iframe or top window; preserve URL/form fields. | A mount for iframe; a working return route for top. |
+| `collect_fields` | Provider-owned iframe returns an opaque token by postMessage.  | Mount and exact frame origin.                       |
+| `sdk_handoff`    | Request a registered adapter, optionally load its SDK script.  | Adapter matching `action.sdk`.                      |
+| `display`        | Show QR/code/instructions while the engine polls.              | Mount and optional provider-rendered QR URL.        |
 
 A headless host supplies `createMount(element)` to `engine.runPendingAction({ mount })`. React uses `PaymentActionHost`. There is no supplied popup runner; register your own for that surface.
 
 ## SDK lifecycle
 
-~~~ts
+```ts
 const runtime = createBrowserRuntime({
   returnPath: '/checkout/return',
   sdk: {
@@ -39,7 +39,7 @@ const runtime = createBrowserRuntime({
     ],
   },
 })
-~~~
+```
 
 Your host implements `walletSdk`. Resolve the payload expected by the provider after the SDK finishes, not when a component mounts. [Stripe](./providers/stripe.md) supplies an SDK adapter; [Adyen](./providers/adyen.md) resolves additional details.
 
@@ -49,9 +49,9 @@ Scripts are shared by URL and reject conflicting integrity settings. The runner 
 
 Recreate the same registrations/storage on the return route:
 
-~~~ts
+```ts
 const result = await engine.hydrate(runtime.readReturnParams())
-~~~
+```
 
 Hydration reads saved provider, intent and action, then re-reads the order. Verified final state needs no new confirmation/capture. Evidence is bound to the saved action. A temporary outage preserves metadata: retry hydrate with the original parameters.
 
@@ -59,14 +59,14 @@ Serve the app at the exact return path. Keep query parameters and the same sessi
 
 ## Attempts, retries and cancellation
 
-| Situation | Operation |
-| --- | --- |
-| Lost creation or confirmation reply | Retry the same attempt/key; reconcile its existing intent. |
-| Processing | Poll the same intent; a timeout remains unresolved. |
-| Verified decline/cancel | A next payment may use a fresh intent/key. |
-| Start over | `reset()` clears local state; it does not cancel a server charge. |
-| Shopper cancellation | `abort()` stops work and requests cancellation when supported. |
-| Payment succeeded during cancellation | Preserve succeeded; UI cannot reverse payment history. |
+| Situation                             | Operation                                                         |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| Lost creation or confirmation reply   | Retry the same attempt/key; reconcile its existing intent.        |
+| Processing                            | Poll the same intent; a timeout remains unresolved.               |
+| Verified decline/cancel               | A next payment may use a fresh intent/key.                        |
+| Start over                            | `reset()` clears local state; it does not cancel a server charge. |
+| Shopper cancellation                  | `abort()` stops work and requests cancellation when supported.    |
+| Payment succeeded during cancellation | Preserve succeeded; UI cannot reverse payment history.            |
 
 The engine retains a key after an interrupted creation even if no id reached the page, and reuses the existing processing intent. The backend must enforce scoped idempotency and transitions atomically. Fulfillment comes from durable verified state, also after the browser closes.
 

@@ -6,13 +6,13 @@
 
 ## Подберите контракт
 
-| Пакет | Контракт |
-| --- | --- |
-| `provider-psp` | [JSON PSP](./psp.md) |
-| `provider-acquiring` | [Form-эквайер](./acquiring.md) |
-| `provider-hpp` | [Платёжная страница](./hosted-page.md) |
-| `provider-hosted-fields` | [Хостед-поля](./hosted-fields.md) |
-| `provider-wallet` | [SDK кошелька](./wallet.md) |
+| Пакет                    | Контракт                                 |
+| ------------------------ | ---------------------------------------- |
+| `provider-psp`           | [JSON PSP](./psp.md)                     |
+| `provider-acquiring`     | [Form-эквайер](./acquiring.md)           |
+| `provider-hpp`           | [Платёжная страница](./hosted-page.md)   |
+| `provider-hosted-fields` | [Хостед-поля](./hosted-fields.md)        |
+| `provider-wallet`        | [SDK кошелька](./wallet.md)              |
 | `provider-bank-transfer` | [Банковский перевод](./bank-transfer.md) |
 
 PSP/эквайер принимают карту; hosted/wallet/transfer собирают данные или подтверждение через действия. Похожий поток не означает готовое подключение конкретного банка/кошелька. [Каталог](../packages.md) перечисляет все пакеты.

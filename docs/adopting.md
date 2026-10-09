@@ -10,15 +10,15 @@ browsers does it drop.
 
 Built root entry points measured on 2026-10-09: bundle/minify with esbuild, then gzip. All root exports are included; peers (React, core, SDKs) are external and excluded from each row. A consumer may tree-shake unused exports; measure its final bundle too.
 
-| Package | gzip |
-| --- | --- |
-| `@checkout-kit/core` | 6.8 KiB |
-| `@checkout-kit/runtime-browser` | 3.2 KiB |
-| `@checkout-kit/react` | 1.0 KiB |
-| `@checkout-kit/ui` (root JS) | 9.1 KiB |
-| `@checkout-kit/ui/styles.css` (all imports) | 6.2 KiB |
-| Provider root | 1.0–1.9 KiB |
-| `@checkout-kit/webview-bridge` root | 2.1 KiB |
+| Package                                     | gzip        |
+| ------------------------------------------- | ----------- |
+| `@checkout-kit/core`                        | 6.8 KiB     |
+| `@checkout-kit/runtime-browser`             | 3.2 KiB     |
+| `@checkout-kit/react`                       | 1.0 KiB     |
+| `@checkout-kit/ui` (root JS)                | 9.1 KiB     |
+| `@checkout-kit/ui/styles.css` (all imports) | 6.2 KiB     |
+| Provider root                               | 1.0–1.9 KiB |
+| `@checkout-kit/webview-bridge` root         | 2.1 KiB     |
 
 Dynamic imports load the selected provider. React, Stripe.js, Adyen Web and QR encoders are not bundled by the kit. See [the catalog](./packages.md).
 

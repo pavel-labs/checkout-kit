@@ -12,7 +12,6 @@ Create/capture используют отдельные PayPal-Request-Id; сох
 
 Fake cancel API отсутствует: abort останавливает локальный поток, сервер хранит исход. Authorization/void — другой контракт. Продолжайте сверку после закрытия браузера.
 
-
 ## Регистрация
 
 ```ts
@@ -39,7 +38,6 @@ await checkout.pay({ input: { planId: 'starter' }, instrument: { kind: 'none' } 
 | `POST /paypal/orders` with `{ planId }` | Create an order with server-owned price and `intent: CAPTURE`     |
 | `GET /paypal/orders/:id`                | Retrieve the order and its capture state                          |
 | `POST /paypal/orders/:id/capture`       | Capture an approved order, replaying the same request id on retry |
-
 
 Проверяйте конечное состояние перед мутацией; cancel не переписывает paid. Сервер атомарно обеспечивает scoped-idempotency; callback не доказывает оплату. Установите runtime storage и hydrate на return route.
 

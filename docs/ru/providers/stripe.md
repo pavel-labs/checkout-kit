@@ -12,7 +12,6 @@
 
 Succeeded — успех; processing проверяется polling; requires_capture возвращает `capture_required` с processing intent, не оплатой. Пример использует automatic capture. Ручное списание и выдача заказа требуют процесса на сервере.
 
-
 ## Регистрация
 
 ```ts
@@ -44,7 +43,6 @@ await checkout.pay({
 | `POST /payments/:id/confirm` with `{ paymentMethodId }` | Confirm that intent                               |
 | `GET /payments/:id`                                     | Retrieve its current status                       |
 | `POST /payments/:id/cancel`                             | Cancel a cancelable intent                        |
-
 
 Проверяйте конечное состояние перед мутацией; cancel не переписывает paid. Сервер атомарно обеспечивает scoped-idempotency; callback не доказывает оплату. Установите runtime storage и hydrate на return route.
 

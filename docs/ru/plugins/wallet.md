@@ -44,7 +44,6 @@ Config type регистрирует id в TypeScript; динамический 
 | POST   | `/wallet/charges/:id/pay`    | `{ walletToken }`; verify and charge on your server. |
 | POST   | `/wallet/charges/:id/cancel` | Cancel an unfinished charge.                         |
 
-
 Все шесть reference configs поддерживают credentials и headers API мерчанта. Повтор операции сохраняет прежний ключ. После reload сервер возвращает состояние и активное действие.
 
 ## Проверка

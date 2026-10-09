@@ -6,28 +6,28 @@ Fixtures проверяют протокол, симуляторы — жизн�
 
 ## Проверки репозитория
 
-| Команда | Проверяет |
-| --- | --- |
-| `npm test` | Движок, HTTP-сервер, контракты провайдеров, React/UI, runners, bridge. |
-| `npm run test:e2e` | Шесть референсных протоколов в браузере, с учётом capabilities. |
-| `npm run test:integration` | Stripe/Adyen/PayPal через HTTP: подтверждение, отказ, polling, возврат, capture, повторы. |
-| `npm run typecheck` / `npm run examples:typecheck` | Типы пакетов и примеров. |
-| `npm run verify:consumer` | Отдельная установка всех 16 архивов, строгие типы, exports, Node checkout, React SSR. |
-| `npm run lint` / `npm run format:check` / `npm run purity` | Код и отсутствие browser globals в core/native entry points. |
-| `npm run docs:api` / `npm run docs:build` | API из деклараций, сборка сайта, проверка страниц и anchors. |
+| Команда                                                    | Проверяет                                                                                 |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `npm test`                                                 | Движок, HTTP-сервер, контракты провайдеров, React/UI, runners, bridge.                    |
+| `npm run test:e2e`                                         | Шесть референсных протоколов в браузере, с учётом capabilities.                           |
+| `npm run test:integration`                                 | Stripe/Adyen/PayPal через HTTP: подтверждение, отказ, polling, возврат, capture, повторы. |
+| `npm run typecheck` / `npm run examples:typecheck`         | Типы пакетов и примеров.                                                                  |
+| `npm run verify:consumer`                                  | Отдельная установка всех 16 архивов, строгие типы, exports, Node checkout, React SSR.     |
+| `npm run lint` / `npm run format:check` / `npm run purity` | Код и отсутствие browser globals в core/native entry points.                              |
+| `npm run docs:api` / `npm run docs:build`                  | API из деклараций, сборка сайта, проверка страниц и anchors.                              |
 
 Для браузера нужен Chromium: `npx playwright install chromium`; CI устанавливает его. До генерации API соберите декларации.
 
 ## Тестовые пакеты
 
-| Entry point | Назначение |
-| --- | --- |
-| `@checkout-kit/testing` | Карты и тексты отказов без mock server. |
-| `@checkout-kit/testing/engine` | Fake providers, scripted runners, intent/action fixtures. |
-| `@checkout-kit/testing/backend` | MSW handlers и сбрасываемое состояние оплаты. |
-| `@checkout-kit/conformance` | Vitest-контракт; peers core, testing, MSW 2, Vitest 5. |
+| Entry point                     | Назначение                                                |
+| ------------------------------- | --------------------------------------------------------- |
+| `@checkout-kit/testing`         | Карты и тексты отказов без mock server.                   |
+| `@checkout-kit/testing/engine`  | Fake providers, scripted runners, intent/action fixtures. |
+| `@checkout-kit/testing/backend` | MSW handlers и сбрасываемое состояние оплаты.             |
+| `@checkout-kit/conformance`     | Vitest-контракт; peers core, testing, MSW 2, Vitest 5.    |
 
-~~~ts
+```ts
 import { describeProviderContract } from '@checkout-kit/conformance'
 import { paymentIntentHandlers, threeDsHandlers } from '@checkout-kit/testing/backend'
 import { SCENARIO_CARDS, declineMessage } from '@checkout-kit/testing'
@@ -57,8 +57,7 @@ describeProviderContract({
     },
   }),
 })
-~~~
-
+```
 
 Свой fixture передаёт `reset: async () => { ... }` перед каждым тестом. `evidenceFor` может сначала выполнить действие симулятора банка, затем вернуть связанные данные.
 

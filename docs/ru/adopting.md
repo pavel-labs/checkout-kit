@@ -9,15 +9,15 @@
 
 Измерение собранных корневых entry points от 2026-10-09: bundle/minify через esbuild, затем gzip. Все root exports включены; peers (React, core, SDK) external и не входят в строку. Приложение может tree-shake exports; измеряйте и его итоговый bundle.
 
-| Package | gzip |
-| --- | --- |
-| `@checkout-kit/core` | 6.8 KiB |
-| `@checkout-kit/runtime-browser` | 3.2 KiB |
-| `@checkout-kit/react` | 1.0 KiB |
-| `@checkout-kit/ui` (root JS) | 9.1 KiB |
-| `@checkout-kit/ui/styles.css` (all imports) | 6.2 KiB |
-| Provider root | 1.0–1.9 KiB |
-| `@checkout-kit/webview-bridge` root | 2.1 KiB |
+| Package                                     | gzip        |
+| ------------------------------------------- | ----------- |
+| `@checkout-kit/core`                        | 6.8 KiB     |
+| `@checkout-kit/runtime-browser`             | 3.2 KiB     |
+| `@checkout-kit/react`                       | 1.0 KiB     |
+| `@checkout-kit/ui` (root JS)                | 9.1 KiB     |
+| `@checkout-kit/ui/styles.css` (all imports) | 6.2 KiB     |
+| Provider root                               | 1.0–1.9 KiB |
+| `@checkout-kit/webview-bridge` root         | 2.1 KiB     |
 
 Dynamic imports загружают выбранного провайдера. React, Stripe.js, Adyen Web и QR encoder не включены в набор. См. [каталог](./packages.md).
 

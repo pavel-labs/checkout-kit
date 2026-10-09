@@ -32,25 +32,7 @@ jobs:
         run: npm ci
 
       - name: Check formatting
-        id: format
         run: npm run format:check
-
-      - name: Export formatting diagnostics
-        if: failure() && steps.format.outcome == 'failure'
-        run: |
-          npm run format
-          node --input-type=module <<'NODE'
-          import { execFileSync } from 'node:child_process'
-          import { readFileSync } from 'node:fs'
-          const paths = execFileSync('git', ['diff', '--name-only'], { encoding: 'utf8' }).trim().split('\n').filter(Boolean)
-          for (const p of paths) {
-            const value = readFileSync(p, 'utf8')
-            const total = Math.ceil(value.length / 6000)
-            for (let i = 0; i < total; i++) {
-              console.log('CHECKOUT_FORMAT_CHUNK ' + JSON.stringify({ p, i, total, s: value.slice(i * 6000, (i + 1) * 6000) }))
-            }
-          }
-          NODE
 
       - name: Lint
         run: npm run lint

@@ -26,21 +26,21 @@ Create one engine per checkout outside the rendering path. A new engine on every
 
 ## Subscribe to the state you need
 
-| Hook | Returns |
-| --- | --- |
-| `useCheckoutEngine()` | Command API without a state subscription. |
-| `useCheckoutSnapshot()` | Immutable phase, intent, action, error, provider and capabilities. |
-| `useCheckout()` | Snapshot plus engine, `isBusy`, `isSettled` and `isLocked`. |
-| `useCheckoutSelector(selector, isEqual?)` | Cached selection, supporting objects and custom equality. |
-| `usePaymentState({ isDirty, isValidating })` | Form-aware state layered over the engine. |
+| Hook                                         | Returns                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------ |
+| `useCheckoutEngine()`                        | Command API without a state subscription.                          |
+| `useCheckoutSnapshot()`                      | Immutable phase, intent, action, error, provider and capabilities. |
+| `useCheckout()`                              | Snapshot plus engine, `isBusy`, `isSettled` and `isLocked`.        |
+| `useCheckoutSelector(selector, isEqual?)`    | Cached selection, supporting objects and custom equality.          |
+| `usePaymentState({ isDirty, isValidating })` | Form-aware state layered over the engine.                          |
 
-~~~tsx
+```tsx
 import { useCheckoutSelector } from '@checkout-kit/react'
 const total = useCheckoutSelector(
   (s) => ({ amount: s.intent?.amount, currency: s.intent?.currency }),
   (a, b) => a.amount === b.amount && a.currency === b.currency,
 )
-~~~
+```
 
 Keep selectors pure. `isSettled` means the engine stopped advancing and includes failed/unresolved attempts; it is not payment proof. `isLocked` includes terminal phases. Use a separate recovery or fresh-attempt condition rather than permanently disabling retry.
 
