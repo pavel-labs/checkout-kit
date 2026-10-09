@@ -1,8 +1,8 @@
 // Checks every package's type declarations the way a consumer would resolve them, with
 // are-the-types-wrong.
 //
-// It runs here rather than inside the bundler because the bundler checks all eleven packages
-// at once, and packing eleven of them in parallel occasionally returned nothing at all -
+// It runs here after the bundler because concurrent exports generation and packing
+// occasionally returned nothing at all -
 // a build that failed with "Unexpected end of JSON input" once in a while and passed on a
 // retry. One at a time is slower and always says the same thing.
 

@@ -49,7 +49,7 @@ jobs:
       - name: Build
         run: npm run build:packages
 
-      # publint and attw run inside the build; this proves the entry points resolve the way a
+      # publint runs after the build; this proves the entry points resolve the way a
       # consumer will resolve them, from dist rather than from source.
       - name: Check the packages resolve as published
         run: |

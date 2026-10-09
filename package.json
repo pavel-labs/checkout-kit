@@ -18,7 +18,7 @@
     "dev": "npm run dev -w @checkout-kit/demo",
     "dev:mock": "npm run dev:mock -w @checkout-kit/demo",
     "dev:bank": "npm run dev -w @checkout-kit/bank-sim",
-    "build:packages": "tsdown && node scripts/add-ui-styles-export.mjs",
+    "build:packages": "tsdown && node scripts/add-ui-styles-export.mjs && node scripts/check-package-manifests.mjs",
     "build": "npm run build:packages && npm run build -w @checkout-kit/demo",
     "build:mock": "npm run build:packages && npm run build:mock -w @checkout-kit/demo",
     "verify:dist": "node scripts/verify-dist.mjs",

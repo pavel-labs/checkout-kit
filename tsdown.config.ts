@@ -16,7 +16,6 @@ export default defineConfig({
   // oxc emits the .d.ts files; the tsc-based path does not support TypeScript 7 yet.
   dts: { generator: 'oxc' },
   exports: { devExports: '@checkout-kit/source' },
-  publint: true,
-  // are-the-types-wrong runs separately, in `npm run check:types`. Checking eleven packages
-  // in parallel here failed intermittently while packing them.
+  // Package packing must wait until all exports maps have been written. publint runs
+  // after this build in build:packages; are-the-types-wrong runs in check:types.
 })

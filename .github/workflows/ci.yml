@@ -79,8 +79,8 @@ jobs:
 
       # Everyday builds resolve workspace packages through the `@checkout-kit/source` condition and
       # see TypeScript sources, so a broken `exports` map would only surface downstream.
-      # This job builds the app the way a published consumer would; publint and attw run
-      # as part of the package build.
+      # This job builds the app the way a published consumer would; publint checks all
+      # packages after the build and attw checks their declarations in the next step.
       - name: Build the demo against the packages' published entry points
         run: npm run verify:dist
 
