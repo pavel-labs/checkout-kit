@@ -265,10 +265,13 @@ export const createAdyenProvider = (
       }
       return toIntent(dto)
     },
-    cancel: async (id, opts) =>
-      toIntent(
+    cancel: async (id, opts) => {
+      const current = toIntent(await http.get<AdyenPayment>(path(id), { signal: opts.signal }))
+      if (['succeeded', 'declined', 'canceled'].includes(current.status)) return current
+      return toIntent(
         await http.post<AdyenPayment>(`${path(id)}/cancel`, {}, options(opts, `cancel:${id}`)),
-      ),
+      )
+    },
   }
 }
 export const adyenProvider: PaymentProvider<AdyenConfig> = {

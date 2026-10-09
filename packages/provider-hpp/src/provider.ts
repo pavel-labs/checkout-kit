@@ -4,7 +4,7 @@
 // The interesting part is `resume`: the browser returns saying `status=success` on a URL
 // the shopper could have typed, so the plugin ignores it and re-reads the order.
 
-import { createHttpClient, type HttpClient } from '@checkout-kit/core/http'
+import { createHttpClient, type HttpClient, type HttpClientConfig } from '@checkout-kit/core/http'
 import type {
   CallOptions,
   CreateIntentInput,
@@ -18,7 +18,7 @@ import type {
   ProviderContext,
 } from '@checkout-kit/core'
 
-export interface HostedPageConfig {
+export interface HostedPageConfig extends Pick<HttpClientConfig, 'headers' | 'credentials'> {
   /** Root of the merchant-facing API used to register and read orders. */
   readonly baseUrl: string
   /**
@@ -59,7 +59,12 @@ const capabilities: ProviderCapabilities = {
 
 export const createHostedPageProvider = (
   ctx: ProviderContext<HostedPageConfig>,
-  http: HttpClient = createHttpClient({ baseUrl: ctx.config.baseUrl, fetch: ctx.fetch }),
+  http: HttpClient = createHttpClient({
+    baseUrl: ctx.config.baseUrl,
+    headers: ctx.config.headers,
+    credentials: ctx.config.credentials,
+    fetch: ctx.fetch,
+  }),
 ): PaymentProviderInstance => {
   const toIntent = (dto: OrderDto): PaymentIntent => ({
     id: dto.id,
@@ -70,7 +75,7 @@ export const createHostedPageProvider = (
   })
 
   const readOrder = (orderId: string, opts: CallOptions) =>
-    http.get<OrderDto>(`/hosted/orders/${orderId}`, { signal: opts.signal })
+    http.get<OrderDto>(`/hosted/orders/${encodeURIComponent(orderId)}`, { signal: opts.signal })
 
   const toResult = (dto: OrderDto): PaymentResult => {
     const intent = toIntent(dto)
@@ -133,6 +138,8 @@ export const createHostedPageProvider = (
 
       try {
         const order = await readOrder(intentId, opts)
+        if (!['requires_payment_method', 'requires_action'].includes(order.status))
+          return toResult(order)
 
         return {
           status: 'requires_action',
@@ -173,6 +180,15 @@ export const createHostedPageProvider = (
           },
         }
       }
+
+      if (evidence.via !== 'return_url' && evidence.via !== 'aborted')
+        return {
+          status: 'error',
+          error: {
+            code: 'unsupported_evidence',
+            message: 'This provider resumes from its return URL.',
+          },
+        }
 
       if (evidence.via === 'aborted') {
         return {

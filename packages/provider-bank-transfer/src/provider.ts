@@ -5,7 +5,7 @@
 // Poland, PromptPay in Thailand. Nothing on the page can see it happen, so the action is
 // completed by polling and the outcome is always read back from the provider.
 
-import { createHttpClient, type HttpClient } from '@checkout-kit/core/http'
+import { createHttpClient, type HttpClient, type HttpClientConfig } from '@checkout-kit/core/http'
 import type {
   CallOptions,
   CreateIntentInput,
@@ -19,7 +19,7 @@ import type {
   ProviderContext,
 } from '@checkout-kit/core'
 
-export interface BankTransferConfig {
+export interface BankTransferConfig extends Pick<HttpClientConfig, 'headers' | 'credentials'> {
   readonly baseUrl: string
   /** How the code is shown. A QR to scan, a short code to type, or written steps. */
   readonly format?: 'qr' | 'code' | 'instructions'
@@ -70,7 +70,12 @@ const capabilities: ProviderCapabilities = {
 
 export const createBankTransferProvider = (
   ctx: ProviderContext<BankTransferConfig>,
-  http: HttpClient = createHttpClient({ baseUrl: ctx.config.baseUrl, fetch: ctx.fetch }),
+  http: HttpClient = createHttpClient({
+    baseUrl: ctx.config.baseUrl,
+    headers: ctx.config.headers,
+    credentials: ctx.config.credentials,
+    fetch: ctx.fetch,
+  }),
 ): PaymentProviderInstance => {
   const poll = ctx.config.poll ?? DEFAULT_POLL
 
@@ -83,7 +88,7 @@ export const createBankTransferProvider = (
   })
 
   const readOrder = (orderId: string, opts: CallOptions) =>
-    http.get<OrderDto>(`/transfer/orders/${orderId}`, { signal: opts.signal })
+    http.get<OrderDto>(`/transfer/orders/${encodeURIComponent(orderId)}`, { signal: opts.signal })
 
   const toResult = (dto: OrderDto): PaymentResult => {
     const intent = toIntent(dto)
@@ -139,11 +144,19 @@ export const createBankTransferProvider = (
       }
 
       try {
+        const current = await readOrder(intentId, opts)
+        if (!['requires_payment_method', 'requires_action'].includes(current.status))
+          return toResult(current)
         const code = await http.post<CodeDto>(
-          `/transfer/orders/${intentId}/code`,
+          `/transfer/orders/${encodeURIComponent(intentId)}/code`,
           {},
-          { signal: opts.signal },
+          {
+            headers: { 'Idempotency-Key': `${opts.idempotencyKey}:code:${intentId}` },
+            signal: opts.signal,
+          },
         )
+        if (!['requires_payment_method', 'requires_action'].includes(code.order.status))
+          return toResult(code.order)
 
         return {
           status: 'requires_action',
@@ -184,6 +197,15 @@ export const createBankTransferProvider = (
         }
       }
 
+      if (evidence.via !== 'poll' && evidence.via !== 'aborted')
+        return {
+          status: 'error',
+          error: {
+            code: 'unsupported_evidence',
+            message: 'Bank transfers complete through polling.',
+          },
+        }
+
       if (evidence.via === 'aborted') {
         return {
           status: 'error',
@@ -211,14 +233,20 @@ export const createBankTransferProvider = (
 
     getIntent: async (intentId, opts) => toIntent(await readOrder(intentId, opts)),
 
-    cancel: async (intentId, opts) =>
-      toIntent(
+    cancel: async (intentId, opts) => {
+      const current = await readOrder(intentId, opts)
+      if (['succeeded', 'declined', 'canceled'].includes(current.status)) return toIntent(current)
+      return toIntent(
         await http.post<OrderDto>(
-          `/transfer/orders/${intentId}/cancel`,
+          `/transfer/orders/${encodeURIComponent(intentId)}/cancel`,
           {},
-          { signal: opts.signal },
+          {
+            headers: { 'Idempotency-Key': `${opts.idempotencyKey}:cancel:${intentId}` },
+            signal: opts.signal,
+          },
         ),
-      ),
+      )
+    },
   }
 }
 

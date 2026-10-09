@@ -48,6 +48,8 @@ export interface ConformanceSuite<TConfig> {
   /** Card numbers this suite pays with. None of them may come back out of the plugin. */
   readonly secrets?: readonly string[]
   readonly planId?: string
+  /** Reset the merchant fixture before each case. Defaults to checkout-kit's mock backend. */
+  readonly reset?: () => void | Promise<void>
 }
 
 const options = (key: string): CallOptions => ({ idempotencyKey: key })
@@ -90,8 +92,8 @@ export const describeProviderContract = <TConfig>(suite: ConformanceSuite<TConfi
     afterEach(() => server.resetHandlers())
     afterAll(() => server.close())
 
-    beforeEach(() => {
-      resetBackend()
+    beforeEach(async () => {
+      await (suite.reset ?? resetBackend)()
       provider = suite.provider.create(context)
     })
 
@@ -195,6 +197,24 @@ export const describeProviderContract = <TConfig>(suite: ConformanceSuite<TConfi
       expect(reread.status).toBe('succeeded')
     })
 
+    it('does not reopen a payment when confirm is repeated after success', async () => {
+      const { intent } = await settle('approve')
+      const again = await provider.confirm(
+        intent.id,
+        suite.instrumentFor('approve'),
+        options(nextKey()),
+      )
+      expect(again.status).toBe('succeeded')
+      expect((await provider.getIntent(intent.id, options(nextKey()))).status).toBe('succeeded')
+    })
+
+    it('does not reverse an already successful payment when cancel is requested', async () => {
+      if (!suite.provider.capabilities.cancel) return
+      const { intent } = await settle('approve')
+      const canceled = await provider.cancel?.(intent.id, options(nextKey()))
+      expect(canceled?.status).toBe('succeeded')
+    })
+
     it('reports a decline in the words the issuer used', async () => {
       const { result } = await settle('decline')
 
@@ -262,7 +282,20 @@ export const describeProviderContract = <TConfig>(suite: ConformanceSuite<TConfi
 
       const reread = await provider.getIntent(intent.id, options(nextKey()))
       expect(reread.status).toBe('succeeded')
-    })
+    }, 10_000)
+
+    it('refuses a valid action issued for another payment', async () => {
+      const first = await startPayment('challengePass')
+      const second = await startPayment('challengePass')
+      if (first.result.status !== 'requires_action' || second.result.status !== 'requires_action')
+        throw new Error('expected two actions')
+      const evidence = await suite.evidenceFor(second.result.action, 'challengePass')
+      const result = await provider.resume(first.intent.id, evidence, options(nextKey()))
+      expect(result.status).toBe('error')
+      expect((await provider.getIntent(first.intent.id, options(nextKey()))).status).not.toBe(
+        'succeeded',
+      )
+    }, 10_000)
 
     it('reports an authorization that has not settled yet', async () => {
       if (!suite.provider.capabilities.poll) return

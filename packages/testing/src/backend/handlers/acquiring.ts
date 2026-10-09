@@ -177,6 +177,12 @@ export const acquiringHandlers: HttpHandler[] = [
     // Projected from the shared status, never stored separately: the two facades cannot
     // disagree about a payment because there is only one of it.
     const intent = settleIfDue(stored)
+    const challenge =
+      intent.status === 'requires_action'
+        ? [...threeDSChallenges.values()].find(
+            (value) => value.paymentIntentId === intent.id && value.status === 'pending',
+          )
+        : undefined
 
     return ok({
       orderStatus: ORDER_STATUS[intent.status],
@@ -185,6 +191,13 @@ export const acquiringHandlers: HttpHandler[] = [
       amount: intent.amount,
       currency: CURRENCY_NUMBERS[intent.currency] ?? intent.currency,
       orderNumber: intent.id,
+      ...(challenge
+        ? {
+            MD: challenge.id,
+            acsUrl: '/acs/pareq',
+            paReq: btoa(JSON.stringify({ challengeId: challenge.id, version: '1.0.2' })),
+          }
+        : {}),
     })
   }),
 
