@@ -20,6 +20,11 @@ export const PaymentButton = ({
 }: PaymentButtonProps): ReactElement => (
   <Button {...props} type={type} busy={BUSY.includes(state)}>
     {children}
-    {amount ? <span className="ck-payment-button__amount">{amount}</span> : null}
+    {amount ? (
+      <>
+        {' '}
+        <span className="ck-payment-button__amount">{amount}</span>
+      </>
+    ) : null}
   </Button>
 )

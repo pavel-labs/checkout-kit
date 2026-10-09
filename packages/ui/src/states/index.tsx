@@ -53,6 +53,8 @@ export interface SuccessStateProps {
   actions?: ReactNode
   /** Pass `null` for no icon at all. */
   icon?: ReactNode
+  /** Off when showing a static specimen; true for an actual payment result. */
+  autoFocus?: boolean
 }
 
 export const SuccessState = ({
@@ -61,6 +63,7 @@ export const SuccessState = ({
   details,
   actions,
   icon = <SuccessIcon />,
+  autoFocus = true,
 }: SuccessStateProps): ReactElement => (
   <PaymentStateScreen
     heading={heading}
@@ -68,7 +71,7 @@ export const SuccessState = ({
     actions={actions}
     icon={icon}
     tone="success"
-    autoFocus
+    autoFocus={autoFocus}
   >
     {children}
   </PaymentStateScreen>
@@ -91,6 +94,8 @@ export interface FailureStateProps {
   actions?: ReactNode
   /** Pass `null` for no icon at all. */
   icon?: ReactNode
+  /** Off when showing a static specimen; true for an actual payment result. */
+  autoFocus?: boolean
 }
 
 export const FailureState = ({
@@ -100,6 +105,7 @@ export const FailureState = ({
   details,
   actions,
   icon,
+  autoFocus = true,
 }: FailureStateProps): ReactElement => (
   <PaymentStateScreen
     heading={heading ?? HEADINGS[tone]}
@@ -108,7 +114,7 @@ export const FailureState = ({
     // Cancelling is not a failure, and a red cross tells the shopper it was.
     icon={icon === undefined ? tone === 'cancelled' ? <NeutralIcon /> : <FailureIcon /> : icon}
     tone={tone === 'cancelled' ? 'neutral' : 'failure'}
-    autoFocus
+    autoFocus={autoFocus}
   >
     {children}
   </PaymentStateScreen>

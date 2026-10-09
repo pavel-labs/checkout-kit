@@ -139,7 +139,7 @@ The core has no React or DOM dependency. Provider SDKs belong to the host applic
 merchant server. Return URLs and SDK callbacks are evidence to reconcile with server state;
 they are never proof of payment. Fulfillment, refunds and settlement belong to the merchant.
 
-CI checks package and example types, unit and conformance tests, two browser suites, builds,
+CI checks package and example types, unit and conformance tests, payment and UI browser suites, builds,
 package exports and installation outside the monorepo. Tests use fixtures and local simulators.
 Live sandbox verification with your own Stripe, Adyen or PayPal account is a separate step.
 The example server stores orders and replay results in memory: use durable storage and
@@ -149,8 +149,11 @@ application authentication when adapting it for a deployed merchant.
 npm test
 npm run test:e2e
 npm run test:integration
+npm run test:ui
 npm run verify:consumer
 ```
+
+Explore the [live UI gallery](https://pavel-labs.github.io/checkout-kit/demo/gallery): a composed checkout, light/dark themes, brand variants, mobile frames and component specimens.
 
 ## Guides
 

@@ -231,6 +231,27 @@ describe('ValidationSummary', () => {
 })
 
 describe('Dialog', () => {
+  it('describes itself and offers a localized, visible dismissal', () => {
+    const close = vi.fn()
+    render(
+      <Dialog
+        open
+        onClose={close}
+        title="Address"
+        description="Your bank checks it."
+        closeLabel="Закрыть"
+      >
+        body
+      </Dialog>,
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Address' })
+    expect(document.getElementById(dialog.getAttribute('aria-describedby')!)?.textContent).toBe(
+      'Your bank checks it.',
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Закрыть' }))
+    expect(close).toHaveBeenCalledTimes(1)
+  })
+
   it('names itself from its title', () => {
     render(
       <Dialog open onClose={() => {}} title="Why do you need this?">
@@ -285,5 +306,6 @@ describe('Dialog', () => {
     fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }))
 
     expect(onClose).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: 'Close dialog' })).toBeNull()
   })
 })

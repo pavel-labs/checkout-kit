@@ -112,12 +112,12 @@
 
 .ck-option {
   display: flex;
-  min-block-size: var(--ck-tap-target);
+  min-block-size: max(4rem, var(--ck-tap-target));
   align-items: center;
   gap: var(--ck-space-3);
-  border: 1px solid var(--ck-border);
+  border: 1px solid var(--ck-border-strong);
   border-radius: var(--ck-radius-small);
-  background: var(--ck-surface-sunken);
+  background: var(--ck-surface-raised);
   padding: var(--ck-space-3) var(--ck-space-4);
   cursor: pointer;
   touch-action: manipulation;
@@ -168,7 +168,7 @@
   place-items: center;
   inline-size: 1.25rem;
   block-size: 1.25rem;
-  border: 2px solid var(--ck-border-strong);
+  border: 2px solid var(--ck-control-border);
   border-radius: var(--ck-radius-full);
   transition: border-color var(--ck-duration-fast) var(--ck-ease-standard);
 }
@@ -195,6 +195,12 @@
 
 .ck-option__media {
   display: flex;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  justify-content: center;
+  border: 1px solid var(--ck-border);
+  border-radius: var(--ck-radius-sm);
+  background: var(--ck-surface);
   flex: 0 0 auto;
   align-items: center;
 }
@@ -209,6 +215,8 @@
 
 .ck-option__label {
   display: flex;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
   align-items: center;
   gap: var(--ck-space-2);
   color: var(--ck-text);
@@ -216,6 +224,7 @@
 }
 
 .ck-option__description {
+  overflow-wrap: anywhere;
   color: var(--ck-text-muted);
   font-size: var(--ck-font-size-sm);
   line-height: var(--ck-line-normal);
@@ -233,8 +242,9 @@
   block-size: var(--ck-input-height);
   min-block-size: var(--ck-tap-target);
   inline-size: 100%;
+  min-inline-size: 0;
   align-items: center;
-  border: 1px solid var(--ck-border);
+  border: 1px solid var(--ck-control-border);
   border-radius: var(--ck-radius-small);
   background: var(--ck-surface);
   padding-inline: var(--ck-control-padding-inline);
@@ -266,6 +276,12 @@ select.ck-input {
   padding-inline-end: var(--ck-space-10);
 }
 
+.ck-root:dir(rtl) select.ck-input {
+  background-position:
+    left calc(var(--ck-space-4) + 4px) center,
+    left var(--ck-space-4) center;
+}
+
 .ck-input::placeholder {
   color: var(--ck-text-subtle);
 }
@@ -288,8 +304,71 @@ select.ck-input {
 }
 
 .ck-input[aria-invalid='true'] {
-  border-color: var(--ck-danger-border);
+  border-color: var(--ck-danger);
   background: var(--ck-danger-surface);
+}
+
+/* The input keeps its native semantics. The surrounding surface carries focus and error. */
+.ck-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--ck-space-3);
+  min-inline-size: 0;
+  border: 1px solid var(--ck-control-border);
+  border-radius: var(--ck-radius-small);
+  background: var(--ck-surface);
+  padding-inline: var(--ck-control-padding-inline);
+  color: var(--ck-text-muted);
+}
+
+.ck-input-group > .ck-input {
+  flex: 1 1 auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding-inline: 0;
+  box-shadow: none;
+}
+
+.ck-input-group:has(> .ck-input:focus-visible) {
+  border-color: var(--ck-accent);
+  outline: var(--ck-focus-ring-width) solid var(--ck-focus-ring-color);
+  outline-offset: var(--ck-focus-ring-offset);
+}
+
+.ck-input-group > .ck-input:focus-visible {
+  outline: none;
+}
+
+.ck-input-group:has(> .ck-input[aria-invalid='true']) {
+  border-color: var(--ck-danger);
+  background: var(--ck-danger-surface);
+}
+
+.ck-input-group:has(> .ck-input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ck-input-group > .ck-input:disabled {
+  opacity: 1;
+}
+
+.ck-input-group__leading,
+.ck-input-group__trailing {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  font-size: var(--ck-font-size-sm);
+}
+
+.ck-input-group__leading svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}
+
+.ck-input-group__trailing:has(> .ck-icon-button) {
+  margin-inline-end: calc(var(--ck-control-padding-inline) * -1 + var(--ck-space-1));
 }
 
 .ck-card-fields {
@@ -396,7 +475,7 @@ select.ck-input {
   block-size: 1.25rem;
   /* Optical: line the box up with the first line of the label, not the top of the row. */
   margin-block-start: 0.1rem;
-  border: 1px solid var(--ck-border-strong);
+  border: 1px solid var(--ck-control-border);
   border-radius: var(--ck-radius-xs);
   background: var(--ck-surface);
   color: var(--ck-text-on-accent);

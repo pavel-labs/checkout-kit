@@ -34,7 +34,7 @@ export const Steps = ({
   return (
     <nav aria-label={label} className={cx('ck-steps', className)}>
       <p className="ck-visually-hidden">{progressLabel(index + 1, steps.length)}</p>
-      <ol className="ck-steps__list">
+      <ol className="ck-steps__list" tabIndex={0}>
         {steps.map((step, position) => {
           const state = position < index ? 'done' : position === index ? 'current' : 'upcoming'
 

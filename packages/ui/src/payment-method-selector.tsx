@@ -42,6 +42,11 @@ export const PaymentMethodSelector = ({
     >
       {methods.map((method) => (
         <Tab key={method.id} value={method.id} disabled={method.disabled}>
+          {method.icon ? (
+            <span className="ck-tab__icon" aria-hidden="true">
+              {method.icon}
+            </span>
+          ) : null}
           {method.label}
         </Tab>
       ))}

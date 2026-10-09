@@ -29,8 +29,11 @@ export interface CheckoutAppearance {
   text?: string
   textMuted?: string
   border?: string
+  /** Border of editable controls and unchecked radio/checkbox markers. */
+  controlBorder?: string
 
   danger?: string
+  dangerContrast?: string
   success?: string
 
   /** The focus ring, when the accent is not the right colour against your surfaces. */
@@ -44,7 +47,7 @@ const VARS: Record<
   Exclude<keyof CheckoutAppearance, 'density'>,
   { property: string; transform?: (value: string | number) => string | undefined }
 > = {
-  // The primitive, not the semantic token: moving 500 is what carries the whole ramp.
+  // State tones are derived from this primitive in CSS.
   accent: { property: '--ck-p-accent-500' },
   accentContrast: { property: '--ck-accent-contrast' },
   radius: { property: '--ck-radius', transform: length },
@@ -58,7 +61,9 @@ const VARS: Record<
   text: { property: '--ck-text' },
   textMuted: { property: '--ck-text-muted' },
   border: { property: '--ck-border' },
+  controlBorder: { property: '--ck-control-border' },
   danger: { property: '--ck-danger' },
+  dangerContrast: { property: '--ck-danger-contrast' },
   success: { property: '--ck-success' },
   focusRing: { property: '--ck-focus-ring-color' },
 }

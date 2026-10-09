@@ -17,7 +17,7 @@
   margin: 0;
   color: var(--ck-text);
   font-size: var(--ck-font-size-lg);
-  font-weight: var(--ck-weight-medium);
+  font-weight: var(--ck-weight-semibold);
   line-height: var(--ck-line-tight);
   letter-spacing: var(--ck-tracking-tight);
   text-wrap: balance;
@@ -105,7 +105,6 @@
 
 .ck-payment-button__amount {
   margin-inline-start: var(--ck-space-2);
-  opacity: 0.85;
   font-variant-numeric: tabular-nums;
 }
 
@@ -136,8 +135,8 @@
   gap: var(--ck-space-4);
   border: 1px solid var(--ck-border);
   border-radius: var(--ck-radius);
-  background: var(--ck-surface-sunken);
-  box-shadow: var(--ck-highlight), var(--ck-shadow-md);
+  background: var(--ck-surface-raised);
+  box-shadow: var(--ck-highlight), var(--ck-shadow-sm);
   padding: var(--ck-space-5);
   transition:
     opacity var(--ck-duration-normal) var(--ck-ease-standard),

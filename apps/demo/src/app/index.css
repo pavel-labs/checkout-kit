@@ -10,15 +10,11 @@
 :root {
   --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
-  /* The app always renders on the dark gradient, so lock the scheme and base tones
-     dark — no light/dark duplication needed. This background matches the gradients
-     darkest stop so overscroll and first paint never flash white. */
   color-scheme: dark;
-  color: #b0b0b0;
-  background-color: #06040a;
-
-  font: 18px / 145% var(--font-sans);
-  letter-spacing: 0.18px;
+  color: #b9c0ce;
+  background-color: #0b101a;
+  font: 16px / 1.5 var(--font-sans);
+  letter-spacing: 0;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -59,18 +55,20 @@
 
   /* On the root element, not in <Main>: the router renders its pending component
      before <Main> mounts, and a gradient scoped there would flash in afterwards. */
-  background: linear-gradient(to bottom right, #06040a, #10091c, #2a0f46);
+  background: #0b101a;
 }
 
-h2 {
-  font-weight: 500;
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  text-wrap: balance;
+@layer base {
+  h2 {
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 118%;
+    letter-spacing: -0.24px;
+    text-wrap: balance;
 
-  @media (width <= 1024px) {
-    font-size: 20px;
+    @media (width <= 1024px) {
+      font-size: 20px;
+    }
   }
 }
 
