@@ -5,7 +5,13 @@ import {
   fakeAction,
   fakeIntent,
 } from '@checkout-kit/testing/engine'
-import type { PaymentIntent, PaymentProvider, PaymentResult } from '../index'
+import type {
+  CallOptions,
+  CreateIntentInput,
+  PaymentIntent,
+  PaymentProvider,
+  PaymentResult,
+} from '../index'
 import { createCheckout } from './engine'
 import { memoryStorage, PENDING_CHECKOUT_KEY } from './persistence'
 
@@ -103,6 +109,59 @@ it('reuses a matching prepared intent and its idempotency key', async () => {
   await engine.pay(PAY)
   expect(calls.createIntent).toHaveLength(1)
   expect(calls.confirm[0].opts.idempotencyKey).toBe(calls.createIntent[0].opts.idempotencyKey)
+})
+
+describe('creation reply recovery', () => {
+  it.each(['pay', 'prepare'] as const)(
+    'replays the same merchant creation after a lost %s reply',
+    async (firstOperation) => {
+      const fake = createFakeProvider({ capabilities: { session: 'eager' } })
+      const orders = new Map<string, PaymentIntent>()
+      const createIntent = vi.fn(async (_input: CreateIntentInput, opts: CallOptions) => {
+        const prior = orders.get(opts.idempotencyKey)
+        if (prior) return prior
+        orders.set(opts.idempotencyKey, fakeIntent())
+        throw new Error('Creation succeeded, but its reply was lost')
+      })
+      const engine = setup({
+        ...fake.provider,
+        create: (ctx) => ({ ...fake.provider.create(ctx), createIntent }),
+      })
+
+      if (firstOperation === 'prepare') await engine.prepare(PAY.input)
+      else await engine.pay(PAY)
+      expect(engine.getSnapshot()).toMatchObject({ phase: 'failed', intent: null })
+
+      await expect(engine.pay(PAY)).resolves.toMatchObject({ status: 'succeeded' })
+      expect(createIntent).toHaveBeenCalledTimes(2)
+      expect(orders.size).toBe(1)
+      expect(fake.calls.confirm).toHaveLength(1)
+      expect(fake.calls.confirm[0].opts.idempotencyKey).toBe(
+        createIntent.mock.calls[0][1].idempotencyKey,
+      )
+    },
+  )
+
+  it.each(['changed order', 'explicit new key', 'reset'] as const)(
+    'starts a distinct creation after %s',
+    async (choice) => {
+      const createIntent = vi.fn(() => Promise.reject(new Error('Reply lost')))
+      const { provider, calls } = createFakeProvider({ createIntent })
+      const engine = setup(provider)
+      await engine.pay(PAY)
+
+      if (choice === 'reset') engine.reset()
+      await engine.pay({
+        ...PAY,
+        ...(choice === 'changed order' ? { input: { planId: 'team' } } : {}),
+        ...(choice === 'explicit new key' ? { idempotencyKey: 'new-key' } : {}),
+      })
+      expect(calls.createIntent).toHaveLength(2)
+      expect(calls.createIntent[1].opts.idempotencyKey).not.toBe(
+        calls.createIntent[0].opts.idempotencyKey,
+      )
+    },
+  )
 })
 
 it('clears the previous provider intent on switching', async () => {
