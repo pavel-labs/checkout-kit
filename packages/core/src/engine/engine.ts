@@ -544,15 +544,16 @@ export const createCheckout = (config: CheckoutEngineConfig): CheckoutEngine => 
         const started = begin()
         return applyResult({ status: 'processing', intent: previousIntent }, started)
       }
-      const existing =
+      // Creation may have succeeded even when no intent id reached this page. Keep its
+      // key independently of the intent so the merchant can replay that same creation.
+      const reuseAttempt =
         (phase === 'ready' || phase === 'failed') &&
         preparedInput === inputKey(request.input) &&
         (!request.idempotencyKey || request.idempotencyKey === idempotencyKey)
-          ? previousIntent
-          : null
+      const existing = reuseAttempt ? previousIntent : null
 
       const started = begin()
-      idempotencyKey = request.idempotencyKey ?? (existing ? idempotencyKey : null) ?? uuid()
+      idempotencyKey = request.idempotencyKey ?? (reuseAttempt ? idempotencyKey : null) ?? uuid()
       preparedInput = inputKey(request.input)
       store.set({ intent: existing, error: null, action: null, attempt: 0 })
       transition('pay')
