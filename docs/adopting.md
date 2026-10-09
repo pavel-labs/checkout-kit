@@ -52,9 +52,9 @@ What the kit renders itself:
 - Every field the kit renders goes through `Field`, which gives it a label, an id, and its
   hint and error named in `aria-describedby`. Errors are polite; the payment gets the one
   alert. See [The UI kit](./ui.md).
-- Everything is real HTML: a `<button>` is a button and a link is an `<a>`. The one place
-  `@checkout-kit/ui` uses ARIA is the provider tabs (`tablist`/`tab`/`aria-selected`) and the
-  error text (`role="alert"`).
+- Everything is real HTML: a `<button>` is a button and a link is an `<a>`. Provider tabs
+  use tab roles; status/error components use live regions. Keep the components' labels,
+  descriptions and state attributes when composing your interface.
 
 What is yours, because only you can do it:
 
