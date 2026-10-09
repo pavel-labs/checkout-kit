@@ -2,6 +2,7 @@
 // URL, and an integrity hash is passed through when the provider publishes one.
 
 import type { ActionEvidence, ActionRunner, PaymentAction, RunnerContext } from '@checkout-kit/core'
+import { validatePaymentUrl, type PaymentUrlPolicy } from '../security'
 
 type SdkHandoffAction = Extract<PaymentAction, { kind: 'sdk_handoff' }>
 
@@ -18,6 +19,7 @@ export interface SdkAdapter {
 }
 
 export interface SdkHandoffRunnerOptions {
+  readonly security?: PaymentUrlPolicy
   readonly adapters?: readonly SdkAdapter[]
   readonly loadTimeoutMs?: number
 }
@@ -33,9 +35,7 @@ const loadScript = (
   if (existing) {
     if (existing.integrity !== integrity)
       return Promise.reject(
-        new Error(
-          `The payment SDK at ${url} was already requested with different integrity settings.`,
-        ),
+        new Error('The payment SDK was already requested with different integrity settings.'),
       )
     return existing.promise
   }
@@ -44,6 +44,7 @@ const loadScript = (
     const script = document.createElement('script')
     script.src = url
     script.async = true
+    script.referrerPolicy = 'no-referrer'
     if (integrity) {
       script.integrity = integrity
       // Required for the browser to check the hash at all on a cross-origin script.
@@ -52,7 +53,7 @@ const loadScript = (
 
     const timer = setTimeout(() => {
       script.remove()
-      reject(new Error(`The payment SDK at ${url} did not load in time.`))
+      reject(new Error('The payment SDK did not load in time.'))
     }, timeoutMs)
 
     script.addEventListener('load', () => {
@@ -62,7 +63,7 @@ const loadScript = (
     script.addEventListener('error', () => {
       clearTimeout(timer)
       script.remove()
-      reject(new Error(`The payment SDK at ${url} could not be loaded.`))
+      reject(new Error('The payment SDK could not be loaded.'))
     })
 
     document.head.append(script)
@@ -103,9 +104,15 @@ export const createSdkHandoffRunner = (
 
       const execute = async (): Promise<ActionEvidence> => {
         if (action.scriptUrl) {
-          ctx.report({ stage: 'loading-sdk', detail: action.scriptUrl })
           try {
-            await loadScript(action.scriptUrl, action.integrity, options.loadTimeoutMs ?? 15_000)
+            const url = validatePaymentUrl(
+              action.scriptUrl,
+              ctx.returnUrl,
+              'script',
+              options.security,
+            )
+            ctx.report({ stage: 'loading-sdk', detail: url.origin })
+            await loadScript(url.toString(), action.integrity, options.loadTimeoutMs ?? 15_000)
           } catch (cause) {
             return { via: 'aborted', actionId: action.id, reason: 'runner_error', cause }
           }

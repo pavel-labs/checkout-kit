@@ -50,7 +50,7 @@ describe('the display runner', () => {
   })
 
   it('offers the app link the provider gave', async () => {
-    const runner = createDisplayRunner()
+    const runner = createDisplayRunner({ security: { deeplinkProtocols: ['bankapp:'] } })
     const ctx = context()
 
     void runner.run(action({ deeplink: 'bankapp://pay/act_1', format: 'code' }), ctx)

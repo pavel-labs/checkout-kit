@@ -48,16 +48,25 @@ export const readPendingCheckout = (storage: StorageAdapter): PendingCheckout | 
     const raw = storage.read(PENDING_CHECKOUT_KEY)
     if (!raw) return null
     const parsed: unknown = JSON.parse(raw)
-    return isPendingCheckout(parsed) ? parsed : null
+    return isPendingCheckout(parsed) ? pendingFields(parsed) : null
   } catch {
     // Someone else's data under our key, or a truncated write. Ignore it.
     return null
   }
 }
 
+// Project the record even for a caller that passes extra properties at runtime.
+const pendingFields = (pending: PendingCheckout): PendingCheckout => ({
+  providerId: pending.providerId,
+  intentId: pending.intentId,
+  actionId: pending.actionId,
+  idempotencyKey: pending.idempotencyKey,
+  startedAt: pending.startedAt,
+})
+
 export const writePendingCheckout = (storage: StorageAdapter, pending: PendingCheckout): void => {
   try {
-    storage.write(PENDING_CHECKOUT_KEY, JSON.stringify(pending))
+    storage.write(PENDING_CHECKOUT_KEY, JSON.stringify(pendingFields(pending)))
   } catch {
     // Storage may be disabled by the host. The current payment can still complete.
   }

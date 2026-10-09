@@ -107,3 +107,7 @@ npm run dev:react -w @checkout-kit/examples
 - [Решение проблем](./troubleshooting.md): причины и исправления.
 
 `npm run verify:consumer` собирает и устанавливает архивы в отдельный проект, проверяет exports, строгие типы, Node checkout и React SSR. Симуляторы проверяют код; sandbox аккаунта — его SDK, уведомления и возврат.
+
+## Подготовка к публичному npm
+
+Source настроен на public npm, но доступность пакетов ещё требует проверки публикации. Используйте текущие архивы или исходники. [Releasing](../../RELEASING.md#public-npm-publication) описывает dry-run, npm scope и OIDC. Перед настоящими платежами прочитайте [production guide](./production.md); новые security defaults отсутствуют в старом bundle 0.2.0.

@@ -107,3 +107,7 @@ Use the same hostname for app and API. Browser variables are public keys; server
 - [Troubleshooting](./troubleshooting.md): concrete causes and fixes.
 
 `npm run verify:consumer` builds, packs and installs the library in a fresh project, checking exports, strict types, Node checkout and React SSR. Tests and simulators validate code paths; your account's sandbox validates its SDK, notifications and return configuration.
+
+## Public npm release preparation
+
+Source targets public npm, but availability still requires verified publication. Use the current archives or source. [Releasing](../RELEASING.md#public-npm-publication) covers dry-run, scope ownership and OIDC. Read the [production guide](./production.md) before real payments; the new security defaults are not in the older 0.2.0 bundle.

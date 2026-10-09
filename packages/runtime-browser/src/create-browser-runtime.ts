@@ -14,6 +14,7 @@ import { createDisplayRunner, type DisplayRunnerOptions } from './runners/displa
 import { createRedirectRunner, type RedirectRunnerOptions } from './runners/redirect'
 import { createSdkHandoffRunner, type SdkHandoffRunnerOptions } from './runners/sdk-handoff'
 import { sessionStorageAdapter } from './storage/session-storage'
+import { validatePaymentUrl, type PaymentUrlPolicy } from './security'
 
 export interface BrowserRuntime {
   readonly runners: RunnerRegistry
@@ -31,24 +32,35 @@ export interface BrowserRuntimeOptions {
    * URLs go wrong.
    */
   readonly returnPath: string
-  readonly redirect?: RedirectRunnerOptions
-  readonly collectFields?: CollectFieldsRunnerOptions
-  readonly sdk?: SdkHandoffRunnerOptions
-  readonly display?: DisplayRunnerOptions
+  readonly redirect?: Omit<RedirectRunnerOptions, 'security'>
+  readonly collectFields?: Omit<CollectFieldsRunnerOptions, 'security'>
+  readonly sdk?: Omit<SdkHandoffRunnerOptions, 'security'>
+  readonly display?: Omit<DisplayRunnerOptions, 'security'>
   readonly storage?: StorageAdapter
+  readonly security?: PaymentUrlPolicy
 }
 
 export const createBrowserRuntime = (options: BrowserRuntimeOptions): BrowserRuntime => {
+  const returnUrl = validatePaymentUrl(
+    options.returnPath,
+    `${window.location.origin}/`,
+    'return',
+    options.security,
+  )
+  if (returnUrl.origin !== window.location.origin)
+    throw new Error('The payment return URL must belong to this application origin.')
   const runners = createRunnerRegistry()
-  runners.register(createRedirectRunner(options.redirect))
-  runners.register(createCollectFieldsRunner(options.collectFields))
-  runners.register(createSdkHandoffRunner(options.sdk))
-  runners.register(createDisplayRunner(options.display))
+  runners.register(createRedirectRunner({ ...options.redirect, security: options.security }))
+  runners.register(
+    createCollectFieldsRunner({ ...options.collectFields, security: options.security }),
+  )
+  runners.register(createSdkHandoffRunner({ ...options.sdk, security: options.security }))
+  runners.register(createDisplayRunner({ ...options.display, security: options.security }))
 
   return {
     runners,
     storage: options.storage ?? sessionStorageAdapter(),
-    returnUrl: new URL(options.returnPath, window.location.origin).toString(),
+    returnUrl: returnUrl.toString(),
     readReturnParams: () => Object.fromEntries(new URL(window.location.href).searchParams),
   }
 }

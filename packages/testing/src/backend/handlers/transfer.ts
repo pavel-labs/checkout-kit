@@ -4,7 +4,7 @@
 // PIX, UPI, BLIK and Poland's Blue Media all work like this. The only thing that differs
 // is what the code looks like.
 
-import { http } from 'msw'
+import { http, HttpResponse } from 'msw'
 import type { HttpHandler } from 'msw'
 import {
   idempotencyKeys,
@@ -57,7 +57,7 @@ export const transferHandlers: HttpHandler[] = [
   }),
 
   /** Issues the code the shopper pays. Asking twice returns the same one. */
-  http.post('*/api/transfer/orders/:id/code', async ({ params }) => {
+  http.post('*/api/transfer/orders/:id/code', async ({ params, request }) => {
     await networkDelay()
 
     const intent = paymentIntents.get(String(params.id))
@@ -71,13 +71,20 @@ export const transferHandlers: HttpHandler[] = [
       payload,
       // A real provider renders the QR itself and hands over a URL, which is why the kit
       // ships no QR encoder.
-      qrImageUrl: `data:image/svg+xml,${encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><rect width="8" height="8" fill="#fff"/><rect x="1" y="1" width="2" height="2"/><rect x="5" y="1" width="2" height="2"/><rect x="1" y="5" width="2" height="2"/><rect x="4" y="4" width="1" height="1"/></svg>`,
-      )}`,
+      qrImageUrl: request.url.replace(/\/code(?:\?.*)?$/, '/qr'),
       deeplink: `demobank://pay?code=${encodeURIComponent(payload)}`,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     })
   }),
+
+  http.get(
+    '*/api/transfer/orders/:id/qr',
+    () =>
+      new HttpResponse(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><rect width="8" height="8" fill="#fff"/><rect x="1" y="1" width="2" height="2"/><rect x="5" y="1" width="2" height="2"/><rect x="1" y="5" width="2" height="2"/><rect x="4" y="4" width="1" height="1"/></svg>',
+        { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store' } },
+      ),
+  ),
 
   http.get('*/api/transfer/orders/:id', async ({ params }) => {
     await networkDelay()

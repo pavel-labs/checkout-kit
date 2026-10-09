@@ -46,7 +46,9 @@ jobs:
         run: npm run examples:typecheck
 
       - name: Unit tests and plugin contract
-        run: npm run test
+        run: |
+          npm run test
+          npm run test:release
 
       - name: Check core purity
         run: npm run purity
@@ -90,6 +92,9 @@ jobs:
       - name: Install tarballs in a separate consumer and verify types, SSR and checkout
         run: npm run verify:consumer
 
+      - name: Dry-run public npm publication of the tested archives
+        run: npm run release:npm-check
+
       - name: Verify the complete release bundle when changesets have been applied
         if: hashFiles('.changeset/*.md') == ''
         run: npm run release:archives
@@ -104,6 +109,7 @@ jobs:
   docs:
     name: Guides and generated API reference
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -119,12 +125,19 @@ jobs:
         run: npm ci
       - name: Install documentation dependencies
         run: npm run docs:ci
-      - name: Build package declarations
-        run: npm run build:packages
+      - name: Build package declarations and the mock demo
+        run: npm run build:mock
       - name: Generate API reference
         run: npm run docs:api
       - name: Build the documentation and check links
         run: npm run docs:build
+      - name: Compose the deployed site
+        run: node scripts/compose-pages.mjs
+      - name: Install Chromium
+        timeout-minutes: 5
+        run: npx playwright install --with-deps chromium
+      - name: Check hydrated documentation links and Pages deep links
+        run: npm run test:site
 
   e2e:
     name: E2E (mock backend)

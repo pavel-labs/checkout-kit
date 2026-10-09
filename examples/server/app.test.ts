@@ -50,6 +50,20 @@ const start = async (gateways?: Gateways, extras = {}) => {
 }
 
 describe('merchant HTTP boundary', () => {
+  it('rejects raw Adyen card data at the server even if the browser guard is bypassed', async () => {
+    const mock = createMockGateways('http://localhost:4000')
+    const confirm = vi.fn(mock.adyen!.confirm)
+    const { post } = await start({ adyen: { ...mock.adyen!, confirm } })
+    const created = await post('/adyen/payments/sessions', { planId: '1id' })
+    const { id } = (await created.json()) as { id: string }
+    for (const field of ['number', 'cvc']) {
+      const response = await post(`/adyen/payments/${id}`, {
+        paymentMethod: { type: 'scheme', [field]: 'raw' },
+      })
+      expect(response.status).toBe(422)
+    }
+    expect(confirm).not.toHaveBeenCalled()
+  })
   it.each([
     ['/stripe/payments', 'status', 'requires_payment_method'],
     ['/adyen/payments/sessions', 'resultCode', 'Created'],

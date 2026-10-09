@@ -77,3 +77,12 @@ Session storage хранит метаданные без полей карты, 
 Evidence iframe проверяется по sender, origin, type и action id. Копирование/сканирование кода не подтверждает оплату: display завершается polling. При отказе clipboard код доступен для ручного копирования. DOM, listeners и timers раннера очищаются.
 
 [WebView](./webview.md) описывает сессии и deep links; [решение проблем](./troubleshooting.md) — mount, SDK и восстановление.
+
+## Безопасность URL
+
+Action URL требуют HTTPS. Для загрузки SDK scripts явно задайте `security.scriptOrigins`,
+для custom bank app links — `security.deeplinkProtocols`. HTTP доступен только на loopback
+с `security.allowInsecureLocalhost: true` для локальной разработки. Return URL должен
+принадлежать origin приложения. По возможности импортируйте SDK непосредственно.
+
+[Настройка политики и migration](./production.md).

@@ -20,6 +20,7 @@ export const RETURN_PATH = '/payment/return'
 
 export const runtime = createBrowserRuntime({
   returnPath: RETURN_PATH,
+  security: { allowInsecureLocalhost: import.meta.env.DEV, deeplinkProtocols: ['demobank:'] },
   sdk: {
     adapters: [
       { sdk: 'mock-wallet', request: async () => ({ walletToken: 'mock-wallet-token' }) },

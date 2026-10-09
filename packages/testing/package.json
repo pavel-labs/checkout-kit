@@ -47,13 +47,21 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted",
+    "registry": "https://registry.npmjs.org",
+    "access": "public",
     "exports": {
       ".": "./dist/index.mjs",
       "./backend": "./dist/backend/index.mjs",
       "./engine": "./dist/engine/index.mjs",
       "./package.json": "./package.json"
     }
-  }
+  },
+  "homepage": "https://pavel-labs.github.io/checkout-kit/",
+  "keywords": [
+    "checkout",
+    "payments",
+    "typescript",
+    "headless",
+    "testing"
+  ]
 }

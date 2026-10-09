@@ -33,3 +33,19 @@ it('tolerates a custom storage adapter becoming unavailable', () => {
   ).not.toThrow()
   expect(() => clearPendingCheckout(storage)).not.toThrow()
 })
+
+it('only reads and writes recovery identifiers even if a caller supplies extra properties', () => {
+  const storage = memoryStorage()
+  const pending = {
+    providerId: 'stripe',
+    intentId: 'pi',
+    actionId: 'act',
+    idempotencyKey: 'key',
+    startedAt: 1,
+  }
+  const supplied = { ...pending, clientSecret: 'secret', card: { cvc: '123' } }
+  writePendingCheckout(storage, supplied)
+  expect(JSON.parse(storage.read(PENDING_CHECKOUT_KEY)!)).toEqual(pending)
+  storage.write(PENDING_CHECKOUT_KEY, JSON.stringify(supplied))
+  expect(readPendingCheckout(storage)).toEqual(pending)
+})

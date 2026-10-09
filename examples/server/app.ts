@@ -259,6 +259,8 @@ export const createPaymentServer = (options: PaymentServerOptions): Server => {
         if (protocol === 'adyen') {
           if (!isRecord(body.paymentMethod))
             throw new RequestError(422, 'Provide an Adyen paymentMethod.')
+          if (['number', 'cvc'].some((field) => Object.hasOwn(body.paymentMethod as object, field)))
+            throw new RequestError(422, 'Use encrypted Adyen component data or a saved method.')
           const previous = confirmationKeys.get(recordKey(protocol, record.dto.id))
           if (previous && previous !== key)
             throw new RequestError(

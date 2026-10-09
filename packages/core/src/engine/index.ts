@@ -1,5 +1,6 @@
 export * from './engine'
 export * from './events'
+export * from './telemetry'
 export * from './machine'
 export * from './persistence'
 export * from './registry'

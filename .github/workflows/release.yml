@@ -1,76 +1,83 @@
 name: Release
 
-# Publishing is a decision, not something a push does: this only runs when you ask it to.
 on:
   workflow_dispatch:
     inputs:
       dry-run:
-        description: 'Pack and check everything, publish nothing'
+        description: 'Verify public npm archives without publishing'
         type: boolean
         default: true
+      tag:
+        description: 'Distribution tag for newly published versions'
+        type: choice
+        options: [next, latest]
+        default: next
 
 permissions:
   contents: read
 
+concurrency:
+  group: npm-release
+  cancel-in-progress: false
+
 jobs:
-  release:
-    name: Verify or publish to the configured package registry
+  verify:
+    name: Verify public npm release
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
+    timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
-          registry-url: https://npm.pkg.github.com
-          scope: '@checkout-kit'
-
-      - name: Install dependencies
-        run: npm ci
-
-      # The packages are published, so they had better be the ones that pass. This is the CI
-      # job's work again, deliberately: a release should not trust a green run from last week.
-      - name: Verify
+          package-manager-cache: false
+      - run: npm ci
+      - name: Check source and payment contracts
         run: |
           npm run format:check
           npm run lint
           npm run typecheck
           npm run examples:typecheck
-          npm run test
+          npm test
+          npm run test:release
           npm run purity
-
-      - name: Build
-        run: npm run build:packages
-
-      # publint runs after the build; this proves the entry points resolve the way a
-      # consumer will resolve them, from dist rather than from source.
-      - name: Check the packages resolve as published
+      - name: Verify distributable packages and actual installation
         run: |
           npm run verify:dist
           npm run check:types
           npm run verify:consumer
-          npm run release:archives
-
-      - name: Upload verified packages
-        uses: actions/upload-artifact@v7
+          npm run release:npm-check
+          git diff --exit-code
+      - uses: actions/upload-artifact@v7
         with:
-          name: checkout-kit-packages
+          name: npm-verified-packages
           path: artifacts/packages/
           retention-days: 14
 
-      # Registry scope ownership is separate from repository write access. The
-      # owner configures PACKAGES_TOKEN for @checkout-kit; do not assume that this
-      # repository's GITHUB_TOKEN has access to that package scope.
-      - name: Publish
-        if: ${{ !inputs.dry-run }}
-        run: npx changeset publish
+  publish:
+    name: Publish the verified archives using npm OIDC
+    if: ${{ !inputs.dry-run }}
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Require main for public publication
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Download the archives verified in this workflow run
+        run: gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name npm-verified-packages --dir artifacts/packages
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
-          NPM_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+      - name: Publish the exact tested archives
+        run: node scripts/publish-npm.mjs --publish --tag "$RELEASE_TAG"
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}

@@ -24,8 +24,10 @@ await checkout.pay({
 
 Only `paymentMethod`, `browserInfo` and `origin` are forwarded from component data. Your
 server owns the amount, currency, merchant account, order reference and return URL. The
-`token` instrument means a storedPaymentMethodId. The raw `card` instrument is also
-supported for merchants whose Adyen account and compliance arrangements permit it.
+`token` instrument means a storedPaymentMethodId. The raw `card` instrument and raw `number`/`cvc` inside component data are disabled
+by default. Set `allowRawCardData: true` only for merchants whose Adyen account and
+compliance arrangements explicitly permit that path. This flag is not PCI certification;
+the example merchant server always rejects raw data.
 
 | Merchant endpoint                               | Operation                                                           |
 | ----------------------------------------------- | ------------------------------------------------------------------- |

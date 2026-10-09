@@ -86,6 +86,7 @@ describe('the SDK handoff runner', () => {
 
   it('loads a script once, however many payments ask for it', async () => {
     const runner = createSdkHandoffRunner({
+      security: { scriptOrigins: ['https://wallet.test'] },
       adapters: [{ sdk: 'wallet', request: () => Promise.resolve({ ok: true }) }],
     })
     const scriptUrl = 'https://wallet.test/sdk.js'
@@ -104,6 +105,7 @@ describe('the SDK handoff runner', () => {
 
   it('passes an integrity hash through to the script tag', async () => {
     const runner = createSdkHandoffRunner({
+      security: { scriptOrigins: ['https://wallet.test'] },
       adapters: [{ sdk: 'wallet', request: () => Promise.resolve({}) }],
     })
 
@@ -121,7 +123,10 @@ describe('the SDK handoff runner', () => {
 
   it('does not reuse an unpinned script for a request requiring integrity', async () => {
     const request = vi.fn().mockResolvedValue({})
-    const runner = createSdkHandoffRunner({ adapters: [{ sdk: 'wallet', request }] })
+    const runner = createSdkHandoffRunner({
+      security: { scriptOrigins: ['https://wallet.test'] },
+      adapters: [{ sdk: 'wallet', request }],
+    })
     const appended = captureScripts()
     const scriptUrl = 'https://wallet.test/integrity-conflict.js'
     await runner.run(action({ scriptUrl }), context())

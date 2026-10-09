@@ -5,6 +5,7 @@
 // ends the action. So this promise settles only when the shopper gives up or time runs out.
 
 import type { ActionEvidence, ActionRunner, PaymentAction, RunnerContext } from '@checkout-kit/core'
+import { validatePaymentUrl, type PaymentUrlPolicy } from '../security'
 
 type DisplayAction = Extract<PaymentAction, { kind: 'display' }>
 
@@ -18,6 +19,7 @@ export interface DisplayRunnerText {
 }
 
 export interface DisplayRunnerOptions {
+  readonly security?: PaymentUrlPolicy
   /** Every string the runner puts on the page, so it can be translated. */
   readonly text?: Partial<DisplayRunnerText>
   /** Prefix for the class names, in case they clash with the host's. */
@@ -60,6 +62,7 @@ export const createDisplayRunner = (
       image.src = action.imageUrl
       image.alt = text.qrAlt
       image.decoding = 'async'
+      image.referrerPolicy = 'no-referrer'
       root.append(image)
     }
 
@@ -116,7 +119,30 @@ export const createDisplayRunner = (
         }
       }
 
-      const node = render(action)
+      let node: HTMLElement
+      try {
+        node = render({
+          ...action,
+          imageUrl: action.imageUrl
+            ? validatePaymentUrl(
+                action.imageUrl,
+                ctx.returnUrl,
+                'image',
+                options.security,
+              ).toString()
+            : undefined,
+          deeplink: action.deeplink
+            ? validatePaymentUrl(
+                action.deeplink,
+                ctx.returnUrl,
+                'deeplink',
+                options.security,
+              ).toString()
+            : undefined,
+        })
+      } catch (cause) {
+        return { via: 'aborted', actionId: action.id, reason: 'runner_error', cause }
+      }
       mount.append(node)
       ctx.report({ stage: 'displayed', detail: action.format })
 

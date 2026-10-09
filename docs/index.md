@@ -10,7 +10,7 @@
         [
           { 'theme': 'brand', 'text': 'Build your checkout', 'link': '/getting-started' },
           { 'theme': 'alt', 'text': 'Choose packages', 'link': '/packages' },
-          { 'theme': 'alt', 'text': 'Try the demo', 'link': '/demo/' },
+          { 'theme': 'alt', 'text': 'Try the demo', 'link': '/demo/', 'target': '_self' },
         ],
     },
   'features':
@@ -46,9 +46,9 @@
         'linkText': 'Read the guide',
       },
       {
-        'title': '16 packages',
-        'details': 'Engine plus one adapter; add host/UI/test pieces and six reference protocols when needed.',
-        'link': '/packages',
+        'title': 'Explicit security boundaries',
+        'details': 'Origin and transport policies, protected SDK loading, token-first Adyen and telemetry without payment payloads.',
+        'link': '/production',
         'linkText': 'Read the guide',
       },
     ],
