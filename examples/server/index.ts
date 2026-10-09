@@ -14,7 +14,7 @@ const server = createPaymentServer({
   returnUrl,
   mock,
   mockOrigin: mock ? mockOrigin : undefined,
-  adyenHmacKey: process.env.ADYEN_HMAC_KEY,
+  adyenHmacKey: process.env.ADYEN_WEBHOOK_HMAC_KEY,
   adyenMerchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
 })
 server.listen(port, host, () =>
