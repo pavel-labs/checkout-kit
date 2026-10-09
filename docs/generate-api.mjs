@@ -32,6 +32,12 @@ const GROUPS = [
     packages: ['core', 'react', 'ui', 'runtime-browser'],
   },
   {
+    title: 'Provider integrations',
+    blurb:
+      'Stripe, Adyen and PayPal adapters over merchant-owned APIs. See each package for its server contract and SDK setup.',
+    packages: ['provider-stripe', 'provider-adyen', 'provider-paypal'],
+  },
+  {
     title: 'Payment plugins',
     blurb:
       'One package per integration shape. Each is a reference implementation against the mock backend - none has taken a real payment.',

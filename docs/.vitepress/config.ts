@@ -28,6 +28,10 @@ const apiRoot = join(here, '..', 'api')
 const API_GROUPS: { text: string; packages: string[] }[] = [
   { text: 'The checkout', packages: ['core', 'react', 'ui', 'runtime-browser'] },
   {
+    text: 'Provider integrations',
+    packages: ['provider-stripe', 'provider-adyen', 'provider-paypal'],
+  },
+  {
     text: 'Payment plugins',
     packages: [
       'provider-psp',
@@ -68,6 +72,7 @@ const guideSidebar = (): DefaultTheme.SidebarItem[] => [
   {
     text: 'Start here',
     items: [
+      { text: 'Getting started', link: '/getting-started' },
       { text: 'Architecture', link: '/architecture' },
       { text: 'Adopting it', link: '/adopting' },
       { text: 'The UI kit', link: '/ui' },
@@ -118,6 +123,7 @@ const ruSidebar = (): DefaultTheme.SidebarItem[] => [
   {
     text: 'Начало',
     items: [
+      { text: 'Быстрый старт', link: '/ru/getting-started' },
       { text: 'Архитектура', link: '/ru/architecture' },
       { text: 'Как внедрить', link: '/ru/adopting' },
       { text: 'UI-кит', link: '/ru/ui' },

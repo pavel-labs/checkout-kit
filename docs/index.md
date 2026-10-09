@@ -7,8 +7,8 @@ hero:
   tagline: An embeddable checkout whose payment integrations are all plugins. The core does not know what 3-D Secure is.
   actions:
     - theme: brand
-      text: Architecture
-      link: /architecture
+      text: Getting started
+      link: /getting-started
     - theme: alt
       text: Write a plugin
       link: /plugin-authoring
@@ -58,6 +58,8 @@ checked, not claimed - one Playwright spec, naming no provider anywhere, runs ag
 
 ## Status
 
-Nothing is published to npm yet, and every package is still marked private. All six plugins are
-written against a mock backend: **none of them has taken a real payment.** Read them as a reference
-implementation, not as an integration you can install and charge a card with.
+Installable Stripe, Adyen and PayPal adapters ship alongside six generic protocol references.
+Run the local integration with `npm run dev:integration`, or build archives with
+`npm run pack:packages`. [Getting started](./getting-started.md) covers installation, SDK
+fields and the merchant server. Tests use fixtures and explicit simulators; live provider
+sandbox verification requires your own account keys. Registry publishing is a separate owner action.

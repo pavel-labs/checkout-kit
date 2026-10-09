@@ -5,6 +5,7 @@ import { defaultClientConditions, defineConfig } from 'vite'
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   plugins: [react()],
+  server: { port: 5173, strictPort: true },
   resolve: {
     // Without this the example resolves the workspace packages through their `default`
     // export condition - that is, whatever was last built into dist - and silently runs
