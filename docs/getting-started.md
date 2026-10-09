@@ -30,20 +30,22 @@ The [site demo](/demo/) exercises six reference protocols with an in-browser MSW
 
 ## Install package archives
 
-Download `checkout-kit-0.1.0.tar.gz` from [the GitHub release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.1.0), then extract it. The release contains all 16 packages, an integrity manifest, checksums and a standalone installer. No clone or registry token is needed.
+Download `checkout-kit-0.2.0.tar.gz` from [the GitHub release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0), then extract it. The release contains all 16 packages, an integrity manifest, checksums and a standalone installer. No clone or registry token is needed.
+
+Bundle **0.2.0** includes `@checkout-kit/ui@0.2.0` and the other 15 packages at `0.1.0`. Package versions are independent; the installer reads the manifest to choose their archives.
 
 Run the installer **from your app's directory**:
 
 ```sh
-node /path/to/checkout-kit-0.1.0/install.mjs runtime-browser provider-paypal react ui
+node /path/to/checkout-kit-0.2.0/install.mjs runtime-browser provider-paypal react ui
 ```
 
 It verifies each selected archive and adds required checkout-kit peers automatically, including core. npm resolves external peers such as React 19 normally. Keep your app's `react-dom` compatible with React. Replace `provider-paypal` with `provider-stripe` or `provider-adyen` for those adapters.
 
 ```sh
 # Inspect the available packages or verify a selection without installing:
-node /path/to/checkout-kit-0.1.0/install.mjs --list
-node /path/to/checkout-kit-0.1.0/install.mjs provider-paypal react ui --dry-run
+node /path/to/checkout-kit-0.2.0/install.mjs --list
+node /path/to/checkout-kit-0.2.0/install.mjs provider-paypal react ui --dry-run
 ```
 
 For a host without React, select `runtime-browser` and your provider. Individual `.tgz` assets can also be installed with `npm install`; include their checkout-kit peers in the same command.

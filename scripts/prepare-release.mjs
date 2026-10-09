@@ -62,12 +62,32 @@ for (const file of ['LICENSE', 'NOTICE']) {
 }
 const docs = 'https://pavel-labs.github.io/checkout-kit'
 const repository = 'https://github.com/pavel-labs/checkout-kit'
+const packageVersions = [...packages.values()]
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map(({ name, version }) => `| \`${name}\` | \`${version}\` |`)
+  .join('\n')
 const notes = `# Checkout kit ${version}
 
 An early release of the headless checkout engine, browser/native hosts, optional
 React UI and provider adapters. All ${packages.size} packages have declarations,
 changelogs and Apache-2.0 notices. The same package archives pass isolated
 installation, strict consumer types, SSR and checkout checks in CI.
+
+## Checkout UI
+
+The optional UI kit includes neutral light/dark themes, responsive payment screens,
+editable fields, payment choices, accessible icon actions and consistent interaction
+states. Preview the [component gallery](${docs}/demo/gallery) and follow the
+[UI guide](${docs}/ui.html). The gallery never creates a payment.
+
+## Package versions
+
+The bundle version identifies this collection. Packages are independently versioned;
+the installer uses their manifest rather than assuming matching version numbers.
+
+| Package | Version |
+| --- | --- |
+${packageVersions}
 
 ## Install without a registry token
 

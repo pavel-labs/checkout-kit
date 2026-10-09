@@ -50,6 +50,6 @@ See [testing](./testing.md). Do not use the mock backend as a payment server.
 
 ## Installation and support boundary
 
-[Getting started](./getting-started.md#install-package-archives) installs selected archives and peers together. Version `0.1.0` is available as a [GitHub archive release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.1.0), with an installer that includes required checkout-kit peers. Current manifests target GitHub Packages; registry publication is configured separately. Build/CI archives work independently.
+[Getting started](./getting-started.md#install-package-archives) installs selected archives and peers together. Bundle `0.2.0` (UI `0.2.0`; other packages `0.1.0`) is available as a [GitHub archive release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0), with an installer that includes required checkout-kit peers. Current manifests target GitHub Packages; registry publication is configured separately. Build/CI archives work independently.
 
 The library owns client orchestration. Your server owns authenticated buyers, prices, credentials, durable order state, atomic idempotent mutations, verified notifications and fulfillment. Follow [merchant integration](./merchant-integration.md).

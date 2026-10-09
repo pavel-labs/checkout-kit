@@ -73,7 +73,7 @@ import { createHttpClient } from '@checkout-kit/core/http'
 import { createBrowserRuntime } from '@checkout-kit/runtime-browser'
 import { CheckoutProvider, useCheckout, useCheckoutSelector } from '@checkout-kit/react'
 import { createBridgeCommand, createCommandScript } from '@checkout-kit/webview-bridge/host'
-import { Button, Money } from '@checkout-kit/ui'
+import { Button, Field, IconButton, Input, InputGroup, Money } from '@checkout-kit/ui'
 import type { StripeConfig } from '@checkout-kit/provider-stripe'
 import type { AdyenConfig } from '@checkout-kit/provider-adyen'
 import type { PayPalConfig } from '@checkout-kit/provider-paypal'
@@ -90,7 +90,10 @@ const cancel = createBridgeCommand('PAYMENT_CANCEL', {}, { sessionId: 'session',
 createCommandScript(cancel)
 function Selected() { const s = useCheckoutSelector((s) => ({ phase: s.phase }), (a, b) => a.phase === b.phase); return <span>{s.phase}</span> }
 void Selected
-function Checkout() { const { phase } = useCheckout(); return <Button><Money amount={2500} currency="USD" />{phase}</Button> }
+function Checkout() {
+  const { phase } = useCheckout()
+  return <><Field label="Email">{(control) => <InputGroup trailing={<IconButton label="Clear email">×</IconButton>}><Input {...control} type="email" /></InputGroup>}</Field><Button><Money amount={2500} currency="USD" />{phase}</Button></>
+}
 renderToString(<CheckoutProvider engine={engine}><Checkout /></CheckoutProvider>)
 `,
 )
@@ -101,7 +104,7 @@ import assert from 'node:assert/strict'
 import { createCheckout, createRunnerRegistry, defineProvider } from '@checkout-kit/core'
 import { renderToString } from 'react-dom/server'
 import { createElement } from 'react'
-import { Money } from '@checkout-kit/ui'
+import { IconButton, Input, InputGroup, Money } from '@checkout-kit/ui'
 import { createBridgeCommand, createCommandScript, createCheckoutMessageHandler } from '@checkout-kit/webview-bridge/host'
 import { parseBridgeCommand } from '@checkout-kit/webview-bridge/protocol'
 const command = createBridgeCommand('PAYMENT_RESUME', { params: { token: 'opaque' } }, { sessionId: 'session', id: 'cmd' })
@@ -127,6 +130,11 @@ const result = await checkout.pay({ input: { planId: '1id' }, instrument: { kind
 assert.equal(result.status, 'succeeded')
 assert.equal(posts, 2)
 assert.ok(renderToString(createElement(Money, { amount: 2500, currency: 'USD' })).includes('25'))
+const inputGroup = renderToString(createElement(InputGroup, {
+  trailing: createElement(IconButton, { label: 'Clear email' }, '×'),
+}, createElement(Input, { type: 'email', 'aria-label': 'Email' })))
+assert.ok(inputGroup.includes('aria-label="Clear email"'))
+assert.ok(inputGroup.includes('type="email"'))
 console.log('Installed tarballs: Node checkout flow, SSR, exports and strict consumer types passed.')
 `,
 )

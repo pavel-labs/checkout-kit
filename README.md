@@ -48,10 +48,10 @@ for building your own integration; they do not connect to banks by themselves.
 
 ## Install in another project
 
-Download and extract `checkout-kit-0.1.0.tar.gz` from [GitHub Releases](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.1.0). From your application's directory, select the packages you need:
+Download and extract `checkout-kit-0.2.0.tar.gz` from [GitHub Releases](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0). From your application's directory, select the packages you need:
 
 ```bash
-node /path/to/checkout-kit-0.1.0/install.mjs runtime-browser provider-stripe react ui
+node /path/to/checkout-kit-0.2.0/install.mjs runtime-browser provider-stripe react ui
 ```
 
 The installer verifies SHA-512 integrity and includes required checkout-kit peers automatically.
@@ -64,7 +64,9 @@ To build the current source instead, run `npm run pack:packages` in a clone and 
 `npm run verify:consumer` tests all 16 archives, minimal headless/React installations, strict
 TypeScript, exports, checkout and SSR, and rejection of damaged downloads.
 
-Version `0.1.0` is an early release. GitHub archives need no private registry access. The
+Bundle `0.2.0` includes `@checkout-kit/ui@0.2.0` and the other 15 packages at `0.1.0`.
+Package versions are independent; the installer uses the manifest to select compatible archives.
+This is an early release. GitHub archives need no private registry access. The
 separate registry workflow still requires access to the `@checkout-kit` scope and credentials;
 archive publication does not imply npm publication. See [Releasing](./RELEASING.md).
 
@@ -154,6 +156,8 @@ npm run verify:consumer
 ```
 
 Explore the [live UI gallery](https://pavel-labs.github.io/checkout-kit/demo/gallery): a composed checkout, light/dark themes, brand variants, mobile frames and component specimens.
+
+![Checkout preview in the light theme with compact density](./docs/public/checkout-ui.jpg)
 
 ## Guides
 
