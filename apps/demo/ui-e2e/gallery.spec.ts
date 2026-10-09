@@ -40,8 +40,12 @@ test('the preview edits fields, switches methods and shows a result without call
     if (request.method() !== 'GET' && /\/api\//.test(request.url())) mutations.push(request.url())
   })
   await checkout(page).getByRole('button', { name: 'Clear email address' }).click()
-  await expect(checkout(page).getByLabel('Email address')).toBeFocused()
-  await checkout(page).getByLabel('Email address').fill('buyer@example.com')
+  await expect(
+    checkout(page).getByRole('textbox', { name: 'Email address', exact: true }),
+  ).toBeFocused()
+  await checkout(page)
+    .getByRole('textbox', { name: 'Email address', exact: true })
+    .fill('buyer@example.com')
   await checkout(page).getByRole('tab', { name: 'Bank transfer' }).click()
   await expect(checkout(page).getByRole('heading', { name: 'Pay from your bank' })).toBeVisible()
   await checkout(page).getByRole('tab', { name: 'Card', exact: true }).click()
@@ -54,8 +58,12 @@ test('the preview edits fields, switches methods and shows a result without call
   await expect(checkout(page).getByText('buyer@example.com')).toBeVisible()
   await expect(checkout(page).locator('.ck-state')).toBeFocused()
   await checkout(page).getByRole('button', { name: 'Back to preview' }).click()
-  await expect(checkout(page).getByLabel('Email address')).toHaveValue('buyer@example.com')
-  await expect(checkout(page).getByLabel('Email address')).toBeFocused()
+  await expect(
+    checkout(page).getByRole('textbox', { name: 'Email address', exact: true }),
+  ).toHaveValue('buyer@example.com')
+  await expect(
+    checkout(page).getByRole('textbox', { name: 'Email address', exact: true }),
+  ).toBeFocused()
   expect(mutations).toEqual([])
 })
 

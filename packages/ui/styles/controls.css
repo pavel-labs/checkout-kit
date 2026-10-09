@@ -82,7 +82,7 @@
   --ck-button-active: var(--ck-accent-active);
   display: flex;
   box-sizing: border-box;
-  min-block-size: max(var(--ck-tap-target), var(--ck-button-height));
+  min-block-size: max(44px, var(--ck-tap-target), var(--ck-button-height));
   inline-size: 100%;
   align-items: center;
   justify-content: center;
@@ -130,6 +130,7 @@
 }
 
 .ck-button--sm {
+  min-block-size: max(var(--ck-tap-target), var(--ck-control-height-sm));
   --ck-button-height: var(--ck-control-height-sm);
   padding-block: var(--ck-space-2);
   padding-inline: var(--ck-space-4);
@@ -201,7 +202,7 @@
 
 .ck-icon-button {
   flex: 0 0 auto;
-  inline-size: max(var(--ck-tap-target), var(--ck-button-height));
+  inline-size: max(44px, var(--ck-tap-target), var(--ck-button-height));
   padding: var(--ck-space-2);
   box-shadow: none;
 }
@@ -211,6 +212,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.ck-icon-button.ck-button--sm {
+  inline-size: max(var(--ck-tap-target), var(--ck-control-height-sm));
 }
 
 .ck-icon-button[aria-busy='true'] .ck-button__label {

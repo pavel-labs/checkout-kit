@@ -206,6 +206,12 @@
   scrollbar-width: none;
 }
 
+.ck-steps__list:focus-visible {
+  outline: var(--ck-focus-ring-width) solid var(--ck-focus-ring-color);
+  outline-offset: var(--ck-focus-ring-offset);
+  border-radius: var(--ck-radius-xs);
+}
+
 .ck-steps__list::-webkit-scrollbar {
   display: none;
 }
