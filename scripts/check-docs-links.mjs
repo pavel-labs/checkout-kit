@@ -20,9 +20,10 @@ const pages = new Map()
 for (const path of list(root)) {
   const html = readFileSync(path, 'utf8')
   const ids = new Set([...html.matchAll(/\bid=(["'])(.*?)\1/gs)].map((match) => decode(match[2])))
-  const links = [...html.matchAll(/<a\b[^>]*\bhref=(["'])(.*?)\1/gs)].map((match) =>
-    decode(match[2]),
-  )
+  const links = [...html.matchAll(/<a\b[^>]*\bhref=(["'])(.*?)\1[^>]*>/gs)].map((match) => ({
+    href: decode(match[2]),
+    target: match[0].match(/\btarget=(["'])(.*?)\1/)?.[2],
+  }))
   pages.set(path, { ids, links })
 }
 let checked = 0
@@ -35,11 +36,16 @@ for (const [path, page] of pages) {
       .slice(root.length + 1)
       .split('\\')
       .join('/')
-  for (const href of page.links) {
+  for (const { href, target: linkTarget } of page.links) {
     const url = new URL(href, pageUrl)
     if (url.origin !== 'https://docs.test') continue
     const pathname = decodeURIComponent(url.pathname)
-    if (pathname.startsWith(base + 'demo/')) continue // Built separately by compose-pages.
+    if (pathname.startsWith(base + 'demo/')) {
+      // The demo is built separately. Its links must leave the VitePress SPA router.
+      if (!['_self', '_blank'].includes(linkTarget))
+        broken.add(path.slice(root.length + 1) + ' -> ' + href + ' (demo router interception)')
+      continue
+    }
     if (!pathname.startsWith(base)) continue
     let target = resolve(root, pathname.slice(base.length))
     if (pathname.endsWith('/')) target = join(target, 'index.html')

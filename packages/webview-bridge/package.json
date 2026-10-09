@@ -38,8 +38,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted",
+    "registry": "https://registry.npmjs.org",
+    "access": "public",
     "exports": {
       ".": "./dist/index.mjs",
       "./host": "./dist/host/index.mjs",
@@ -49,5 +49,13 @@
   },
   "devDependencies": {
     "@checkout-kit/testing": "*"
-  }
+  },
+  "homepage": "https://pavel-labs.github.io/checkout-kit/",
+  "keywords": [
+    "checkout",
+    "payments",
+    "typescript",
+    "headless",
+    "webview-bridge"
+  ]
 }

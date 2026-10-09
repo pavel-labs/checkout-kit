@@ -254,3 +254,12 @@ that shape. See [Showing a code and waiting](./providers/asia.md#showing-a-code-
 5. Evidence is a hint. Re-read the payment from your server before telling anyone it worked.
 6. Forward the idempotency key to the provider.
 7. Return the issuer message, in the issuer words.
+
+## URL security defaults
+
+Action URLs require HTTPS. Dynamic SDK scripts require explicit `security.scriptOrigins`;
+custom bank app links require `security.deeplinkProtocols`. HTTP is limited to loopback
+with `security.allowInsecureLocalhost: true` for local development. Return URLs must belong
+to the application origin. Import provider SDKs directly where possible.
+
+[Configure the policy and migration](./production.md).

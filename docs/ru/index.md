@@ -10,7 +10,7 @@
         [
           { 'theme': 'brand', 'text': 'Собрать чекаут', 'link': '/ru/getting-started' },
           { 'theme': 'alt', 'text': 'Выбрать пакеты', 'link': '/ru/packages' },
-          { 'theme': 'alt', 'text': 'Попробовать демо', 'link': '/demo/' },
+          { 'theme': 'alt', 'text': 'Попробовать демо', 'link': '/demo/', 'target': '_self' },
         ],
     },
   'features':
@@ -46,9 +46,9 @@
         'linkText': 'Открыть руководство',
       },
       {
-        'title': '16 пакетов',
-        'details': 'Движок и адаптер; host/UI/test по необходимости, шесть референсных протоколов для своей интеграции.',
-        'link': '/ru/packages',
+        'title': 'Явные границы безопасности',
+        'details': 'Origin/transport policy, ограниченная загрузка SDK, token-first Adyen и telemetry без платёжного payload.',
+        'link': '/ru/production',
         'linkText': 'Открыть руководство',
       },
     ],

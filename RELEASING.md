@@ -97,27 +97,84 @@ For a subsequent release, merge a PR with applied package changesets and a new r
 A new successful main CI run publishes that version. Rerun failed Actions runs to retry; registry
 publication is unrelated to this workflow.
 
-## Optional registry publication
+## Public npm publication
 
-The manifests still use `publishConfig.registry=https://npm.pkg.github.com` and
-`access=restricted`. `.npmrc` routes the `@checkout-kit` scope there. The manual **Release** workflow
-uses the Actions secret `PACKAGES_TOKEN`, which must have access to publish under that scope.
-Repository write access alone does not establish package-scope ownership.
+The source now targets `https://registry.npmjs.org` with `access=public`, including
+all package manifests, `.npmrc` and Changesets. This prepares a public release; it does
+not establish that the `@checkout-kit` npm scope is owned by this repository's owner or
+that any version has been published there. GitHub archives remain usable today.
 
-Run **Release** after the version commit is merged. Its default `dry-run` packs actual archives,
-verifies separate-consumer installation and uploads them without publishing. It also checks
-formatting, lint, package/example types, tests, purity, built exports and declarations. Disable
-`dry-run` only when the intended registry and credentials are configured. This workflow does not
-claim that archive releases are available on npm.
+Before the first public release, apply pending changesets, commit package/peer versions
+and lockfile, and decide the next archive bundle version. Review the [production gate](./docs/production.md),
+including actual provider account sandbox checks and security reporting. New security defaults
+and telemetry in the source are not included in the older `0.2.0` archive bundle.
 
-Consumers of an existing GitHub Packages registry release configure their own scope and read token:
+### Verify without credentials
 
-```ini
-@checkout-kit:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```bash
+npm ci
+npm run verify:consumer
+npm run test:release
+npm run release:npm-check
 ```
 
-Keep the token value in the environment. Changing registry or scope requires updating manifests,
-`.npmrc`, Changesets access configuration and workflow authentication together. Public provider
-release notes should state which account sandbox configurations were exercised; local fixtures and
-simulated browser tests are a different kind of evidence.
+The last command verifies committed package versions, public registry/access, dependency metadata
+and every archive's SHA-512 hash, then runs `npm publish --dry-run` for those exact tarballs.
+Required checkout-kit dependencies/peers are ordered first. It does not upload packages, require
+a write token or prove scope ownership. The manual **Release** workflow defaults to this same
+verification, plus types, tests, lint, build, declarations and a clean generated-file check.
+`npm run release` remains a local verification command; real publication uses the workflow.
+
+### Establish the npm scope and first versions
+
+The npm account/organization must own `@checkout-kit` and have permission to publish each package.
+Repository ownership is separate. If the scope is unavailable, choose an owned scope and update
+package names, imports, peer ranges, examples, docs and installer selection together.
+
+A new package needs an initial authenticated publication before its package settings can be used
+to configure a trusted publisher. Use the verified archives, publish dependencies/peers first,
+and authenticate interactively with npm/2FA; never put credentials in source or chat:
+
+```bash
+npm publish artifacts/packages/<verified-package-file>.tgz \
+  --registry https://registry.npmjs.org --access public --tag next
+```
+
+Use the actual filenames from `artifacts/packages/manifest.json`; the command above is a template.
+The dry-run prints the dependency order. Initial interactive publication is distinct from the later
+OIDC/provenance workflow and must not be described as having GitHub provenance without verification.
+
+### Configure trusted publishing
+
+For each package on npm, configure a GitHub Actions trusted publisher:
+
+| npm field            | Value                                         |
+| -------------------- | --------------------------------------------- |
+| Organization or user | `pavel-labs`                                  |
+| Repository           | `checkout-kit`                                |
+| Workflow filename    | `release.yml`                                 |
+| Environment name     | `npm`                                         |
+| Allowed action       | Permit direct `npm publish` for this workflow |
+
+The workflow uses a GitHub-hosted runner and Node.js 24 with npm CLI supporting OIDC
+(npm 11.5.1 or later). Create/validate the trusted publisher according to npm's current
+requirements. Restrict the GitHub `npm` environment to main and configure maintainer approvals
+when desired. After OIDC works, remove unused package write tokens and restrict token publication.
+
+Only the separate publish job has `id-token: write`. It downloads the exact consumer-tested
+archives from its verification job; it does not install project dependencies or rebuild packages.
+Publication is manual, serialized, main-only, public and uses provenance. The default tag is `next`;
+select `latest` only for new versions you want as the default install.
+
+Apply/commit changesets before disabling dry-run. Existing npm versions are immutable: the script
+skips identical published bytes on retry, rejects different bytes at the same version before any
+upload, and fails closed on registry errors. A partial upload can be rerun; published archives are
+never overwritten. Changing a tag for an already published version is a separate authenticated
+`npm dist-tag` operation, not a side effect of retrying this workflow.
+
+After publication, verify the registry version/integrity, provenance badge, dist-tag and installation
+from npm in a clean external project. npm release is independent of GitHub archive publication.
+
+[Trusted publishing](https://docs.npmjs.com/trusted-publishers/) ·
+[Provenance](https://docs.npmjs.com/generating-provenance-statements/) ·
+[Public scoped packages](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)

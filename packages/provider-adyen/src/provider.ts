@@ -17,6 +17,8 @@ export interface AdyenConfig {
   /** Omit when the host imports @adyen/adyen-web itself. */
   readonly scriptUrl?: string
   readonly integrity?: string
+  /** Requires the merchant's explicit PCI scope and Adyen approval. Defaults to false. */
+  readonly allowRawCardData?: boolean
 }
 declare module '@checkout-kit/core' {
   interface ProviderConfigRegistry {
@@ -45,7 +47,7 @@ export interface AdyenPayment {
 }
 export const PROVIDER_ID = 'adyen'
 const capabilities: ProviderCapabilities = {
-  instruments: ['card', 'token', 'wallet'],
+  instruments: ['token', 'wallet'],
   actions: ['redirect', 'sdk_handoff'],
   surfaces: ['top', 'none'],
   authentication: ['none', '3ds1', '3ds2'],
@@ -186,6 +188,19 @@ export const createAdyenProvider = (
         ),
       ),
     confirm: async (id, instrument, opts) => {
+      const paymentMethod =
+        instrument.kind === 'wallet' && isRecord(instrument.payload)
+          ? instrument.payload.paymentMethod
+          : undefined
+      const rawCard =
+        instrument.kind === 'card' ||
+        (isRecord(paymentMethod) &&
+          ['number', 'cvc'].some((key) => Object.hasOwn(paymentMethod, key)))
+      if (rawCard && ctx.config.allowRawCardData !== true)
+        return error(
+          'raw_card_data_disabled',
+          'Use Adyen encrypted component data or a saved payment method. Raw card data is disabled.',
+        )
       let body: Record<string, unknown>
       if (instrument.kind === 'token' && instrument.token.trim())
         body = { paymentMethod: { type: 'scheme', storedPaymentMethodId: instrument.token } }

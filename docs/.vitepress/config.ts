@@ -14,9 +14,8 @@ import { defineConfig, type DefaultTheme } from 'vitepress'
 
 const REPO = 'https://github.com/pavel-labs/checkout-kit'
 
-// The demo is a sibling of the docs on the same Pages site, not a page of them. Written
-// without the base: VitePress prepends that itself, and spelling it out here produced
-// /checkout-kit/checkout-kit/demo/.
+// VitePress adds the base. Demo links also need target=_self so its router leaves the
+// documentation application and loads the separately built SPA.
 const DEMO = '/demo/'
 
 // The reference is generated into docs/api by `npm run docs:api`, which also writes one
@@ -84,6 +83,7 @@ const guideSidebar = (): DefaultTheme.SidebarItem[] => [
         text: 'Architecture',
         link: '/architecture',
       },
+      { text: 'Payment security and production', link: '/production' },
     ],
   },
   {
@@ -139,6 +139,7 @@ const guideSidebar = (): DefaultTheme.SidebarItem[] => [
         text: 'Testing and conformance',
         link: '/testing',
       },
+      { text: 'Safe telemetry', link: '/observability' },
       {
         text: 'Troubleshooting',
         link: '/troubleshooting',
@@ -243,6 +244,7 @@ const ruSidebar = (): DefaultTheme.SidebarItem[] => [
         text: 'Архитектура',
         link: '/ru/architecture',
       },
+      { text: 'Безопасность и production', link: '/ru/production' },
     ],
   },
   {
@@ -298,6 +300,7 @@ const ruSidebar = (): DefaultTheme.SidebarItem[] => [
         text: 'Тестирование и conformance',
         link: '/ru/testing',
       },
+      { text: 'Безопасная telemetry', link: '/ru/observability' },
       {
         text: 'Решение проблем',
         link: '/ru/troubleshooting',
@@ -408,6 +411,8 @@ export default defineConfig({
       md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
         const href = tokens[idx].attrGet('href')
 
+        if (href?.startsWith('/demo/')) tokens[idx].attrSet('target', '_self')
+
         if (href?.startsWith('.')) {
           const fromDocsRoot = posixNormalize(
             posixJoin(posixDirname(String(env.relativePath ?? '')), href),
@@ -461,7 +466,7 @@ export default defineConfig({
           { text: 'Guide', link: '/getting-started', activeMatch: '^/(?!ru/|api/|packages)' },
           { text: 'Packages', link: '/packages' },
           { text: 'API', link: '/api/', activeMatch: '^/api/' },
-          { text: 'Demo', link: DEMO },
+          { text: 'Demo', link: DEMO, target: '_self' },
         ],
         sidebar: {
           '/api/': apiSidebar(),
@@ -488,7 +493,7 @@ export default defineConfig({
           { text: 'Руководство', link: '/ru/getting-started', activeMatch: '^/ru/(?!packages)' },
           { text: 'Пакеты', link: '/ru/packages' },
           { text: 'API', link: '/api/' },
-          { text: 'Демо', link: DEMO },
+          { text: 'Демо', link: DEMO, target: '_self' },
         ],
         sidebar: { '/ru/': ruSidebar() },
         editLink: {

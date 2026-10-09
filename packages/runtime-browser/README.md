@@ -56,3 +56,12 @@ Hosted-field and redirect messages must match the expected origin, frame sender,
 If session storage is blocked, direct flows can still run; navigation recovery needs a durable host-supplied `StorageAdapter`. Storage contains only resumable metadata, not card fields or SDK payment secrets.
 
 [Runtime and recovery](https://pavel-labs.github.io/checkout-kit/runtime.html) · [Installation](https://pavel-labs.github.io/checkout-kit/getting-started.html)
+
+## URL security defaults
+
+Action URLs require HTTPS. Dynamic SDK scripts require explicit `security.scriptOrigins`;
+custom bank app links require `security.deeplinkProtocols`. HTTP is limited to loopback
+with `security.allowInsecureLocalhost: true` for local development. Return URLs must belong
+to the application origin. Import provider SDKs directly where possible.
+
+[Configure the policy and migration](https://pavel-labs.github.io/checkout-kit/production.html).

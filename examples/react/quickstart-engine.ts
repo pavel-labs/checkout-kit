@@ -4,7 +4,10 @@ import type { PayPalConfig } from '@checkout-kit/provider-paypal'
 
 /** Call once in the browser. baseUrl points at the merchant's PayPal API. */
 export const createPayPalCheckout = (baseUrl = '/api', returnPath = '/checkout/return') => {
-  const runtime = createBrowserRuntime({ returnPath })
+  const runtime = createBrowserRuntime({
+    returnPath,
+    security: { allowInsecureLocalhost: import.meta.env.DEV },
+  })
   const engine = createCheckout({
     providers: [
       defineProvider({

@@ -77,3 +77,12 @@ Session storage persists resumable metadata without card fields, SDK payloads or
 Iframe evidence must match sender, origin, type and action id. Copying/scanning a code does not prove payment; display finishes through polling. Clipboard failure supports manual copying, and runner DOM/listeners/timers are cleaned up.
 
 [WebView](./webview.md) covers native sessions and deep links. [Troubleshooting](./troubleshooting.md) covers missing mounts, SDKs and recovery.
+
+## URL security defaults
+
+Action URLs require HTTPS. Dynamic SDK scripts require explicit `security.scriptOrigins`;
+custom bank app links require `security.deeplinkProtocols`. HTTP is limited to loopback
+with `security.allowInsecureLocalhost: true` for local development. Return URLs must belong
+to the application origin. Import provider SDKs directly where possible.
+
+[Configure the policy and migration](./production.md).

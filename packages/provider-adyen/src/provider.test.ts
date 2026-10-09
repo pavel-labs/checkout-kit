@@ -9,14 +9,14 @@ const dto: AdyenPayment = {
 }
 const opts = { idempotencyKey: 'attempt' }
 const token = { kind: 'token' as const, token: 'saved_1' }
-const setup = (response: AdyenPayment = dto) => {
+const setup = (response: AdyenPayment = dto, allowRawCardData = false) => {
   const fetch = vi
     .fn<typeof globalThis.fetch>()
     .mockImplementation(async () => Response.json(response))
   return {
     fetch,
     provider: createAdyenProvider({
-      config: { baseUrl: 'https://shop.test/adyen' },
+      config: { baseUrl: 'https://shop.test/adyen', allowRawCardData },
       fetch,
       uuid: () => 'uuid',
       now: Date.now,
@@ -68,7 +68,7 @@ it('sends encrypted Adyen component data and ignores browser-supplied amounts', 
   })
 })
 it('uses a four-digit expiry year for the raw card adapter', async () => {
-  const { provider, fetch } = setup()
+  const { provider, fetch } = setup(dto, true)
   await provider.confirm(
     'payment_1',
     {
@@ -84,6 +84,38 @@ it('uses a four-digit expiry year for the raw card adapter', async () => {
     number: '4242424242424242',
   })
 })
+it('rejects raw card data before making an HTTP request by default', async () => {
+  const { provider, fetch } = setup()
+  const result = await provider.confirm(
+    'payment_1',
+    {
+      kind: 'card',
+      number: '4242424242424242' as CardNumber,
+      exp: '12/30' as CardExpiration,
+      cvc: '123' as CvcCode,
+    },
+    opts,
+  )
+  expect(result).toMatchObject({ status: 'error', error: { code: 'raw_card_data_disabled' } })
+  expect(fetch).not.toHaveBeenCalled()
+})
+it.each(['number', 'cvc'])(
+  'does not let raw %s bypass the guard through component data',
+  async (field) => {
+    const { provider, fetch } = setup()
+    const result = await provider.confirm(
+      'payment_1',
+      {
+        kind: 'wallet',
+        walletId: 'adyen',
+        payload: { paymentMethod: { type: 'scheme', [field]: 'raw' } },
+      },
+      opts,
+    )
+    expect(result).toMatchObject({ status: 'error', error: { code: 'raw_card_data_disabled' } })
+    expect(fetch).not.toHaveBeenCalled()
+  },
+)
 it('binds details to an issued action and forwards only redirect evidence', async () => {
   const { provider, fetch } = setup({
     ...dto,

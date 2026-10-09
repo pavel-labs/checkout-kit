@@ -6,10 +6,12 @@
 
 import type { ActionEvidence, ActionRunner, PaymentAction, RunnerContext } from '@checkout-kit/core'
 import { awaitPostMessage } from '../watchers/post-message'
+import { validateMessageOrigin, validatePaymentUrl, type PaymentUrlPolicy } from '../security'
 
 type RedirectAction = Extract<PaymentAction, { kind: 'redirect' }>
 
 export interface RedirectRunnerOptions {
+  readonly security?: PaymentUrlPolicy
   /** Accessible name for the frame the provider is rendered in. */
   readonly frameTitle?: (action: RedirectAction) => string
   /**
@@ -104,7 +106,7 @@ const runInIframe = async (
   } else {
     const form = buildForm(action, name, ctx.returnUrl)
     document.body.append(form)
-    ctx.report({ stage: 'submitting', detail: action.url })
+    ctx.report({ stage: 'submitting', detail: new URL(action.url).origin })
     form.submit()
     form.remove()
   }
@@ -117,7 +119,7 @@ const runInIframe = async (
 }
 
 const runInTopWindow = (action: RedirectAction, ctx: RunnerContext): Promise<ActionEvidence> => {
-  ctx.report({ stage: 'leaving', detail: action.url })
+  ctx.report({ stage: 'leaving', detail: new URL(action.url).origin })
 
   if (action.method === 'GET') {
     // Resolved against the current page - a provider may hand back a relative URL.
@@ -147,6 +149,17 @@ export const createRedirectRunner = (
 ): ActionRunner<'redirect'> => ({
   kind: 'redirect',
   surfaces: ['iframe', 'top'],
-  run: (action, ctx) =>
-    ctx.surface === 'top' ? runInTopWindow(action, ctx) : runInIframe(action, ctx, options),
+  run: async (action, ctx) => {
+    try {
+      const url = validatePaymentUrl(action.url, ctx.returnUrl, 'redirect', options.security)
+      if (action.completion.via === 'post_message')
+        validateMessageOrigin(action.completion.origin, options.security)
+      const safeAction = { ...action, url: url.toString() }
+      return await (ctx.surface === 'top'
+        ? runInTopWindow(safeAction, ctx)
+        : runInIframe(safeAction, ctx, options))
+    } catch (cause) {
+      return { via: 'aborted', actionId: action.id, reason: 'runner_error', cause }
+    }
+  },
 })

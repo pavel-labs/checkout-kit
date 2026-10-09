@@ -30,8 +30,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted",
+    "registry": "https://registry.npmjs.org",
+    "access": "public",
     "exports": {
       ".": "./dist/index.mjs",
       "./package.json": "./package.json"
@@ -41,5 +41,13 @@
     "@checkout-kit/conformance": "*",
     "@checkout-kit/testing": "*",
     "msw": "^2.15.0"
-  }
+  },
+  "homepage": "https://pavel-labs.github.io/checkout-kit/",
+  "keywords": [
+    "checkout",
+    "payments",
+    "typescript",
+    "headless",
+    "provider-hosted-fields"
+  ]
 }

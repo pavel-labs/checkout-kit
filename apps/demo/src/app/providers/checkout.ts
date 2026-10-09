@@ -101,6 +101,12 @@ const transferConfig: BankTransferConfig = {
 // Built from BASE_URL, so it stays right when the app is served from a sub-path.
 const runtime = createBrowserRuntime({
   returnPath: `${BASE_URL}payment/return`,
+  // The static demo owns its mock SDK; HTTP is limited to loopback development.
+  security: {
+    allowInsecureLocalhost: true,
+    scriptOrigins: [window.location.origin],
+    deeplinkProtocols: ['demobank:'],
+  },
   redirect: { frameTitle: () => '3-D Secure authentication' },
   collectFields: { frameTitle: () => 'Card details' },
   // How to drive the wallet once its script loads. The runner knows nothing about this

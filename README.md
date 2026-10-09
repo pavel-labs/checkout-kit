@@ -46,6 +46,18 @@ Six additional `provider-*` packages demonstrate generic PSP, acquiring, hosted-
 hosted-fields, wallet and bank-transfer protocols against the mock API. They are references
 for building your own integration; they do not connect to banks by themselves.
 
+## Why use it
+
+Keep one lifecycle across providers: preserve attempts after a lost reply, reconcile processing
+payments, run 3DS/redirect/SDK actions and recover after navigation. Use your own interface or
+compose the optional UI. Add `observeCheckout` for categorical metrics without sending payment
+payloads to analytics. For a single hosted payment page, the provider's own SDK may be sufficient.
+
+The [production guide](./docs/production.md) explains what the kit guarantees and what your
+merchant server must implement. Browser actions enforce transport/origin rules; dynamic SDK
+scripts need explicit permission. Adyen raw card data is disabled unless expressly enabled.
+These new defaults and telemetry are in source for the next release, not the older `0.2.0` bundle.
+
 ## Install in another project
 
 Download and extract `checkout-kit-0.2.0.tar.gz` from [GitHub Releases](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0). From your application's directory, select the packages you need:
@@ -69,6 +81,12 @@ Package versions are independent; the installer uses the manifest to select comp
 This is an early release. GitHub archives need no private registry access. The
 separate registry workflow still requires access to the `@checkout-kit` scope and credentials;
 archive publication does not imply npm publication. See [Releasing](./RELEASING.md).
+
+Public npm release preparation now targets `registry.npmjs.org` with public access and a manual
+OIDC/provenance workflow. Scope ownership, first publication and actual sandbox-account checks
+remain separate release steps. Until npm availability is verified, use the archives above or
+build the current source. The [release guide](./RELEASING.md#public-npm-publication) includes dry-run,
+initial scope setup and the exact trusted publisher settings.
 
 ## Integrate
 
@@ -168,6 +186,8 @@ English and Russian guides, plus a generated API reference:
 - Writing a provider: [English](./docs/plugin-authoring.md) / [Русский](./docs/ru/plugin-authoring.md)
 - Browser and SDK integration: [English](./docs/integrations.md) / [Русский](./docs/ru/integrations.md)
 - UI: [English](./docs/ui.md) / [Русский](./docs/ru/ui.md)
+- Payment security: [English](./docs/production.md) / [Русский](./docs/ru/production.md)
+- Safe telemetry: [English](./docs/observability.md) / [Русский](./docs/ru/observability.md)
 - Merchant backend: [English](./docs/backend.md) / [Русский](./docs/ru/backend.md)
 - Native apps: [English](./docs/webview.md) / [Русский](./docs/ru/webview.md)
 

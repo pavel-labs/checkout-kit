@@ -4,7 +4,7 @@
 
 ## Инструмент, SDK и сервер
 
-`@checkout-kit/provider-adyen` реализует Advanced flow. Component onSubmit возвращает state.data; передайте его как `wallet` с walletId `adyen`. Пересылаются paymentMethod, browserInfo, origin; цена/account/reference/return URL принадлежат серверу. Token означает storedPaymentMethodId; raw card применяется только в разрешённой мерчанту схеме сбора.
+`@checkout-kit/provider-adyen` реализует Advanced flow. Component onSubmit возвращает state.data; передайте его как `wallet` с walletId `adyen`. Пересылаются paymentMethod, browserInfo, origin; цена/account/reference/return URL принадлежат серверу. Token означает storedPaymentMethodId; raw card запрещён по умолчанию и требует явного allowRawCardData с проверкой разрешений мерчанта.
 
 Настройки server: `ADYEN_API_KEY`, `ADYEN_MERCHANT_ACCOUNT`, `ADYEN_WEBHOOK_HMAC_KEY`; browser: `VITE_ADYEN_CLIENT_KEY`. [AdyenFields.tsx](../../../examples/react/AdyenFields.tsx) показывает components и additional details. BaseUrl включает `/api/adyen`.
 
@@ -54,3 +54,5 @@ await checkout.pay({
 Fixtures проверяют код; отдельно проверьте sandbox collection, authentication/approval, processing, redirect, потерянный ответ, buyer isolation и уведомления. [Merchant server](../merchant-integration.md) описывает постоянное состояние и выдачу заказа.
 
 [Восстановление](../runtime.md) · [Тестирование](../testing.md) · [README пакета](../../../packages/provider-adyen/README.md)
+
+Raw `card` и `number`/`cvc` в component data запрещены по умолчанию. `allowRawCardData: true` требует отдельной проверки PCI scope и разрешения Adyen; пример сервера raw data не принимает.

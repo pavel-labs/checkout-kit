@@ -252,3 +252,12 @@ PIX, UPI, BLIK, PromptPay, Konbini: ваш сервер просит у пров
    прошло.
 6. Пробрасывайте ключ идемпотентности провайдеру.
 7. Возвращайте сообщение эмитента его словами.
+
+## Безопасность URL
+
+Action URL требуют HTTPS. Для загрузки SDK scripts явно задайте `security.scriptOrigins`,
+для custom bank app links — `security.deeplinkProtocols`. HTTP доступен только на loopback
+с `security.allowInsecureLocalhost: true` для локальной разработки. Return URL должен
+принадлежать origin приложения. По возможности импортируйте SDK непосредственно.
+
+[Настройка политики и migration](./production.md).

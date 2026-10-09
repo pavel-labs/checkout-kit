@@ -3,10 +3,12 @@
 
 import type { ActionEvidence, ActionRunner, PaymentAction, RunnerContext } from '@checkout-kit/core'
 import { awaitPostMessage } from '../watchers/post-message'
+import { validateMessageOrigin, validatePaymentUrl, type PaymentUrlPolicy } from '../security'
 
 type CollectFieldsAction = Extract<PaymentAction, { kind: 'collect_fields' }>
 
 export interface CollectFieldsRunnerOptions {
+  readonly security?: PaymentUrlPolicy
   readonly frameTitle?: (action: CollectFieldsAction) => string
   /**
    * No `allow-forms` and no `allow-top-navigation`: the field frame talks to its provider
@@ -35,6 +37,17 @@ export const createCollectFieldsRunner = (
   surfaces: ['inline'],
 
   run: async (action, ctx: RunnerContext): Promise<ActionEvidence> => {
+    let url: URL
+    try {
+      url = validatePaymentUrl(action.url, ctx.returnUrl, 'frame', options.security)
+      validateMessageOrigin(action.origin, options.security)
+      if (url.origin !== action.origin)
+        throw new Error('Hosted fields and their message origin must match.')
+      if (action.completion.via !== 'post_message' || action.completion.origin !== action.origin)
+        throw new Error('Hosted fields require matching postMessage completion.')
+    } catch (cause) {
+      return { via: 'aborted', actionId: action.id, reason: 'runner_error', cause }
+    }
     const mount = ctx.mount?.element
     if (!(mount instanceof HTMLElement)) {
       return {
@@ -66,7 +79,7 @@ export const createCollectFieldsRunner = (
       deadline: ctx.deadline,
     })
 
-    frame.src = buildUrl(action, ctx.returnUrl)
+    frame.src = buildUrl({ ...action, url: url.toString() }, ctx.returnUrl)
     ctx.report({ stage: 'collecting', detail: action.origin })
 
     try {
