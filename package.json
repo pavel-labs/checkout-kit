@@ -68,6 +68,6 @@
     "publint": "^0.3.14",
     "tsdown": "^0.23.0",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.3"
   }
 }
