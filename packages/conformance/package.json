@@ -1,6 +1,6 @@
 {
   "name": "@checkout-kit/conformance",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "The contract every payment plugin must satisfy, as a runnable vitest suite.",
   "license": "Apache-2.0",
@@ -19,8 +19,8 @@
     "build": "tsdown"
   },
   "peerDependencies": {
-    "@checkout-kit/core": "^0.1.0",
-    "@checkout-kit/testing": "^0.1.0",
+    "@checkout-kit/core": "^0.2.0",
+    "@checkout-kit/testing": "^0.1.1",
     "msw": "^2.15.0",
     "vitest": "^5.0.0"
   },
