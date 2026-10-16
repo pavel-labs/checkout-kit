@@ -2,54 +2,62 @@
 
 > [Русская версия](./ru/troubleshooting.md)
 
-Start with phase, provider, intent id, action kind and error code, then inspect the corresponding merchant request. Keep card fields, tokens, client secrets and raw SDK responses out of logs.
+First, collect the basic facts: the engine phase, the provider, the payment (intent) id, the kind of step (action) and the error code. Then look at the matching request to your server.
+
+Never write card fields, tokens, client secrets or raw SDK responses to logs.
 
 ## Setup
 
-| Symptom                      | Check / fix                                                                                                                                           |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unpublished peer download    | Use the release installer to include required peers, or install archives together; see [installation](./getting-started.md#install-package-archives). |
-| Unstyled UI                  | Import `@checkout-kit/ui/styles.css` and use CheckoutRoot / .ck-root.                                                                                 |
-| SSR window error             | Instantiate runtime/bridge on the client; React/UI import and render separately.                                                                      |
-| Unknown provider             | Import its config type and register its actual id/module.                                                                                             |
-| Missing cookie / API failure | Verify baseUrl, origin, credentials, hostname and buyer session.                                                                                      |
+| Problem                                       | What to check and how to fix                                                                                                                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| npm cannot download a checkout-kit dependency | The packages are not on npm yet. Use the release installer, which adds the needed packages, or install the archives together. See [installation](./getting-started.md#install-package-archives). |
+| The UI has no styles                          | Import `@checkout-kit/ui/styles.css` and wrap the checkout in `CheckoutRoot` (or an element with the `.ck-root` class).                                                                          |
+| `window is not defined` during SSR            | Create the runtime and the bridge only in the browser. React and UI components can be imported and rendered on the server.                                                                       |
+| Unknown provider                              | Import its config type and register it with its real id and module.                                                                                                                              |
+| No cookie / the API call fails                | Check `baseUrl`, origin, `credentials`, the host name and that the buyer has a session.                                                                                                          |
 
-## Pending actions
+## Extra steps (actions)
 
-| Symptom                       | Check / fix                                                                                       |
-| ----------------------------- | ------------------------------------------------------------------------------------------------- |
-| Action pending without a page | Mount PaymentActionHost or call runPendingAction.                                                 |
-| No mount                      | Use createMount(element) for iframe/inline actions and keep it visible.                           |
-| No SDK adapter                | Its sdk id must match action.sdk; follow [provider setup](./packages.md#named-provider-adapters). |
-| SDK resolves too early        | Resolve its result/additional-details callback, not component mount.                              |
-| Integrity conflict            | One script URL/hash per session; reload before changing it.                                       |
-| Iframe ignores evidence       | Check exact origin, sender, type and action correlation; do not use wildcard trust.               |
-| Unsupported action            | Enable supported methods or implement that returned action type.                                  |
-| QR never completes            | Verify merchant status, notifications and polling; scanning is not payment proof.                 |
+| Problem                                 | What to check and how to fix                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| A step is waiting, but nothing is shown | Render `PaymentActionHost`, or call `runPendingAction` yourself.                                                   |
+| No place to show the step (no mount)    | For iframe and inline steps, use `createMount(element)` and keep that element visible.                             |
+| No SDK adapter                          | The adapter's `sdk` name must match `action.sdk`. See the [provider setup](./packages.md#named-provider-adapters). |
+| The SDK returns too early               | Return the result from the SDK's "finished" or "additional details" callback, not when the component appears.      |
+| Integrity conflict                      | Use one script address and one hash per session. Reload the page before changing them.                             |
+| The iframe's answer is ignored          | Check the exact origin, the sender, the message type and the step id. Do not allow "any origin" (`*`).             |
+| Unsupported step                        | Turn on only payment methods you support, or implement the step type the provider returned.                        |
+| A QR payment never finishes             | Check the status on your server, the notifications and the status polling. Scanning a code does not prove payment. |
 
 ## Recovery and status
 
-| Symptom                   | Check / fix                                                                 |
-| ------------------------- | --------------------------------------------------------------------------- |
-| Return route 404          | Serve the app at the exact deployed return path.                            |
-| No saved checkout         | Pass runtime.storage; keep the same session and avoid reset before hydrate. |
-| Recovery API outage       | Preserve parameters and retry hydrate when reachable.                       |
-| Processing timeout        | Check the same intent before allowing another charge.                       |
-| Stripe capture_required   | Capture on the merchant server; the example uses automatic capture.         |
-| PayPal capture_unverified | Return verified capture status/amount/currency, not order status alone.     |
-| Adyen Pending / Received  | Check webhook HMAC, account, ordering and durable merchant state.           |
-| Foreign/invalid evidence  | Use the saved action for this order.                                        |
-| HTTP 409 replay           | Payload changed under one operation key; check its original result.         |
-| Retry stays disabled      | isLocked includes final phases; use a separate recovery condition.          |
+| Problem                                | What to check and how to fix                                                                          |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| The return page shows 404              | Your app must open at exactly the return address on the deployed site.                                |
+| The saved payment is not found         | Pass `runtime.storage` to the engine. Stay in the same tab. Do not call `reset()` before `hydrate()`. |
+| The server is down during recovery     | Keep the parameters and call `hydrate` again when the server is back.                                 |
+| Processing never ends                  | Check the same payment before allowing a new charge.                                                  |
+| Stripe `capture_required`              | Capture the money on your server. The example uses automatic capture.                                 |
+| PayPal `capture_unverified`            | Return the checked capture status, amount and currency — not only the order status.                   |
+| Adyen `Pending` / `Received`           | Check the webhook signature (HMAC), the account, the event order and what is stored on the server.    |
+| Data from another order / invalid data | Use the saved step of this order.                                                                     |
+| HTTP 409 on a repeated request         | The data changed, but the operation key stayed the same. Look at the first result for that key.       |
+| The retry button stays disabled        | `isLocked` is also true in final states. Add your own condition for recovery.                         |
 
-## Native bridge
+## Mobile apps (native bridge) {#native-bridge}
 
-Use the session from PAYMENT_READY and unique command ids. createBridgeCommand / createCommandScript safely serialize injection. Stale/duplicate commands are ignored; ping answers with correlated ready metadata.
+- Use the session from the `PAYMENT_READY` message, and give every command a unique id.
+- Build injected commands with `createBridgeCommand` / `createCommandScript`. They escape the data safely.
+- Old and duplicate commands are ignored. A `ping` gets an answer with the matching ready data.
+- In `onMessage`, accept messages only from your checkout page address.
+- Even if the WebView is allowed to open the bank's page, that page cannot give orders to your app.
+- When the app receives a return link with its own scheme, send its data as `PAYMENT_RESUME` instead of loading that address in the WebView.
 
-Filter onMessage by the merchant document URL. Allowed bank navigation does not make a bank page an authority. Send custom-scheme return data as PAYMENT_RESUME instead of loading that URL.
+[The mobile app example](../examples/react-native-checkout/README.md) stores return links that arrive before the handshake, and shows how to handle navigation. Browser tests do not replace a real iOS or Android build.
 
-[The native example](../examples/react-native-checkout/README.md) queues pre-handshake returns and implements navigation branching. Browser tests do not replace an actual iOS/Android build.
+## Find where it fails {#isolate-the-failure}
 
-## Isolate the failure
+Run `npm run dev:integration` to compare your setup with the local simulator.
 
-Run `npm run dev:integration` to compare account integration with a local simulator. If the simulator works, inspect sandbox configuration/merchant/SDK. Otherwise run the affected package and [contract tests](./testing.md).
+- If the simulator works, the problem is in your sandbox settings, your server or the SDK setup.
+- If the simulator also fails, run the tests of the affected package and the [contract tests](./testing.md).

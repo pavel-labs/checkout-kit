@@ -1,12 +1,12 @@
 # @checkout-kit/testing
 
-Fixtures и симуляторы для разработки чекаута. Они не вызывают аккаунты провайдеров и не проводят реальные платежи.
+Тестовые данные и симуляторы для разработки оплаты. Ничто здесь не обращается к настоящим аккаунтам провайдеров и не проводит настоящих платежей.
 
-| Entry point                     | Экспорты                                                                |
-| ------------------------------- | ----------------------------------------------------------------------- |
-| `@checkout-kit/testing`         | SCENARIO_CARDS, outcomes, тексты отказов без backend.                   |
-| `@checkout-kit/testing/engine`  | createFakeProvider, fakeIntent/action, scripted runners, abort helpers. |
-| `@checkout-kit/testing/backend` | MSW handlers, resetBackend, состояние симулятора мерчанта.              |
+| Импорт                          | Что внутри                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `@checkout-kit/testing`         | `SCENARIO_CARDS` (тестовые карты), исходы и тексты отказов. Без поддельного сервера.                   |
+| `@checkout-kit/testing/engine`  | `createFakeProvider`, `fakeIntent` / `fakeAction`, раннеры с заданным сценарием, помощники для отмены. |
+| `@checkout-kit/testing/backend` | Обработчики запросов MSW, `resetBackend` и состояние симулированного сервера мерчанта.                 |
 
 ## Проверка движка
 
@@ -28,14 +28,18 @@ const result = await engine.pay({
 console.log(result.status, calls.confirm.length)
 ```
 
-Настраивайте confirm/resume outcomes, задерживайте create/read и проверяйте calls для retries, abort и времени жизни хоста без сети.
+С поддельным провайдером можно задавать результаты `confirm` и `resume`, замедлять ответы на создание и чтение и смотреть записанные вызовы. Так можно проверить повторы, отмену и жизненный цикл приложения без сети.
 
-## MSW backend
+## Поддельный сервер (MSW)
 
-MSW 2 нужен для /backend. В Node зарегистрируйте handlers в setupServer, в демо — явно setupWorker; resetBackend очищает fixture.
+MSW 2 нужен только для импорта `/backend`.
 
-Node хранит state в памяти; browser demo сохраняет симулятор в session storage для top redirect. Это не база приложения и не аутентифицированный сервер оплаты. Mock cards/tokens не передаются реальным API.
+- В Node зарегистрируйте его обработчики через `setupServer`.
+- В браузерном демо запускайте их явно через `setupWorker`.
+- `resetBackend` очищает тестовое состояние.
 
-[Точка сборки](../../apps/demo/src/app/providers/checkout.ts) регистрирует шесть протоколов. [Тестирование](https://pavel-labs.github.io/checkout-kit/ru/testing.html) разделяет fixtures, HTTP/browser сценарии и sandbox аккаунта.
+В Node состояние хранится в памяти. Браузерное демо сохраняет симулированное состояние в session storage, чтобы оно пережило перенаправление всей страницы. Это всё равно только симулятор — не база данных приложения и не настоящий сервер со входом пользователей. Тестовые карты и токены никогда не уходят в настоящие платёжные API.
 
-[English](./README.md) · [Conformance](../conformance/README.md)
+[Файл настройки демо](https://github.com/pavel-labs/checkout-kit/blob/main/apps/demo/src/app/providers/checkout.ts) регистрирует все шесть протоколов-примеров. В [руководстве по тестированию](https://pavel-labs.github.io/checkout-kit/ru/testing.html) объяснена разница между тестовыми данными, интеграционными HTTP-тестами, сценариями в браузере и проверкой на настоящем тестовом аккаунте.
+
+[English](https://github.com/pavel-labs/checkout-kit/blob/main/packages/testing/README.md) · [Conformance](https://github.com/pavel-labs/checkout-kit/blob/main/packages/conformance/README.md)

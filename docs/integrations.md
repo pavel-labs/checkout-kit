@@ -1,7 +1,7 @@
 # Integrating a real payment SDK
 
-::: info Integration design examples
-This page describes possible adaptations. Shipped Stripe, Adyen, PayPal packages and support boundaries are listed in [the catalog](./packages.md). Regional names here do not imply shipped integrations.
+::: info Examples, not ready-made packages
+This page shows **how you could** connect these providers yourself. Ready-made packages exist only for Stripe, Adyen and PayPal — see [the package list](./packages.md). If a provider is mentioned here, that does not mean checkout kit already supports it.
 :::
 
 > Русская версия: [ru/integrations.md](./ru/integrations.md)
@@ -220,7 +220,7 @@ yours renders. Two things are yours alone:
 
 - **Merchant validation** (Apple Pay) is a server call by definition - the domain has to be
   registered and the session signed with your merchant certificate.
-- **The payload goes to the provider from your server.** The browser holds an encrypted blob
+- **The payload goes to the provider from your server.** The browser holds encrypted data
   it cannot open, and it should not try.
 
 In a React Native app, take these natively rather than in the WebView - see

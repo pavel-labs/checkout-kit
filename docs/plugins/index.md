@@ -2,22 +2,28 @@
 
 > [Русская версия](../ru/plugins/index.md)
 
-Six packages implement generic merchant protocols against the mock API. Use them to build an adapter for your server, study action flow or test without credentials. Named [Stripe](../providers/stripe.md), [Adyen](../providers/adyen.md), [PayPal](../providers/paypal.md) adapters have separate guides.
+Six packages show common kinds of payment APIs. They work with the included fake server, so you can try them without any account keys. Use them to:
 
-## Match your protocol
+- build an adapter for your own server or provider;
+- understand how extra steps (bank checks, redirects, QR codes) go through the engine;
+- test without real credentials.
 
-| Package                  | Contract                            |
-| ------------------------ | ----------------------------------- |
-| `provider-psp`           | [JSON PSP](./psp.md)                |
-| `provider-acquiring`     | [Form acquiring](./acquiring.md)    |
-| `provider-hpp`           | [Hosted page](./hosted-page.md)     |
-| `provider-hosted-fields` | [Hosted fields](./hosted-fields.md) |
-| `provider-wallet`        | [Wallet SDK](./wallet.md)           |
-| `provider-bank-transfer` | [Bank transfer](./bank-transfer.md) |
+Stripe, Adyen and PayPal have their own ready adapters with separate guides: [Stripe](../providers/stripe.md), [Adyen](../providers/adyen.md), [PayPal](../providers/paypal.md).
 
-PSP/acquiring confirm cards; hosted/wallet/transfer flows use their own collection or approval actions. A matching shape does not automatically integrate a named bank or wallet. [The catalog](../packages.md) covers all packages.
+## Find the protocol closest to yours {#match-your-protocol}
 
-## Configure and register
+| Package                  | Kind of API                                                                |
+| ------------------------ | -------------------------------------------------------------------------- |
+| `provider-psp`           | [JSON PSP](./psp.md) — JSON API, card or saved card, 3DS2                  |
+| `provider-acquiring`     | [Form acquiring](./acquiring.md) — bank API with HTML forms, 3DS1          |
+| `provider-hpp`           | [Hosted page](./hosted-page.md) — payment page on the bank's site          |
+| `provider-hosted-fields` | [Hosted fields](./hosted-fields.md) — card fields in the provider's iframe |
+| `provider-wallet`        | [Wallet SDK](./wallet.md) — a wallet's JavaScript SDK                      |
+| `provider-bank-transfer` | [Bank transfer](./bank-transfer.md) — QR code or payment code              |
+
+The PSP and acquiring examples confirm a card. The other four collect nothing on your page: the provider's page, frame, wallet or banking app does it. If your provider's API looks like one of these, that does not mean it will work with it automatically. [The package list](../packages.md) describes all packages.
+
+## Configure and register {#configure-and-register}
 
 ```ts
 import { defineProvider } from '@checkout-kit/core'
@@ -34,8 +40,14 @@ const provider = defineProvider({
 })
 ```
 
-Supply provider, browser runners and storage to createCheckout. See [the demo composition](../../apps/demo/src/app/providers/checkout.ts) for all six and the wallet adapter.
+Pass the provider, the browser runners and the storage to `createCheckout`. [The demo setup file](../../apps/demo/src/app/providers/checkout.ts) shows all six providers and the wallet adapter.
 
-The engine runs create → confirm → action/evidence → resume → outcome. Instruments, wire endpoints and actions vary. A callback is correlated evidence; merchant state is payment truth. Keep prices, buyer ownership and credentials server-side, enforcing idempotency and transitions atomically. Raw-card forms are simulator references; collect real instruments through your selected provider's integration.
+## What is the same for all of them {#what-is-the-same}
 
-[Simulator setup](./setup.md) · [Provider authoring](../plugin-authoring.md) · [Testing](../testing.md)
+The engine always goes: create → confirm → extra step and its result → continue → final status. Only the instruments, the server routes and the kinds of steps differ.
+
+- What comes back from a step is only linked to that step. The real payment state is on your server.
+- Keep prices, the check of who owns an order, and secret keys on the server. Make idempotency and status changes atomic.
+- The forms with raw card fields exist only for the simulator. In a real shop, collect payment details through your provider's own integration.
+
+[Simulator setup](./setup.md) · [Writing a provider](../plugin-authoring.md) · [Testing](../testing.md)

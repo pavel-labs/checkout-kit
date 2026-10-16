@@ -79,6 +79,7 @@ const guideSidebar = (): DefaultTheme.SidebarItem[] => [
         text: 'Choose your packages',
         link: '/packages',
       },
+      { text: 'Glossary', link: '/glossary' },
       {
         text: 'Architecture',
         link: '/architecture',
@@ -240,11 +241,12 @@ const ruSidebar = (): DefaultTheme.SidebarItem[] => [
         text: 'Каталог пакетов',
         link: '/ru/packages',
       },
+      { text: 'Словарь терминов', link: '/ru/glossary' },
       {
         text: 'Архитектура',
         link: '/ru/architecture',
       },
-      { text: 'Безопасность и production', link: '/ru/production' },
+      { text: 'Безопасность и запуск', link: '/ru/production' },
     ],
   },
   {
@@ -280,7 +282,7 @@ const ruSidebar = (): DefaultTheme.SidebarItem[] => [
         link: '/ru/ui',
       },
       {
-        text: 'Runtime и восстановление',
+        text: 'Браузер и восстановление',
         link: '/ru/runtime',
       },
       {
@@ -297,10 +299,10 @@ const ruSidebar = (): DefaultTheme.SidebarItem[] => [
     text: 'Проверка и расширение',
     items: [
       {
-        text: 'Тестирование и conformance',
+        text: 'Тестирование',
         link: '/ru/testing',
       },
-      { text: 'Безопасная telemetry', link: '/ru/observability' },
+      { text: 'Безопасная телеметрия', link: '/ru/observability' },
       {
         text: 'Решение проблем',
         link: '/ru/troubleshooting',
@@ -340,7 +342,7 @@ const ruSidebar = (): DefaultTheme.SidebarItem[] => [
         link: '/ru/plugins/psp',
       },
       {
-        text: 'Form-эквайер',
+        text: 'Банк-эквайер (формы)',
         link: '/ru/plugins/acquiring',
       },
       {
@@ -348,7 +350,7 @@ const ruSidebar = (): DefaultTheme.SidebarItem[] => [
         link: '/ru/plugins/hosted-page',
       },
       {
-        text: 'Хостед-поля',
+        text: 'Поля провайдера',
         link: '/ru/plugins/hosted-fields',
       },
       {

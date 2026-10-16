@@ -4,11 +4,11 @@
   'hero':
     {
       'name': 'Checkout kit',
-      'text': 'Payment flows you control',
-      'tagline': 'Headless engine, Stripe / Adyen / PayPal, browser and native hosts. Your interface and merchant API.',
+      'text': 'Online payments you control',
+      'tagline': 'One payment flow for Stripe, Adyen, PayPal or your own provider. Works in the browser and in mobile apps. You keep your own interface and server.',
       'actions':
         [
-          { 'theme': 'brand', 'text': 'Build your checkout', 'link': '/getting-started' },
+          { 'theme': 'brand', 'text': 'Get started', 'link': '/getting-started' },
           { 'theme': 'alt', 'text': 'Choose packages', 'link': '/packages' },
           { 'theme': 'alt', 'text': 'Try the demo', 'link': '/demo/', 'target': '_self' },
         ],
@@ -16,38 +16,38 @@
   'features':
     [
       {
-        'title': 'Three provider adapters',
-        'details': 'PaymentIntents, Adyen Advanced flow and PayPal Orders, with exact merchant contracts and a runnable HTTP server.',
+        'title': 'Stripe, Adyen and PayPal',
+        'details': 'Ready support for three providers, with exact server routes and a working example server.',
         'link': '/packages#named-provider-adapters',
         'linkText': 'Read the guide',
       },
       {
-        'title': 'Your checkout interface',
-        'details': 'React bindings and optional UI. Your layouts, provider SDKs for instrument collection.',
+        'title': 'Your own interface',
+        'details': 'React hooks and optional ready components. Card fields come from the provider, so card data never touches your code.',
         'link': '/react',
         'linkText': 'Read the guide',
       },
       {
-        'title': 'Recovery and retries',
-        'details': 'Preserve attempts across redirects and lost replies; verify existing payments before another charge.',
+        'title': 'No double charges',
+        'details': 'The payment survives a page reload, a trip to the bank page and a lost reply. Before a new charge, the old payment is checked.',
         'link': '/runtime',
         'linkText': 'Read the guide',
       },
       {
-        'title': 'Native hosts',
-        'details': 'Typed WebView sessions, strict messages, safe commands and deep-link recovery.',
+        'title': 'Mobile apps',
+        'details': 'Run the checkout inside a WebView in an iOS or Android app, with checked messages and return links.',
         'link': '/webview',
         'linkText': 'Read the guide',
       },
       {
-        'title': 'Executable contracts',
-        'details': 'Fixture and browser scenarios, paid replay, foreign evidence and isolated package installation.',
+        'title': 'Ready tests',
+        'details': 'Test data, browser scenarios and a test suite that checks your own provider plugin.',
         'link': '/testing',
         'linkText': 'Read the guide',
       },
       {
-        'title': 'Explicit security boundaries',
-        'details': 'Origin and transport policies, protected SDK loading, token-first Adyen and telemetry without payment payloads.',
+        'title': 'Safe by default',
+        'details': 'HTTPS only, provider scripts only from allowed addresses, and metrics that never contain payment data.',
         'link': '/production',
         'linkText': 'Read the guide',
       },
@@ -55,26 +55,31 @@
 }
 ---
 
-## Start with a working flow
+## Start with a working example
 
 ```sh
 npm ci
 npm run dev:integration
 ```
 
-In the [repository](https://github.com/pavel-labs/checkout-kit), this starts React and a merchant server with local simulators, without account keys. [Getting started](./getting-started.md) leads to archives and your selected sandbox.
+Run this in the [repository](https://github.com/pavel-labs/checkout-kit). It starts a React checkout and a test server with fake providers, so you do not need any account keys. Then [Getting started](./getting-started.md) shows how to install the packages and connect a real test account.
 
-## Choose your path
+## Where to go next
 
-| Starting point           | Guide                                                                                            |
-| ------------------------ | ------------------------------------------------------------------------------------------------ |
-| Stripe / Adyen / PayPal  | [Stripe](./providers/stripe.md), [Adyen](./providers/adyen.md), [PayPal](./providers/paypal.md). |
-| Existing React interface | [React](./react.md), [UI](./ui.md), [runtime](./runtime.md).                                     |
-| Another PSP or bank      | [References](./plugins/index.md), [contract](./plugin-authoring.md), [testing](./testing.md).    |
-| Native app               | [WebView](./webview.md) and the host example.                                                    |
+| What you have            | Read this                                                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------- |
+| Stripe, Adyen or PayPal  | [Stripe](./providers/stripe.md), [Adyen](./providers/adyen.md), [PayPal](./providers/paypal.md).    |
+| A React app              | [React](./react.md), [UI](./ui.md), [browser runtime](./runtime.md).                                |
+| Another provider or bank | [Examples](./plugins/index.md), [writing a plugin](./plugin-authoring.md), [testing](./testing.md). |
+| A mobile app             | [WebView](./webview.md) and the app example.                                                        |
+| Unfamiliar words         | [Glossary](./glossary.md).                                                                          |
 
-## One lifecycle, explicit boundaries
+## Who does what
 
-The engine creates an intent, confirms an instrument, runs actions and verifies the result. Providers own wire protocols, runners own surfaces and merchants own prices, buyers and payment truth.
+The engine creates a payment, sends the payment details, runs any extra steps (for example, the bank's 3-D Secure page) and then checks the result.
 
-All 16 packages have ESM archives, declarations, API and tests. Generic references do not certify named banks. Account verification and publishing remain separate steps. [Merchant integration](./merchant-integration.md) describes responsibilities; [troubleshooting](./troubleshooting.md) helps resolve failures.
+- The **provider plugin** knows how to talk to one provider.
+- The **runner** shows the extra step in your app (iframe, redirect, SDK).
+- **Your server** knows the prices, knows the buyer and decides whether the order is paid.
+
+All 16 packages come with JavaScript (ESM), TypeScript types, API docs and tests. The example plugins show common protocols; they are not certified for any real bank. Checking with your own test account and publishing to npm are separate steps. [Merchant server](./merchant-integration.md) lists what your server must do. [Troubleshooting](./troubleshooting.md) helps when something fails.

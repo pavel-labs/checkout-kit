@@ -211,7 +211,7 @@ trailing actions when your form requires them to be unavailable.
 
 **Address and contact.** `AddressFields` and `ContactFields` exist for one reason:
 `autocomplete`. Every token they set is one a browser recognises, and one wrong token turns
-autofill off for the whole form. The country list is yours - the kit ships no data.
+autofill off for the whole form. The country list is yours - the kit includes no country data.
 `autoCompleteSection` keeps a billing and a shipping address filling separately.
 
 **Money.** Amounts travel in minor units. `formatMoney` in `@checkout-kit/core` turns them

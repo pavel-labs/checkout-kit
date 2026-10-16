@@ -2,11 +2,11 @@
 
 > [Русская версия](../ru/plugins/setup.md)
 
-This page runs the six generic protocols. For named adapters and official SDKs, follow [Getting started](../getting-started.md) and [merchant integration](../merchant-integration.md).
+This page shows how to run the six example protocols. For Stripe, Adyen, PayPal and their official SDKs, follow [Getting started](../getting-started.md) and [merchant server](../merchant-integration.md) instead.
 
 ## Run the demo
 
-Use Node.js 24 and npm:
+You need Node.js 24 and npm:
 
 ```sh
 npm ci
@@ -15,24 +15,29 @@ npm run dev:mock
 npm run dev:bank
 ```
 
-Open `https://localhost:5100/` once and accept the local certificate, then open Vite's printed demo URL. The MSW worker handles merchant requests; bank pages use their own HTTPS origin. No account keys are needed. [The site demo](/demo/) includes both simulators.
+1. Open `https://localhost:5100/` once and accept the local certificate. This is the fake bank.
+2. Then open the demo address that Vite printed in the terminal.
 
-| Card                  | Outcome                      |
+Requests to "your server" are answered by an MSW worker in the browser. The bank pages run on their own HTTPS origin. No account keys are needed. [The site demo](/demo/) includes both simulators.
+
+Test cards:
+
+| Card                  | Result                       |
 | --------------------- | ---------------------------- |
 | `4242 4242 4242 4242` | Approved.                    |
 | `4000 0000 0000 0002` | Declined.                    |
 | `4000 0000 0000 9995` | Insufficient funds.          |
-| `4000 0025 0000 3155` | Challenge passes.            |
-| `4000 0084 0000 1629` | Challenge fails.             |
-| `4000 0000 0000 9979` | Processing, then settlement. |
+| `4000 0025 0000 3155` | Bank check passes.           |
+| `4000 0084 0000 1629` | Bank check fails.            |
+| `4000 0000 0000 9979` | Processing first, then paid. |
 
-Hosted/wallet flows select their outcome in the simulator rather than submit raw card fields. [Testing](../testing.md) describes state and recovery.
+In the payment page and wallet examples, you choose the result in the simulator instead of entering a card. [Testing](../testing.md) explains how the simulator state and recovery work.
 
-## Install and configure
+## Install and configure {#install-and-configure}
 
-[Install archives and peers](../getting-started.md#install-package-archives) together. Web needs core, runtime and a provider; React 19 adds bindings and optional UI. [The catalog](../packages.md) covers all packages.
+[Install the archives together with their dependencies](../getting-started.md#install-package-archives). A web app needs core, the browser runtime and a provider. With React 19, add the React bindings and, if you like, the UI. [The package list](../packages.md) describes all packages.
 
-Import `@checkout-kit/ui/styles.css` and use CheckoutRoot / .ck-root. With Tailwind:
+Import `@checkout-kit/ui/styles.css` and wrap the checkout in `CheckoutRoot` (or an element with the `.ck-root` class). With Tailwind, keep this layer order:
 
 ```css
 @layer theme, base, components, checkout, utilities;
@@ -42,10 +47,20 @@ Import `@checkout-kit/ui/styles.css` and use CheckoutRoot / .ck-root. With Tailw
 @import 'tailwindcss/utilities.css' layer(utilities);
 ```
 
-Packages are ESM. Config types register ids; dynamic imports load implementations. Core has no DOM; instantiate browser runtime in client code. The library reads passed config, not environment variables. VITE_ variables are public; provider secrets stay on your server. Point baseUrl at your API and use exact bank/frame origins. Leave the demo's mock worker out of a real merchant checkout.
+Good to know:
 
-## Return routes
+- the packages are ESM. A config type registers the provider id for TypeScript; the dynamic import loads the code;
+- core has no browser code; create the browser runtime in client code;
+- the library reads only the config you pass, not environment variables;
+- `VITE_` variables are public. Provider secrets stay on your server;
+- point `baseUrl` at your API and use exact bank and frame origins;
+- do not include the demo's fake MSW worker in a real checkout.
 
-Include your deployed base in returnPath. Give engine runtime.runners, runtime.storage and runtime.returnUrl. Serve the app on that path and call hydrate with runtime.readReturnParams. Iframes need a mounted action host; wallet needs an SDK adapter.
+## Return page {#return-routes}
 
-[Composition root](../../apps/demo/src/app/providers/checkout.ts) · [Runtime](../runtime.md) · [Troubleshooting](../troubleshooting.md)
+- If your site lives in a subfolder, include it in `returnPath`.
+- Give the engine `runtime.runners`, `runtime.storage` and `runtime.returnUrl`.
+- Your app must open at that path and call `hydrate` with `runtime.readReturnParams()`.
+- Steps in an iframe need a place to show them (the action host on the page). The wallet needs an SDK adapter.
+
+[Demo setup file](../../apps/demo/src/app/providers/checkout.ts) · [Runtime](../runtime.md) · [Troubleshooting](../troubleshooting.md)

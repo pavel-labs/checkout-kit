@@ -1,15 +1,39 @@
 # Checkout in a React Native WebView
 
-`CheckoutScreen.tsx` hosts an existing HTTPS web checkout; `App.tsx` shows how to mount the screen. Import only `@checkout-kit/webview-bridge/host` and `/protocol` on the native side. The web page registers `createWebViewBridge(engine)` once.
+This example shows a mobile app that opens your existing HTTPS checkout page inside a WebView.
 
-Set `CHECKOUT_URL` and register `myapp://payment/return` in your application's iOS/Android deep-link configuration. Add `allowedProviderUrls` when your selected provider needs a top-window bank page inside the WebView. The navigation policy allows exact origins and directory boundaries, and the message handler accepts events only from the merchant checkout document.
+- `CheckoutScreen.tsx` is the screen with the WebView.
+- `App.tsx` shows how to add this screen to the app.
+- On the native side, import only `@checkout-kit/webview-bridge/host` and `/protocol`.
+- The web page calls `createWebViewBridge(engine)` once.
 
-Commands wait for `PAYMENT_READY` and use its session id plus a unique command id. They are delivered with `createBridgeCommand` and `createCommandScript` through `injectJavaScript`; return tokens are serialized as data. Duplicates and events from a retired page are ignored. Cancel is disabled until the bridge is ready.
+## Setup
 
-A return deep link received through `Linking` or intercepted by the WebView is parsed and sent back as `PAYMENT_RESUME`. The custom scheme is not loaded as a WebView page. A return received before the checkout handshake is queued until it is ready. Ordinary HTTPS checkout returns load normally and the web app hydrates its own saved attempt.
+1. Set `CHECKOUT_URL` to your checkout page address.
+2. Register the return link `myapp://payment/return` in your iOS and Android deep link settings.
+3. If your provider needs to show a bank page in the whole WebView window, add it to `allowedProviderUrls`.
 
-For a system-browser authentication session, your app must start the platform session and deliver its return URL through the same helper. Opening a URL from `PAYMENT_REQUIRES_ACTION` alone is insufficient for providers requiring form POST fields; let the web runtime perform that redirect or implement the provider's full platform flow.
+The navigation rules allow only exact origins and whole path folders. The message handler accepts events only from your checkout page.
 
-Drop these files into your Expo or React Native application and supply its dependencies. This example is deliberately outside the repository workspaces so installing the web library does not pull in a native toolchain. Repository tests cover bridge payloads, session isolation, navigation and command serialization; the example still needs an iOS/Android build in the consuming app.
+## Commands
+
+- Commands wait for `PAYMENT_READY`. Each command carries its session id and its own unique id.
+- They are sent with `createBridgeCommand` and `createCommandScript` through `injectJavaScript`. Return tokens are passed as data, not pasted into code.
+- Repeated commands and events from an old page are ignored.
+- The cancel button stays disabled until the bridge is ready.
+
+## Return links
+
+- A return link that arrives through `Linking`, or that the WebView catches, is parsed and sent back to the page as `PAYMENT_RESUME`. The WebView does not open your custom scheme as a page.
+- A return that arrives before the handshake is queued until the page is ready.
+- Normal HTTPS returns to the checkout load as usual, and the web app restores its saved payment by itself.
+
+If the bank check runs in a system browser session, your app must start that session and pass its return address through the same helper. Just opening the address from `PAYMENT_REQUIRES_ACTION` is not enough for providers that need POST form fields: let the web runtime do that redirect, or implement the provider's full native flow.
+
+## Using the example
+
+Copy these files into your Expo or React Native app and install the dependencies it needs. The example is kept outside the repository workspaces on purpose, so installing the web library does not pull in native tools.
+
+The repository tests cover the bridge messages, session isolation, navigation and command encoding. You still need to build and try the app on iOS and Android.
 
 [WebView guide](https://pavel-labs.github.io/checkout-kit/webview.html) · [Bridge package](../../packages/webview-bridge/README.md)

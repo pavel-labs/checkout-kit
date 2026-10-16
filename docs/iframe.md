@@ -65,7 +65,7 @@ flowchart LR
     end
 ```
 
-The famous gotcha: `allow-scripts` + `allow-same-origin` together are dangerous
+A well-known trap: `allow-scripts` + `allow-same-origin` together are dangerous
 **only if the framed page is same-origin as the parent** - then it could script its
 own sandbox off. Here the bank is a different origin, so `allow-same-origin` just
 lets it keep the bank's origin. It gives the frame no power over our page.

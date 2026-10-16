@@ -2,8 +2,7 @@
 
 > [Русская версия](../ru/providers/stripe.md)
 
-Stripe PaymentIntents through your merchant API, using PaymentMethod ids collected with
-Stripe.js. Raw card data never goes through this adapter.
+This adapter works with Stripe PaymentIntents through **your** server. The card is collected by Stripe.js (Stripe's own fields), which gives you a PaymentMethod id. You pass only that id. Raw card data never goes through this adapter.
 
 ```ts
 import { defineProvider } from '@checkout-kit/core'
@@ -22,20 +21,22 @@ await checkout.pay({
 })
 ```
 
-The merchant owns prices, authorization and the Stripe secret key. Return only the fields
-in `StripePaymentIntent`; associate every intent with its authenticated buyer.
+## What your server must do {#what-your-server-must-do}
 
-| Merchant endpoint                                       | Stripe operation                                  |
-| ------------------------------------------------------- | ------------------------------------------------- |
-| `POST /payments` with `{ planId }`                      | Create a PaymentIntent with a server-owned amount |
-| `POST /payments/:id/confirm` with `{ paymentMethodId }` | Confirm that intent                               |
-| `GET /payments/:id`                                     | Retrieve its current status                       |
-| `POST /payments/:id/cancel`                             | Cancel a cancelable intent                        |
+Your server owns the prices, checks who the buyer is, and keeps the Stripe secret key. Return only the fields of `StripePaymentIntent`, and link every payment to the logged-in buyer.
 
-The adapter scopes `Idempotency-Key` by operation so create, confirm and cancel do not
-collide in Stripe. Forward the header; retain it when retrying the same request.
+| Your route                                              | What it does at Stripe                                    |
+| ------------------------------------------------------- | --------------------------------------------------------- |
+| `POST /payments` with `{ planId }`                      | Creates a PaymentIntent. The amount is set by the server. |
+| `POST /payments/:id/confirm` with `{ paymentMethodId }` | Confirms that payment.                                    |
+| `GET /payments/:id`                                     | Reads its current status.                                 |
+| `POST /payments/:id/cancel`                             | Cancels the payment, if it can still be canceled.         |
 
-`redirect_to_url` is preserved unchanged. For `use_stripe_sdk`, register a runtime adapter:
+The adapter makes the `Idempotency-Key` different for each operation, so that create, confirm and cancel do not clash at Stripe. Forward this header to Stripe, and keep it the same when you retry the same request.
+
+## Extra steps {#extra-steps}
+
+A `redirect_to_url` step is passed on as it is. For `use_stripe_sdk` (for example, 3D Secure inside Stripe.js), register an SDK adapter in the runtime:
 
 ```ts
 import { loadStripe } from '@stripe/stripe-js'
@@ -50,22 +51,31 @@ const adapter = createStripeSdkAdapter(async () => {
 // createBrowserRuntime({ returnPath: '/payment/return', sdk: { adapters: [adapter] } })
 ```
 
-The SDK callback and return URL are hints; the adapter reads your API before reporting an
-outcome. Client secrets are passed only to the action, never into the intent or redirect
-recovery storage. Do not log them.
+- What the SDK reports and what comes back in the return address are only hints. Before reporting a result, the adapter reads your API.
+- The client secret is given only to the step. It is never saved in the payment data or in the recovery storage. Do not write it to logs.
 
-Use automatic capture. `requires_capture` reports `capture_required` with a processing
-intent, never success. For manual capture, implement capture and fulfillment on your backend.
+## Capture {#capture}
 
-The contract and wire-format tests run without credentials. A sandbox run against your own
-Stripe account is still required before accepting payments. See [the integration examples](https://github.com/pavel-labs/checkout-kit/blob/main/examples/README.md).
+Use automatic capture. If Stripe says `requires_capture`, the adapter reports `capture_required` and the payment stays "processing" — it is never reported as success. If you want manual capture, implement capture and order delivery on your server.
 
-## Runnable fields and merchant DTO
+## Testing {#testing}
 
-Set server `STRIPE_SECRET_KEY` and browser `VITE_STRIPE_PUBLISHABLE_KEY` with test keys. [StripeFields.tsx](../../examples/react/StripeFields.tsx) collects a PaymentMethod with Elements and supplies the SDK action adapter. Give runners and session storage to the engine; [React](../react.md) shows a host.
+The contract tests and the request/response format tests run without any keys. Before accepting payments, you still have to test with your own Stripe sandbox account. See [the integration examples](https://github.com/pavel-labs/checkout-kit/blob/main/examples/README.md).
 
-Return [StripePaymentIntent](../../packages/provider-stripe/src/provider.ts): id, integer amount, currency, status, safe error and next_action. Client secret belongs to the authentication action. Succeeded is paid, processing polls, requires_capture remains unresolved and issuer decline text is preserved. Unsupported actions fail explicitly.
+## Card fields and server response {#runnable-fields-and-merchant-dto}
 
-Read before mutation; cancel cannot overwrite success. Verify account challenges, redirects and lost replies, and reconcile when the browser closes.
+Put your **test** keys into the server variable `STRIPE_SECRET_KEY` and the browser variable `VITE_STRIPE_PUBLISHABLE_KEY`. [StripeFields.tsx](../../examples/react/StripeFields.tsx) collects a PaymentMethod with Stripe Elements and provides the SDK adapter. Give the engine the runners and session storage; the [React guide](../react.md) shows a complete page.
 
-[Merchant integration](../merchant-integration.md) · [Recovery](../runtime.md) · [Stripe PaymentIntents](https://docs.stripe.com/payments/payment-intents)
+Your server returns a [StripePaymentIntent](../../packages/provider-stripe/src/provider.ts) with: id, amount as an integer, currency, status, a safe error and `next_action`. The client secret belongs only to the bank check step.
+
+How statuses are understood:
+
+- `succeeded` — paid;
+- `processing` — the engine keeps checking the status;
+- `requires_capture` — the result stays unclear until you capture;
+- a decline keeps the bank's own text;
+- unsupported steps fail with a clear error.
+
+Read the payment before you change it; a cancel cannot overwrite a success. With your sandbox account, check bank checks, redirects and lost replies, and reconcile payments when the browser was closed.
+
+[Merchant server](../merchant-integration.md) · [Recovery](../runtime.md) · [Stripe PaymentIntents](https://docs.stripe.com/payments/payment-intents)

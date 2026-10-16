@@ -2,13 +2,16 @@
 
 > [Русская версия](../ru/plugins/hosted-page.md)
 
-Reference adapter for **hosted payment page, top window**. Provider id: `hpp`. Instruments: **none**.
+This is an **example adapter** for a **payment page on the bank's site**. The whole window goes there, and the shopper comes back afterwards.
 
-This package implements checkout-kit's example merchant protocol. It is useful as an executable integration template and with `@checkout-kit/testing/backend`; it is not a certified adapter for a named bank or payment network. For Stripe, Adyen and PayPal, use their dedicated provider packages.
+- Provider id: `hpp`.
+- What the shopper pays with (instrument): none — the shopper enters everything on the bank's page.
+
+The package shows checkout kit's example server protocol. Use it as a working template for your own integration, together with the fake server from `@checkout-kit/testing/backend`. It is **not** a certified adapter for any real bank or payment network. For Stripe, Adyen and PayPal, use their own provider packages.
 
 ## Configure
 
-Follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html) for package archives or registry setup.
+To install the packages, follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html).
 
 ```ts
 import { defineProvider } from '@checkout-kit/core'
@@ -24,28 +27,31 @@ const provider = defineProvider({
 // Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-`baseUrl` is your merchant API. Optional `headers` carry merchant session or CSRF headers; `credentials` controls cookies. Keep payment-service secrets on the server. The host supplies the browser runtime, return URL and any SDK adapter.
+- `baseUrl` is the address of your server API.
+- `headers` (optional) can carry your session or CSRF headers. `credentials` controls whether cookies are sent.
+- Keep the payment service's secret keys on your server.
+- Your app provides the browser runtime, the return address and an SDK adapter, if one is needed.
 
 ## Merchant API
 
-Paths below are relative to `baseUrl`. Authenticate the shopper, resolve price from `planId`, verify order ownership, and enforce allowed state transitions on the server. Monetary amounts are integers in the currency's minor units.
+The paths below are relative to `baseUrl`. On your server: log in the shopper, take the price from `planId`, check that the order belongs to this shopper, and allow only valid status changes. Amounts are integers in the smallest currency unit (for example, cents).
 
-| Method | Path                 | Contract                                                  |
-| ------ | -------------------- | --------------------------------------------------------- |
-| POST   | `/hosted/orders`     | `{ planId }`; return `{ orderId }`.                       |
-| GET    | `/hosted/orders/:id` | Authoritative order with id, amount, currency and status. |
+| Method | Path                 | What it does                                             |
+| ------ | -------------------- | -------------------------------------------------------- |
+| POST   | `/hosted/orders`     | Takes `{ planId }`, returns `{ orderId }`.               |
+| GET    | `/hosted/orders/:id` | Returns the real order: id, amount, currency and status. |
 
-Intent/order/charge responses include `{ id, amount, currency, status, error? }`. Statuses use checkout-kit's `PaymentStatus`; declines may include `{ code?, message }` in `error`.
+Responses for a payment, order or charge contain `{ id, amount, currency, status, error? }`. Statuses are checkout kit's `PaymentStatus` values. A decline may have `{ code?, message }` in `error`.
 
-The runner navigates to `pageUrl` with `orderId` and `returnUrl`. Return evidence must use `via: 'return_url'` and the order id as `actionId`. The adapter ignores claimed payment status in the URL and re-reads the order. This example does not expose cancellation.
+**How it works.** The runner opens `pageUrl` with `orderId` and `returnUrl`. On the way back, the step data must have `via: 'return_url'` and the order id as `actionId`. The adapter **ignores** any payment status written in the address and reads the order again. This example has no cancel.
 
 ## Retries and verification
 
-The adapter reads the authoritative order before reopening payment, spending another token or canceling. Successful, declined and canceled orders retain their outcome; processing orders continue to be polled. A retry after a lost reply checks the same order before issuing another mutation.
+Before it reopens a payment, uses another token or cancels, the adapter reads the real order from the server. Successful, declined and canceled orders keep their result. For orders that are still processing, the status keeps being checked. After a lost reply, a retry first checks the same order and only then sends another change.
 
-Creation forwards `CallOptions.idempotencyKey` as `Idempotency-Key`. Mutations scope it with an operation and intent id (`:confirm:`, `:resume:`, `:pay:`, `:code:` or `:cancel:` as applicable). Your backend must honor the key and reject a changed payload under the same key; sending a header alone cannot guarantee a single charge.
+**Idempotency.** On creation, `CallOptions.idempotencyKey` is sent as the `Idempotency-Key` header. For other changes, the key is extended with the operation and the payment id (`:confirm:`, `:resume:`, `:pay:`, `:code:` or `:cancel:`). Your server must respect the key and reject a request that has the same key but different data. The header alone does not guarantee a single charge.
 
-Run this package's contract and regression tests from the repository:
+To run this package's contract and regression tests in the repository:
 
 ```sh
 npm ci
@@ -56,4 +62,4 @@ npm test -- packages/provider-hpp
 
 ## Run and verify
 
-Run `npm run dev:mock` plus `npm run dev:bank`, or use [the site demo](/demo/). This is a reference merchant protocol, not a named-bank integration. [Environment](./setup.md), [runtime](../runtime.md) and [testing](../testing.md) cover mounts, recovery and contract verification.
+Run `npm run dev:mock` and `npm run dev:bank`, or open [the site demo](/demo/). This is an example protocol, not an integration with a real bank. [Simulator setup](./setup.md), [runtime](../runtime.md) and [testing](../testing.md) explain where steps are shown, how recovery works and how the contract is checked.

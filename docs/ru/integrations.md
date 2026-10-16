@@ -1,7 +1,7 @@
 # Интеграция настоящего платёжного SDK
 
-::: info Примеры проектирования
-Эта страница описывает возможные адаптации. Готовые пакеты Stripe, Adyen, PayPal и точные границы перечислены в [каталоге](./packages.md). Региональное название здесь не означает поставляемую интеграцию.
+::: info Это примеры, а не готовые пакеты
+Эта страница показывает, **как можно** самостоятельно подключить этих провайдеров. Готовые пакеты есть только для Stripe, Adyen и PayPal — см. [список пакетов](./packages.md). Если провайдер здесь упомянут, это не значит, что checkout kit уже его поддерживает.
 :::
 
 > English version: [integrations.md](../integrations.md)
@@ -22,29 +22,29 @@ Stripe, Adyen и PayPal, по их настоящим формам API. В CI о
 
 **Плагин работает в браузере, поэтому секретного ключа у него не бывает.** Stripe `sk_`,
 Adyen `x-api-key`, client secret у PayPal, `userName`/`password` у банка — всё это живёт на
-вашем сервере. Плагин зовёт ваш API, ваш API — провайдера.
+вашем сервере. Плагин вызывает ваш API, ваш API — провайдера.
 
 Там, где у SDK есть _публикуемый_ ключ (`pk_`, client token у Braintree, client key у
 Adyen), он в браузере уместен: он умеет начать платёж, но не двигать деньги.
 
 ## Карта
 
-| Провайдер                      | Что даёт                         | Вид действия               | surface        | Чем завершается |
-| ------------------------------ | -------------------------------- | -------------------------- | -------------- | --------------- |
-| Stripe, редирект в next action | `next_action.redirect_to_url`    | `redirect`                 | `top`          | `return_url`    |
-| Stripe.js / Elements           | скрипт, который сам подтверждает | `sdk_handoff`              | `none`         | `sdk_callback`  |
-| Stripe Checkout                | хостед-URL                       | `redirect`                 | `top`          | `return_url`    |
-| Adyen `action.type=redirect`   | url + method + data              | `redirect`                 | `top`          | `return_url`    |
-| Adyen `action.type=threeDS2`   | токен для своего SDK             | `sdk_handoff`              | `none`         | `sdk_callback`  |
-| Adyen Drop-in                  | скрипт, рисующий всё             | `sdk_handoff`              | `none`         | `sdk_callback`  |
-| Braintree                      | client token, затем nonce        | `sdk_handoff`              | `none`         | `sdk_callback`  |
-| Checkout.com Frames            | iframe у вас на странице         | `collect_fields`           | `inline`       | `post_message`  |
-| Кнопки PayPal                  | скрипт со своей кнопкой          | `sdk_handoff`              | `none`         | `sdk_callback`  |
-| PayPal редиректом              | ссылка на подтверждение          | `redirect`                 | `top`          | `return_url`    |
-| Apple Pay / Google Pay         | шторка от ОС                     | `sdk_handoff`              | `none`         | `sdk_callback`  |
-| Klarna                         | хостед-страница или виджет       | `redirect` / `sdk_handoff` | `top` / `none` | `return_url`    |
-| Банк host-to-host + 3-D Secure | форма для POST                   | `redirect`                 | `iframe`       | `post_message`  |
-| PIX / UPI / BLIK               | QR-строка или код                | `display`                  | `inline`       | `poll`          |
+| Провайдер                              | Что даёт                         | Вид действия               | surface        | Чем завершается |
+| -------------------------------------- | -------------------------------- | -------------------------- | -------------- | --------------- |
+| Stripe, перенаправление из next action | `next_action.redirect_to_url`    | `redirect`                 | `top`          | `return_url`    |
+| Stripe.js / Elements                   | скрипт, который сам подтверждает | `sdk_handoff`              | `none`         | `sdk_callback`  |
+| Stripe Checkout                        | адрес страницы Stripe            | `redirect`                 | `top`          | `return_url`    |
+| Adyen `action.type=redirect`           | url + method + data              | `redirect`                 | `top`          | `return_url`    |
+| Adyen `action.type=threeDS2`           | токен для своего SDK             | `sdk_handoff`              | `none`         | `sdk_callback`  |
+| Adyen Drop-in                          | скрипт, рисующий всё             | `sdk_handoff`              | `none`         | `sdk_callback`  |
+| Braintree                              | client token, затем nonce        | `sdk_handoff`              | `none`         | `sdk_callback`  |
+| Checkout.com Frames                    | iframe у вас на странице         | `collect_fields`           | `inline`       | `post_message`  |
+| Кнопки PayPal                          | скрипт со своей кнопкой          | `sdk_handoff`              | `none`         | `sdk_callback`  |
+| PayPal с перенаправлением              | ссылка на подтверждение          | `redirect`                 | `top`          | `return_url`    |
+| Apple Pay / Google Pay                 | шторка от ОС                     | `sdk_handoff`              | `none`         | `sdk_callback`  |
+| Klarna                                 | страница провайдера или виджет   | `redirect` / `sdk_handoff` | `top` / `none` | `return_url`    |
+| Банк host-to-host + 3-D Secure         | форма для POST                   | `redirect`                 | `iframe`       | `post_message`  |
+| PIX / UPI / BLIK                       | QR-строка или код                | `display`                  | `inline`       | `poll`          |
 
 Закономерность за таблицей: **URL — это `redirect`, скрипт — `sdk_handoff`, URL, рисующий
 поля, — `collect_fields`, код для показа — `display`, а «делать нечего, только ждать» —
@@ -54,7 +54,7 @@ Adyen), он в браузере уместен: он умеет начать п
 
 Две интеграции, которые стоит иметь, и они разной формы.
 
-**Payment Intents с редиректом.** Ваш сервер подтверждает и отдаёт `next_action`:
+**Payment Intents с перенаправлением.** Ваш сервер подтверждает и отдаёт `next_action`:
 
 ```ts
 confirm: async (intentId, instrument, opts) => {
@@ -207,29 +207,29 @@ URL, который рисует поля карты внутри вашей с�
 **Кнопки** — это `sdk_handoff`: скрипт рисует собственную кнопку PayPal, открывает своё окно
 и отдаёт id заказа. Адаптер регистрируется с вашим client id.
 
-**Редирект** — более старая форма: сервер создаёт заказ, PayPal возвращает ссылку на
+**Перенаправление** — более старый вариант: сервер создаёт заказ, PayPal возвращает ссылку на
 подтверждение, и это `redirect` с `surface: 'top'`, завершающийся `return_url`. Дальше ваш
 сервер делает capture — `resume` не должен считать сам возврат оплатой.
 
 ## Apple Pay и Google Pay
 
-Оба — `sdk_handoff` с `surface: 'none'`: шторку рисует ОС, вашего не рендерится ничего. Две
+Оба — `sdk_handoff` с `surface: 'none'`: шторку рисует ОС, вашего не показывается ничего. Две
 вещи только ваши:
 
 - **Валидация мерчанта** (Apple Pay) серверная по определению: домен должен быть
   зарегистрирован, а сессия подписана вашим сертификатом.
-- **Payload уходит провайдеру с вашего сервера.** В браузере лежит зашифрованный блоб,
+- **Данные кошелька уходят провайдеру с вашего сервера.** В браузере лежит зашифрованный блоб,
   который он не может открыть, — и не должен пытаться.
 
 В React Native берите их нативно, а не в WebView — см. [гайд по WebView](./webview.md).
 
 ## Klarna и другие «плати потом»
 
-Обычно хостед-страница (`redirect`, `surface: 'top'`, `return_url`), иногда виджет
+Обычно страница оплаты провайдера (`redirect`, `surface: 'top'`, `return_url`), иногда виджет
 (`sdk_handoff`). От карты отличаются двумя вещами:
 
 - Исход может быть `processing` на минуты. Объявляйте `poll: true` и дайте движку подождать
-  — или пусть вебхук досеттлит, а покупатель узнает письмом.
+  — или пусть оплату завершит вебхук, а покупатель узнает письмом.
 - Сумма и состав корзины должны совпадать с авторизованными. Присылайте id плана, а не цену
   из браузера.
 
@@ -250,13 +250,13 @@ PIX, UPI, BLIK, PromptPay, Konbini: ваш сервер просит у пров
 4. `confirm` и `resume` не бросают. Любой сбой — `{ status: 'error' }`.
 5. Evidence — подсказка. Перечитайте платёж со своего сервера, прежде чем сказать, что всё
    прошло.
-6. Пробрасывайте ключ идемпотентности провайдеру.
+6. Передавайте ключ идемпотентности провайдеру.
 7. Возвращайте сообщение эмитента его словами.
 
 ## Безопасность URL
 
 Action URL требуют HTTPS. Для загрузки SDK scripts явно задайте `security.scriptOrigins`,
-для custom bank app links — `security.deeplinkProtocols`. HTTP доступен только на loopback
+для ссылок на банковские приложения со своей схемой — `security.deeplinkProtocols`. HTTP доступен только на loopback
 с `security.allowInsecureLocalhost: true` для локальной разработки. Return URL должен
 принадлежать origin приложения. По возможности импортируйте SDK непосредственно.
 

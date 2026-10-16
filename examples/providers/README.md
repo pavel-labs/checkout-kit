@@ -1,32 +1,30 @@
 # Provider adapters
 
-Stripe, Adyen and PayPal are public package entry points in this repository, not files you
-need to copy into your application:
+Stripe, Adyen and PayPal support comes as normal packages. You install them; you do not need to copy files from here into your app.
 
-| Package                                                                     | Instrument                                                 | Actions                                |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------- |
-| [`@checkout-kit/provider-stripe`](../../packages/provider-stripe/README.md) | Stripe.js PaymentMethod id                                 | Redirect or Stripe.js handoff          |
-| [`@checkout-kit/provider-adyen`](../../packages/provider-adyen/README.md)   | Adyen component data, stored method, or permitted raw card | Redirect or Adyen Web handoff          |
-| [`@checkout-kit/provider-paypal`](../../packages/provider-paypal/README.md) | None; PayPal collects it                                   | Approval redirect, then server capture |
+| Package                                                                     | What the shopper pays with                                   | Extra steps                                           |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------- |
+| [`@checkout-kit/provider-stripe`](../../packages/provider-stripe/README.md) | A Stripe.js PaymentMethod id                                 | A redirect, or a step inside Stripe.js                |
+| [`@checkout-kit/provider-adyen`](../../packages/provider-adyen/README.md)   | Adyen component data, a saved method, or raw card if allowed | A redirect, or a step inside Adyen Web                |
+| [`@checkout-kit/provider-paypal`](../../packages/provider-paypal/README.md) | Nothing — PayPal collects it                                 | Approval on PayPal's page, then capture on the server |
 
-`stripe.ts`, `adyen.ts` and `paypal.ts` re-export these packages to keep older example imports
-working. [`usage.ts`](./usage.ts) registers all nine adapters; [`scenarios.ts`](./scenarios.ts)
-shows the headless engine loop. Use those files to understand registration and action
-handling. For the provider's exact merchant API contract, use the package README above.
+What the files in this folder are for:
 
-The six original `provider-*` packages are protocol examples over the MSW backend. They
-remain useful when implementing a bank, hosted fields or a wallet plugin of your own.
-`provider-psp` is Stripe-shaped; use `provider-stripe` for Stripe's actual PaymentIntent format.
+- `stripe.ts`, `adyen.ts` and `paypal.ts` only re-export these packages, so that older example imports keep working;
+- [`usage.ts`](./usage.ts) registers all nine adapters;
+- [`scenarios.ts`](./scenarios.ts) shows the engine loop without any UI.
 
-All adapters call **your API**. Secret keys and prices stay on the server. Browser callbacks
-and query strings never establish that money moved. Stripe's manual-capture authorization is
-not success, and PayPal's order status is separate from its capture status.
+Use these files to understand registration and how steps are handled. For the exact server API of each provider, see the package README above.
 
-Every packaged adapter passes the shared conformance suite. Additional tests cover wire
-formats, action handoff and capture semantics. These are credential-free fixtures and do not
-claim that a payment has been verified against a provider's sandbox.
+The six other `provider-*` packages are protocol examples that work with the fake MSW server. They are useful when you write a plugin for your own bank, hosted fields or wallet. `provider-psp` looks like Stripe, but for the real Stripe PaymentIntent format use `provider-stripe`.
 
-Start with [the runnable examples](../README.md). The sandbox server uses the official server
-SDKs (`stripe`, `@adyen/api-library`, `@paypal/paypal-server-sdk`) and must be configured with
-your test credentials. Add verified webhooks and durable buyer/order storage in your merchant
-backend. See [the backend guide](../../docs/backend.md).
+Important rules:
+
+- every adapter calls **your API**. Secret keys and prices stay on the server;
+- what comes back to the browser (callbacks, address parameters) never proves that money moved;
+- with Stripe manual capture, an authorization is not a success yet;
+- with PayPal, the order status and the capture status are two different things.
+
+Every adapter passes the shared conformance test suite. More tests check the request formats, the steps and the capture logic. These tests use saved test data without any keys. They do not mean that a payment was checked against the provider's sandbox.
+
+Start with [the runnable examples](../README.md). The sandbox server uses the official server SDKs (`stripe`, `@adyen/api-library`, `@paypal/paypal-server-sdk`) and needs your test keys. In your own server, add checked webhooks and a database for buyers and orders. See [the backend guide](../../docs/backend.md).

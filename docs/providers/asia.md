@@ -1,7 +1,7 @@
 # Asia: providers and banks
 
-::: info Integration design examples
-This page describes possible adaptations. Shipped Stripe, Adyen, PayPal packages and support boundaries are listed in [the catalog](../packages.md). Regional names here do not imply shipped integrations.
+::: info Examples, not ready-made packages
+This page shows **how you could** connect these providers yourself. Ready-made packages exist only for Stripe, Adyen and PayPal — see [the package list](../packages.md). If a provider is mentioned here, that does not mean checkout kit already supports it.
 :::
 
 > Русская версия: [ru/providers/asia.md](../ru/providers/asia.md)
