@@ -2,17 +2,7 @@
 
 > [English](../../providers/paypal.md)
 
-## Подтверждение и capture
-
-`@checkout-kit/provider-paypal` использует Orders v2. Инструмент `{ kind: 'none' }`; approval link открывается в top window, браузерный SDK не нужен. Server `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` — из sandbox app. BaseUrl указывает на корень API, например `/api`; адаптер добавляет `/paypal/orders`.
-
-[PayPalOrder](../../../packages/provider-paypal/src/provider.ts): id, integer amount, currency, status, approveUrl, captureStatus. Сервер проверяет принадлежность capture заказу, сумму и валюту. Approval разрешает capture, completed capture даёт succeeded, pending capture — processing, отсутствующие данные — `capture_unverified`. Declined/denied/failed capture — отказ.
-
-Create/capture используют отдельные PayPal-Request-Id; сохраняйте их после потери ответа. Адаптер отвергает чужой token, читает заказ до capture и не списывает completed повторно. После потерянного capture reply пробует прочитать авторитетный результат.
-
-Fake cancel API отсутствует: abort останавливает локальный поток, сервер хранит исход. Authorization/void — другой контракт. Продолжайте сверку после закрытия браузера.
-
-## Регистрация
+Этот адаптер работает с PayPal Orders v2. Покупатель подтверждает оплату на странице PayPal, а потом **ваш сервер** списывает деньги. То, что покупатель вернулся на вашу страницу, оплату не доказывает.
 
 ```ts
 import { defineProvider } from '@checkout-kit/core'
@@ -27,22 +17,45 @@ const registration = defineProvider({
 await checkout.pay({ input: { planId: 'starter' }, instrument: { kind: 'none' } })
 ```
 
-Импорт config-типа регистрирует id; динамический import загружает реализацию. Пример кода использует checkout как созданный вами engine. [React](../react.md) показывает runners, UI и восстановление.
+На вашей странице ничего не вводится, поэтому инструмент — `{ kind: 'none' }`.
 
-## Точный API-контракт
+## Что должен делать ваш сервер {#what-your-server-must-do}
 
-Маршруты ниже относительны baseUrl; цена и ownership проверяются мерчантом. DTO названия сохранены из протокола:
+| Ваш маршрут                          | Что делает                                                                            |
+| ------------------------------------ | ------------------------------------------------------------------------------------- |
+| `POST /paypal/orders` с `{ planId }` | Создаёт заказ с ценой сервера и `intent: CAPTURE`.                                    |
+| `GET /paypal/orders/:id`             | Читает заказ и состояние списания по нему.                                            |
+| `POST /paypal/orders/:id/capture`    | Списывает деньги по подтверждённому заказу. При повторе отправляет тот же id запроса. |
 
-| Merchant endpoint                       | Operation                                                         |
-| --------------------------------------- | ----------------------------------------------------------------- |
-| `POST /paypal/orders` with `{ planId }` | Create an order with server-owned price and `intent: CAPTURE`     |
-| `GET /paypal/orders/:id`                | Retrieve the order and its capture state                          |
-| `POST /paypal/orders/:id/capture`       | Capture an approved order, replaying the same request id on retry |
+Возвращайте `PayPalOrder`:
 
-Проверяйте конечное состояние перед мутацией; cancel не переписывает paid. Сервер атомарно обеспечивает scoped-idempotency; callback не доказывает оплату. Установите runtime storage и hydrate на return route.
+- `approveUrl` — ссылка `payer-action` / `approve` от PayPal;
+- `captureStatus` берётся из `purchase_units[].payments.captures[]`. Если списаний несколько, сервер должен проверить, что вместе они покрывают ожидаемую сумму и валюту;
+- заказ со статусом `COMPLETED`, у которого списание в ожидании, отклонено или отсутствует, **никогда** не считается оплаченным.
 
-## Проверка аккаунта
+## Как адаптер защищает платёж {#how-the-adapter-protects-the-payment}
 
-Fixtures проверяют код; отдельно проверьте sandbox collection, authentication/approval, processing, redirect, потерянный ответ, buyer isolation и уведомления. [Merchant server](../merchant-integration.md) описывает постоянное состояние и выдачу заказа.
+- Перед списанием он заново читает заказ и списывает, только если заказ в статусе `APPROVED`.
+- Он не списывает повторно по уже завершённому заказу.
+- Токен возврата, который относится к другому заказу, отклоняется. Ваш сервер тоже должен проверять, что заказ принадлежит этому покупателю.
+- Создание и списание используют **разные** ключи идемпотентности. Передавайте их в PayPal как `PayPal-Request-Id`.
+- Поддельного API «отмены» нет: подтверждение в Orders v2 — не резервирование, которое можно аннулировать. Отмена оплаты лишь останавливает процесс в браузере; настоящее состояние платежа — на вашем сервере.
 
-[Восстановление](../runtime.md) · [Тестирование](../testing.md) · [README пакета](../../../packages/provider-paypal/README.md)
+## Настройка и тестирование {#merchant-dto-and-recovery}
+
+Укажите серверные переменные `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` из приложения PayPal в песочнице. Браузерный SDK не нужен. Используется перенаправление всей страницы и session storage из runtime. В [руководстве по React](../react.md) показано, как заказ восстанавливается после возврата.
+
+Ваш сервер возвращает [PayPalOrder](../../../packages/provider-paypal/src/provider.ts): id, сумму целым числом, валюту, статус, `approveUrl`, `captureStatus`.
+
+Как понимаются статусы:
+
+- `APPROVED` — можно списывать;
+- списание завершено — успешно;
+- списание в ожидании — «в обработке»;
+- нет данных о списании — `capture_unverified`.
+
+Проверяйте на сервере, что списание относится к заказу, а итоговая сумма и валюта правильные. Читайте заказ перед списанием и после потерянного ответа.
+
+Тесты контракта используют сохранённые тестовые данные. Перед приёмом платежей проверьте подтверждение, списание и списание в ожидании на своём тестовом аккаунте. Подробнее — в [README пакета](../../../packages/provider-paypal/README.md) и в разделе [тестирование](../testing.md).
+
+[Сервер мерчанта](../merchant-integration.md) · [Восстановление](../runtime.md) · [PayPal Orders v2](https://developer.paypal.com/api/orders/v2)

@@ -4,42 +4,42 @@
 
 ## The idea
 
-A checkout holds two kinds of knowledge, and they change at very different speeds.
+Code that accepts payments contains two kinds of knowledge, and they change at very different speeds.
 
-The first is what a payment is. It is created. An instrument is presented. Sometimes another
-step is needed before it can settle. In the end it succeeded, was declined, or failed. This
-has been true for decades.
+**The first is what a payment is.** A payment is created. The shopper gives a payment instrument (for example, a card token). Sometimes one more step is needed, such as a bank check. In the end the payment succeeded, was declined, or failed. This has not changed for decades.
 
-The second is how one provider describes all of that. JSON or form-encoded. A status as a
-word or as a number. An error in the HTTP status code, or inside a successful response. A
-challenge in a frame, a redirect to the bank's page, fields the provider renders itself, a
-wallet on the phone. This part changes often and differs between providers. It is why
-"add a second payment provider" usually means rewriting a checkout.
+**The second is how a particular provider describes all of that.** JSON or HTML forms. A status as a word or as a number. An error in the HTTP status code, or inside a "successful" response. A bank check in an iframe, a redirect to the bank's page, card fields drawn by the provider, a wallet on the phone. This part changes often and is different for every provider. That is why "add a second payment provider" usually means rewriting the checkout.
 
-So the two are kept apart. The first lives in `@checkout-kit/core` and is written once. The second
-lives in plugins, one per provider, and the core cannot see it.
+So checkout kit keeps the two apart:
 
-## One loop, six integrations
+- the first lives in `@checkout-kit/core` and is written once;
+- the second lives in **plugins**, one per provider. The core does not see it at all.
+
+## One loop, six kinds of integration {#one-loop-six-integrations}
 
 ```text
 createIntent → confirm(instrument) → [ action → run → evidence → resume ]* → terminal
 ```
 
-That is the whole engine. Between integrations, only two things differ: **which action the
-provider returned** and **which runner executes it**.
+This is the whole engine:
 
-| Integration        | instrument | first action                    | completes via  |
-| ------------------ | ---------- | ------------------------------- | -------------- |
-| Card processor     | `card`     | `redirect` into a frame         | `post_message` |
-| Acquiring bank     | `card`     | `redirect` with a `PaReq`       | `post_message` |
-| Bank payment page  | `none`     | `redirect` taking the window    | `return_url`   |
-| Hosted card fields | `none`     | `collect_fields` in a frame     | `post_message` |
-| Wallet             | `none`     | `sdk_handoff` to another script | `sdk_callback` |
-| Instant transfer   | `none`     | `display` a QR or a code        | `poll`         |
+1. `createIntent` — create the payment;
+2. `confirm(instrument)` — send what the shopper pays with;
+3. if the provider asks for an extra step (`action`), a runner performs it (`run`), brings back what happened (`evidence`), and the engine continues the payment (`resume`). This can repeat;
+4. the payment reaches a final status (`terminal`).
 
-In the last four rows we collect nothing at all. The engine has no special case for that:
-`{ kind: 'none' }` is a normal instrument, and a provider that needs the card somewhere else
-just asks for an action first.
+Between integrations only two things differ: **which step the provider asked for** and **which runner performs it**.
+
+| Integration        | Instrument | First step                         | How it finishes |
+| ------------------ | ---------- | ---------------------------------- | --------------- |
+| Card processor     | `card`     | `redirect` into a frame            | `post_message`  |
+| Acquiring bank     | `card`     | `redirect` with a `PaReq`          | `post_message`  |
+| Bank payment page  | `none`     | `redirect` of the whole window     | `return_url`    |
+| Hosted card fields | `none`     | `collect_fields` in a frame        | `post_message`  |
+| Wallet             | `none`     | `sdk_handoff` to the wallet script | `sdk_callback`  |
+| Instant transfer   | `none`     | `display` a QR code or a code      | `poll`          |
+
+In the last four rows your page collects nothing at all. The engine has no special case for that: `{ kind: 'none' }` is a normal instrument. A provider that collects the card somewhere else simply asks for a step first.
 
 ```mermaid
 flowchart LR
@@ -53,59 +53,39 @@ flowchart LR
 
 ## The packages
 
-**`@checkout-kit/core`** — the domain, the plugin contract, the engine. No React, no DOM, no bundler
-environment. It compiles for a browser, a Node test and a worker, and `npm run purity` fails
-the build if a browser-only global gets in. That is what lets the whole payment loop run in
-a unit test, with scripted runners in place of a browser.
+**`@checkout-kit/core`** — payment types, the plugin contract and the engine. No React, no DOM (browser page objects), no bundler-specific code. It runs in a browser, in a Node test and in a worker. `npm run purity` fails the build if browser-only code gets in. Thanks to this, a whole payment can run in a unit test, with scripted runners instead of a browser.
 
-**`@checkout-kit/runtime-browser`** — the parts that need a browser: runners that post forms into
-sandboxed frames, take over the window or load a third-party script, plus the single
-`message` listener in the checkout.
+**`@checkout-kit/runtime-browser`** — the parts that need a browser: runners that send forms into isolated (sandboxed) frames, move the whole window to another page or load a provider script. Also the one `message` listener for the whole checkout.
 
-**`@checkout-kit/react`** — hooks over the engine's snapshot, and `<PaymentActionHost/>`, a mount point
-that gives the engine a DOM node and reports the result back. It knows no protocol.
+**`@checkout-kit/react`** — hooks that read the engine's state, and `<PaymentActionHost/>`: a place on the page where the engine can show a step. It reports the result back. It knows nothing about any protocol.
 
-**`@checkout-kit/ui`** — the visual kit. Plain CSS, themed with `--ck-*` variables.
+**`@checkout-kit/ui`** — the visual components. Plain CSS, themed with `--ck-*` variables.
 
-**`@checkout-kit/provider-*`** — one per integration. A protocol lives here and only here.
+**`@checkout-kit/provider-*`** — one per integration. A provider's protocol lives here and only here.
 
-**`@checkout-kit/testing`** and **`@checkout-kit/conformance`** — the mock backend, and the contract suite every
-plugin must pass.
+**`@checkout-kit/testing`** and **`@checkout-kit/conformance`** — a fake payment server, and the test suite every plugin must pass.
 
 ## What the engine does
 
 Besides the loop, the engine handles a few things that are easy to get wrong.
 
-**It stops at the action.** `pay` returns as soon as a provider asks for something, and does
-not run it. The host usually wants to navigate or mount a frame first, and then calls
-`runPendingAction`. This is what puts a redirect and an inline frame on the same code path.
+**It stops at the step.** `pay` returns as soon as the provider asks for a step, and does not run it. The app usually wants to change the screen or prepare a frame first, and then calls `runPendingAction`. Because of this, a full-page redirect and a frame inside the page go through the same code.
 
-**It saves what a redirect would destroy.** Before the action runs, the provider id, intent
-id and action id go into session storage, because a full-page redirect ends the page as soon
-as the form is submitted. `hydrate()` picks the payment up afterwards. It waits for the
-plugin's lazy import first, because on a fresh page the plugin may not be loaded yet.
+**It saves what a redirect would destroy.** Before the step runs, the provider id, payment id and step id are saved to session storage. A full-page redirect ends the page as soon as the form is sent, so without this the payment would be lost. Afterwards `hydrate()` picks the payment up again. It first waits for the plugin to load, because on a fresh page the plugin may not be loaded yet.
 
-**It does not trust evidence.** What a runner brings back shows where the browser has been,
-not what happened to the money. If the answer is not final, the intent is read again from the
-provider before the shopper is told anything.
+**It does not trust what comes back.** What a runner brings back shows where the browser has been, not what happened to the money. If the answer is not final, the engine reads the payment from the provider again before telling the shopper anything.
 
-**It waits for money it cannot see.** When an action says it completes by polling - a QR
-code, a transfer slip - the engine runs the runner and asks the provider at the same time.
-The first to answer stops the other, so the shopper can still walk away and an expired code
-stops the polling instead of running until the tab closes.
+**It waits for money it cannot see.** Some steps finish by polling — for example, a QR code or a bank transfer slip. Then the engine runs the runner and, at the same time, keeps asking the provider for the status. Whichever answers first stops the other. So the shopper can still leave, and an expired code stops the polling instead of running until the tab is closed.
 
-**It stops endless loops.** A provider that answers every resume with another action is cut
-off after four.
+**It stops endless loops.** If a provider answers every "continue" with yet another step, the engine stops after four.
 
-**It catches plugin errors.** Plugins must not throw out of `confirm` and `resume`, but a
-plugin is third-party code, so the engine catches anyway.
+**It catches plugin errors.** Plugins must not throw from `confirm` and `resume`. But a plugin is third-party code, so the engine catches errors anyway.
 
-The state machine is a table of transitions in its own file. It has no promises, no provider
-and no clock, so every allowed and forbidden transition is a small unit test.
+The state machine is a table of allowed transitions in its own file. It has no promises, no provider and no clock, so every allowed and forbidden transition is a small unit test.
 
-## How a payment flows
+## How a payment goes {#how-a-payment-flows}
 
-A card, with an authentication step in a frame:
+A card, with a bank check in a frame:
 
 ```mermaid
 sequenceDiagram
@@ -134,7 +114,7 @@ sequenceDiagram
     E-->>F: succeeded
 ```
 
-A hosted payment page, where the shopper leaves the site:
+A payment page on the bank's site, where the shopper leaves your site:
 
 ```mermaid
 sequenceDiagram
@@ -156,8 +136,7 @@ sequenceDiagram
     B-->>P: the real outcome
 ```
 
-The second diagram is the one to remember. `status=success` came back on a URL the shopper
-could have typed by hand, so it decides nothing.
+Remember the second diagram. `status=success` came back in an address that the shopper could have typed by hand. So it decides nothing.
 
 ## Where things live
 
@@ -183,43 +162,30 @@ apps/
   bank-sim/              the https bank: both 3-D Secure protocols
 ```
 
-The demo keeps Feature-Sliced Design and its own zustand store. The store is now a copy of
-engine state: it subscribes, and never writes back. Two stores that can both change a payment
-would sooner or later disagree about whether the shopper was charged.
+The demo uses Feature-Sliced Design and has its own zustand store. That store only copies the engine state: it subscribes to the engine and never writes back. If two stores could both change a payment, sooner or later they would disagree about whether the shopper was charged.
 
 ## What is left out on purpose
 
-**No separate `capture` or `refund` command.** PayPal captures inside confirm/resume. Manual capture, refunds and fulfillment need a merchant workflow outside this client engine.
+**No separate `capture` or `refund` command.** PayPal captures the money inside confirm/resume. Manual capture, refunds and order delivery need a workflow on your server, outside this client engine.
 
-**No `authorized` or `refunded` status.** The acquiring bank reports both. They are mapped to
-`processing` and `canceled`. That loses information on purpose: the domain speaks its own
-vocabulary, not the bank's.
+**No `authorized` or `refunded` status.** The acquiring bank reports both, but they are mapped to `processing` and `canceled`. Some detail is lost on purpose: the engine uses its own small set of words, not the bank's.
 
-**No sandbox around plugin code.** A plugin runs with the page's full rights. Trusting a
-plugin means trusting its code.
+**No sandbox around plugin code.** A plugin runs with the full rights of the page. Trusting a plugin means trusting its code.
 
-**The core does not receive webhooks.** [The merchant example](./merchant-integration.md) calls three provider APIs and verifies Adyen notifications. The server persists payment truth and reconciles after browser closure; client polling updates the active checkout.
+**The core does not receive webhooks.** [The example server](./merchant-integration.md) calls three provider APIs and checks Adyen notifications. The server stores the real payment state and reconciles payments after the browser is closed. Polling from the client only updates the checkout that is open right now.
 
-## Two loose ends in the vocabulary
+## Two unfinished parts of the vocabulary {#two-loose-ends-in-the-vocabulary}
 
-Both are declared in the domain and honoured by nothing, and both are worth knowing before
-you write a plugin against them:
+Both are declared in the types but not used anywhere. Know about them before you write a plugin:
 
-**`PaymentActionKind: 'poll'` has no browser runner.** `@checkout-kit/runtime-browser`
-registers `redirect`, `collect_fields`, `sdk_handoff` and `display`. No shipped plugin
-declares `poll` in `capabilities.actions`, so `assertCovers` never fires - but a plugin author
-following the action table in [plugin-authoring.md](./plugin-authoring.md) will get a
-boot-time throw. Payments that settle later are handled by `display` plus the engine's own
-polling; a bare `poll` action has no path through the browser runtime today.
+**`PaymentActionKind: 'poll'` has no browser runner.** `@checkout-kit/runtime-browser` registers `redirect`, `collect_fields`, `sdk_handoff` and `display`. No shipped plugin declares `poll` in `capabilities.actions`, so `assertCovers` never complains. But if you follow the step table in [plugin-authoring.md](./plugin-authoring.md) and declare `poll`, the engine will throw an error at startup. Payments that finish later are handled with `display` plus the engine's own polling; a plain `poll` step cannot run in the browser runtime today.
 
-**`ActionSurface: 'popup'` is dead.** It is in the union and in the scripted runners in
-`@checkout-kit/testing`, and nowhere else: no browser runner supports it and no plugin returns
-it.
+**`ActionSurface: 'popup'` is not used.** It exists in the type and in the scripted runners in `@checkout-kit/testing`, and nowhere else: no browser runner supports it and no plugin returns it.
 
 ## Further reading
 
-- **[Writing a payment plugin](./plugin-authoring.md)** — the contract from the other side.
-- **[Iframes and 3-D Secure](./iframe.md)** — how an embedded bank page is sandboxed.
+- **[Writing a payment plugin](./plugin-authoring.md)** — the same contract, seen from the plugin side.
+- **[Iframes and 3-D Secure](./iframe.md)** — how a bank page inside your page is isolated.
 - **[Security headers](./security-headers.md)** — every header the bank simulator sends.
 - **[Mock payment API](../packages/testing/README.md)** — endpoints, state machine, test
   cards, idempotency.

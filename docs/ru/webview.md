@@ -1,20 +1,31 @@
-# WebView и нативный хост
+# WebView и мобильные приложения
 
 > [English](../webview.md)
 
-`@checkout-kit/webview-bridge` связывает веб-чекаут с React Native WebView. Native code импортирует /host или /protocol без DOM и React Native dependency; root используется в странице.
+Мобильное приложение может показать веб-страницу оплаты внутри WebView (встроенного браузера). `@checkout-kit/webview-bridge` позволяет странице и приложению безопасно общаться: страница сообщает, что происходит с оплатой, а приложение может отправлять команды, например «отменить».
 
-## Страница
+У пакета три точки входа. Нативная часть импортирует `/host` или `/protocol`. Они работают без браузера и без зависимости от React Native.
+
+| Импорт                                  | Где работает                                                                            |
+| --------------------------------------- | --------------------------------------------------------------------------------------- |
+| `@checkout-kit/webview-bridge`          | На веб-странице: `createWebViewBridge(engine, options)`.                                |
+| `@checkout-kit/webview-bridge/host`     | В приложении: обработка сообщений, отправка команд, правила навигации, ссылки возврата. |
+| `@checkout-kit/webview-bridge/protocol` | Где угодно: типы, версия протокола и строгие разборщики сообщений.                      |
+
+## На веб-странице {#web-page}
 
 ```ts
 import { createWebViewBridge } from '@checkout-kit/webview-bridge'
 const bridge = createWebViewBridge(engine, { reportHeight: true })
-// На завершении жизни документа: bridge.stop()
+// Register once for this document, and call bridge.stop() when disposing the checkout.
 ```
 
-Без ReactNativeWebView bridge ничего не делает. Внутри WebView отправляет PAYMENT_READY, state/action и проверенные outcomes. Card fields/SDK payload не копируются. OnError сообщает о доставке без изменения оплаты.
+- Мост сам находит `window.ReactNativeWebView`. В обычном браузере он ничего не делает.
+- Он отправляет `PAYMENT_READY`, события состояния и шагов, а также проверенные результаты.
+- Данные в каждом сообщении отбираются поле за полем. Данных карты там никогда нет.
+- `onError` может сообщить, что сообщение не удалось доставить в приложение. На оплату это не влияет.
 
-## Команды хоста
+## В приложении {#native-host}
 
 ```ts
 import {
@@ -41,22 +52,41 @@ if (handle.sessionId) {
 }
 ```
 
-ShowReceipt и webview принадлежат host app. Передавайте данные onMessage в handle только с URL документа мерчанта. Session берётся из PAYMENT_READY, id команды уникален. Чужая session, повтор id, malformed payload и provider frame отвергаются. Ping возвращает ready с correlationId.
+Как работают сессии и команды:
 
-CreateCommandScript сериализует параметры данными; не интерполируйте token в исполняемый JS. Handler принимает новую session только по ready и игнорирует повторные события.
+- Каждая команда должна содержать id сессии из сообщения `PAYMENT_READY`, а не какой-то id, придуманный в приложении.
+- Страница отклоняет команды из другой сессии, команды с повторяющимся id, повреждённые данные и команды, отправленные из фреймов провайдера.
+- На команду `ping` приходит `PAYMENT_READY` с id команды в поле `correlationId`.
+- Приложение забывает старую сессию только тогда, когда приходит новое `PAYMENT_READY`. Повторные события отбрасываются.
 
-## Навигация и возврат
+Правила безопасности:
 
-CreateNavigationPolicy({ allow, openExternally, returnScheme }) сравнивает exact origin и границу директории: /checkout не разрешает /checkout-admin. URL credentials запрещены.
+- Собирайте команды через `createCommandScript`. Не вставляйте токен возврата в строку JavaScript вручную. Функция передаёт параметры как данные и работает с `WebView.injectJavaScript`.
+- В `onMessage` принимайте сообщения только с адреса своей страницы оплаты — даже если WebView разрешено открывать страницы банка.
 
-Разберите четыре решения: разрешённая merchant/provider page остаётся в WebView; external URL открывается ОС; custom-scheme return блокируется, разбирается parseReturnDeepLink и передаётся PAYMENT_RESUME; остальные URL запрещаются.
+**Навигация.** `createNavigationPolicy({ allow, openExternally, returnScheme })` сравнивает HTTPS-origin и целые папки в пути: разрешение `/checkout` **не** разрешает `/checkout-admin`. Когда приходит ссылка возврата с вашей схемой, разберите её через `parseReturnDeepLink` и отправьте `PAYMENT_RESUME` с полученными параметрами. После этого страница заново читает заказ с вашего сервера. Сама ссылка возврата не означает, что оплата прошла.
 
-Навигация банка не делает его сообщения авторитетными: onMessage фильтруется отдельно. Deep link передаёт evidence, не доказательство успеха. POST redirect содержит form fields; его нельзя заменить одним URL.
+[Пример мобильного приложения](https://github.com/pavel-labs/checkout-kit/tree/main/examples/react-native-checkout) · [Руководство по WebView](https://pavel-labs.github.io/checkout-kit/ru/webview.html)
 
-## Время жизни и устройства
+## Навигация и ссылки возврата {#navigation-and-return-handling}
 
-До навигации установите обработчик initial Linking URL и будущих событий. Сохраняйте return до PAYMENT_READY, сбрасывайте readiness при новой загрузке документа. Resume перечитывает merchant order.
+Для каждого адреса, который WebView хочет открыть, примите одно из четырёх решений:
 
-[Нативный пример](../../examples/react-native-checkout/README.md) реализует очереди, session ids и безопасные команды. React Native/WebView dependencies, scheme registration и сборки iOS/Android принадлежат host app. Node/browser tests не заменяют запуск на устройстве.
+1. **Разрешить** в WebView — ваши страницы оплаты и разрешённые страницы провайдера.
+2. **Открыть снаружи** — в системном браузере телефона или в другом приложении.
+3. **Заблокировать и продолжить оплату** — для ссылки возврата с вашей схемой: не открывать её, а разобрать и отправить `PAYMENT_RESUME`.
+4. **Отклонить** — всё остальное.
 
-[Runtime](./runtime.md) · [Решение проблем](./troubleshooting.md)
+Сравнивайте точные origin и целые папки в пути. Адреса с логином или паролем внутри запрещены.
+
+Установите обработчик ссылок возврата в приложении **до того**, как начнётся шаг SDK или перенаправление:
+
+- обрабатывайте и ссылку, которой открыли приложение (начальный URL из `Linking`), и ссылки, пришедшие позже;
+- ссылки возврата, пришедшие до `PAYMENT_READY`, складывайте в очередь;
+- сбрасывайте флаг «готово», когда в WebView загружается новая страница.
+
+Перенаправление методом POST передаёт ещё и поля формы. Его нельзя заменить простым открытием адреса.
+
+## Проверка на настоящем устройстве {#verify-on-the-actual-device}
+
+[Пример на React Native](../../examples/react-native-checkout/README.md) показывает работу с сессиями, очередь ссылок возврата и фильтрацию в `onMessage`. Зависимости React Native и WebView, а также регистрация вашей схемы ссылок относятся к вашему приложению. Соберите приложение и проверьте его на iOS и Android: тесты в браузере и Node мобильное приложение не собирают.

@@ -63,7 +63,7 @@ This stand supports both, so you can compare them side by side.
   "Open bank in this window" button — the app sends a `termUrl`, which is what tells
   the ACS to redirect instead of postMessage.)
 
-ELI5: iframe = the bank is picture-in-picture on your TV. Redirect = you change the
+In simple words: iframe = the bank is picture-in-picture on your TV. Redirect = you change the
 channel to the bank, then it changes you back.
 
 Note the state difference: redirect wipes all in-memory React state (full reload), so
@@ -76,9 +76,9 @@ The ACS only ever redirects back to `PARENT_ORIGIN`. A `termUrl` pointing anywhe
 is rejected with `400` — otherwise a phisher could turn the bank page into an
 **open redirect** to steal users.
 
-## Explain-like-I'm-5 glossary
+## Glossary in simple words
 
-| Thing                              | Kid version                                                                                            |
+| Thing                              | In simple words                                                                                        |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | **origin**                         | a page's "home address" (protocol + host + port). Different port = different home.                     |
 | **cross-origin**                   | the bank lives at a _different_ home than our app.                                                     |

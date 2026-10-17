@@ -2,61 +2,51 @@
 
 > Русская версия: [ru/backend.md](./ru/backend.md)
 
-[Merchant integration](./merchant-integration.md) describes runnable routes, sessions, idempotency and notification verification.
+[Merchant server](./merchant-integration.md) describes the ready routes, sessions, idempotency and notification checks of the example server. This page explains the general idea.
 
-The browser adapters call your merchant API; the API calls the payment provider. The runnable
-[server example](../examples/server/README.md) implements Stripe, Adyen and PayPal routes,
-with official sandbox SDKs and a separate local simulator. This guide explains the general
-boundary; each provider package defines its exact endpoint contract.
+The plugin in the browser calls **your** server API, and your server calls the payment provider. The [example server](../examples/server/README.md) has routes for Stripe, Adyen and PayPal, using the official sandbox SDKs, plus a separate local simulator. Each provider package describes its exact routes.
 
 ```text
 browser: plugin  →  your API  →  provider's API
 ```
 
-This page is what to build on the right-hand side of that arrow. It is short, because the
-plugin contract is short.
+This page is about the right side of that arrow: what your server must do. It is short, because the plugin contract is short.
 
-## Why not straight from the browser
+## Why not call the provider from the browser {#why-not-straight-from-the-browser}
 
-Three reasons, in order of how quickly they bite:
+Three reasons, from the most urgent:
 
-1. **The key.** Stripe's `sk_...`, Adyen's `x-api-key`, a bank's `userName`/`password`.
-   Anything the browser can send, anyone can read and send too.
-2. **The truth.** A browser tells you where it has been, not what happened. `?status=success`
-   in a return URL is typed by whoever typed the URL.
-3. **CORS.** Most provider APIs do not answer browsers at all, which is not an accident.
+1. **The secret key.** Stripe's `sk_...`, Adyen's `x-api-key`, a bank's `userName`/`password`. Anything the browser can send, anyone can read and send too.
+2. **The real result.** A browser tells you where it has been, not what happened. `?status=success` in a return address can be typed by anyone.
+3. **CORS.** Most provider APIs do not answer browsers at all, and this is intentional.
 
-## The four endpoints
+## The endpoints {#the-four-endpoints}
 
-A plugin needs the same small set whatever the provider looks like underneath.
+A plugin needs the same small set of routes, whatever the provider looks like inside.
 
-| Plugin method  | Your endpoint                | What it does                              |
-| -------------- | ---------------------------- | ----------------------------------------- |
-| `createIntent` | `POST /payments`             | starts a payment, returns its id          |
-| `confirm`      | `POST /payments/:id/confirm` | sends the instrument, returns the outcome |
-| `resume`       | `POST /payments/:id/resume`  | takes evidence, returns the outcome       |
-| `getIntent`    | `GET /payments/:id`          | the current state, authoritative          |
-| `cancel`       | `POST /payments/:id/cancel`  | optional                                  |
+| Plugin method  | Your route                   | What it does                                           |
+| -------------- | ---------------------------- | ------------------------------------------------------ |
+| `createIntent` | `POST /payments`             | starts a payment, returns its id                       |
+| `confirm`      | `POST /payments/:id/confirm` | takes the payment instrument, returns the result       |
+| `resume`       | `POST /payments/:id/resume`  | takes what came back from the step, returns the result |
+| `getIntent`    | `GET /payments/:id`          | the current state; this is the source of truth         |
+| `cancel`       | `POST /payments/:id/cancel`  | optional                                               |
 
-`getIntent` is the important one. It is what the engine falls back to when an answer is not
-final, what polling calls, and what a shopper who reloads the page ends up on.
+`getIntent` is the most important one. The engine uses it when an answer is not final, polling calls it, and a shopper who reloads the page ends up there.
 
-## What never comes back out
+## What must never be returned {#what-never-comes-back-out}
 
-Return only what the checkout has to render:
+Return only what the checkout needs to show:
 
-- the amount, the currency, the status;
-- the message the issuer gave for a decline, in the issuer's words;
-- the next action, if the provider asked for one.
+- the amount, the currency and the status;
+- the bank's decline message, in the bank's own words;
+- the next step, if the provider asked for one.
 
-Never return the provider's raw response, your API keys, the PAN, or anything you would not
-want in a browser's memory. The conformance suite checks the last one for every plugin in
-this repository: it pays with a card and then walks the whole returned object looking for it.
+Never return the provider's raw response, your API keys, the card number, or anything you would not want in the browser's memory. The conformance tests check the card number for every plugin in this repository: they pay with a card and then search the whole returned object for it.
 
-## Worked example: a card processor
+## Example: a card processor {#worked-example-a-card-processor}
 
-Express, one provider, no framework opinions. The plugin calls this; the browser holds
-nothing.
+Express, one provider, nothing extra. The plugin calls these routes; the browser keeps nothing secret.
 
 ```js
 import express from 'express'
@@ -116,43 +106,29 @@ app.get('/payments/:id', async (req, res) => {
 })
 ```
 
-Note what `resume` does not do: it does not read `req.body.evidence.params.status`. The
-evidence tells you _which_ payment came back, and the provider tells you what happened to it.
+Note what `resume` does **not** do: it does not read `req.body.evidence.params.status`. The data from the browser tells you _which_ payment came back. What happened to it, the provider tells you.
 
-## The rules that matter
+## The important rules {#the-rules-that-matter}
 
-**The amount comes from your catalogue.** The plugin sends a `planId`, not a price.
+**The amount comes from your catalog.** The plugin sends a `planId`, not a price.
 
-**Pass the idempotency key through.** The plugin generates one per attempt and sends it on
-every call of that attempt. Forward it to the provider. This is what makes a retry safe.
+**Pass the idempotency key on.** The plugin creates one key per attempt and sends it with every request of that attempt. Forward it to the provider. This is what makes a retry safe.
 
-**Check who is asking.** These endpoints move money. They need the same session or token
-check as the rest of your API, and the payment has to belong to the person asking for it.
+**Check who is asking.** These routes move money. They need the same session or token check as the rest of your API, and the payment must belong to the person who asks about it.
 
-**Decide with webhooks, tell the page by polling.** The provider will call your webhook when
-an asynchronous payment settles - that is the event you trust and store. The checkout page
-finds out because `getIntent` starts returning the new status. Neither the plugin nor the
-engine needs to know a webhook exists.
+**Webhooks decide; polling tells the page.** When a delayed payment completes, the provider calls your webhook. That is the event you trust and store. The checkout page finds out because `getIntent` starts returning the new status. Neither the plugin nor the engine needs to know that webhooks exist.
 
-**Return the issuer's message.** "Your card has insufficient funds" is what the shopper needs
-to hear. "Payment failed" sends them to your support queue instead of to their bank.
+**Return the bank's message.** "Your card has insufficient funds" is what the shopper needs to hear. "Payment failed" sends them to your support team instead of to their bank.
 
-## For a hosted page, fields, a wallet or a transfer
+## For a payment page, hosted fields, a wallet or a transfer {#for-a-hosted-page-fields-a-wallet-or-a-transfer}
 
-The same four endpoints, with one addition each:
+The same routes, with one addition each:
 
-- **Hosted page** - register the order, return the URL and any signed parameters. On the way
-  back, ignore the query string and read the order.
-- **Hosted fields** - exchange the token for a charge. The token arrives from the provider's
-  frame; your server is what turns it into money.
-- **Wallet** - the wallet payload goes to the provider from your server. On Apple Pay you
-  also need the merchant validation endpoint, which is a server call by definition.
-- **Instant transfer** - ask the provider for the code, return it, and let the engine poll
-  `getIntent` until your webhook has marked the payment paid.
+- **Payment page on the provider's site** — register the order and return the page address with any signed parameters. When the shopper comes back, ignore the query string and read the order from the provider.
+- **Hosted fields** — exchange the token for a charge. The token comes from the provider's frame; your server is what turns it into money.
+- **Wallet** — your server sends the wallet data to the provider. Apple Pay also needs a merchant validation route, which by its nature runs on the server.
+- **Instant transfer** — ask the provider for the code, return it, and let the engine poll `getIntent` until your webhook marks the payment as paid.
 
-## What this repository does instead
+## What this repository does instead {#what-this-repository-does-instead}
 
-The demo has no server. A mock backend built on MSW answers in the provider's shape directly,
-so the plugins are exercised end to end without one. Everywhere a real integration would call
-your API, the demo calls the mock - the plugin code is the same either way, which is what
-makes it a useful reference despite the missing half.
+The demo has no server. A fake backend built on MSW answers directly in the provider's format, so the plugins can be tested end to end without a server. Wherever a real integration would call your API, the demo calls the fake one. The plugin code is the same in both cases, which is why it is still a useful example.

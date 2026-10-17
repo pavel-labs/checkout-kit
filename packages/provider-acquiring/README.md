@@ -1,12 +1,15 @@
 # @checkout-kit/provider-acquiring
 
-Reference adapter for **3-D Secure 1 redirect, iframe or top window**. Provider id: `acquiring`. Instruments: **card**.
+This is an **example adapter** for a bank (acquirer) whose API takes HTML form fields, uses numbers as statuses and the old bank check **3-D Secure 1**, shown in an iframe or in the whole window.
 
-This package implements checkout-kit's example merchant protocol. It is useful as an executable integration template and with `@checkout-kit/testing/backend`; it is not a certified adapter for a named bank or payment network. For Stripe, Adyen and PayPal, use their dedicated provider packages.
+- Provider id: `acquiring`.
+- What the shopper pays with (instrument): a card.
+
+The package shows checkout kit's example server protocol. Use it as a working template for your own integration, together with the fake server from `@checkout-kit/testing/backend`. It is **not** a certified adapter for any real bank or payment network. For Stripe, Adyen and PayPal, use their own provider packages.
 
 ## Configure
 
-Follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html) for package archives or registry setup.
+To install the packages, follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html).
 
 ```ts
 import { defineProvider } from '@checkout-kit/core'
@@ -27,33 +30,38 @@ const provider = defineProvider({
 // Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-`baseUrl` is your merchant API. Optional `headers` carry merchant session or CSRF headers; `credentials` controls cookies. Keep payment-service secrets on the server. The host supplies the browser runtime, return URL and any SDK adapter.
+- `baseUrl` is the address of your server API.
+- `headers` (optional) can carry your session or CSRF headers. `credentials` controls whether cookies are sent.
+- Keep the payment service's secret keys on your server.
+- Your app provides the browser runtime, the return address and an SDK adapter, if one is needed.
 
 ## Merchant API
 
-Paths below are relative to `baseUrl`. Authenticate the shopper, resolve price from `planId`, verify order ownership, and enforce allowed state transitions on the server. Monetary amounts are integers in the currency's minor units.
+The paths below are relative to `baseUrl`. On your server: log in the shopper, take the price from `planId`, check that the order belongs to this shopper, and allow only valid status changes. Amounts are integers in the smallest currency unit (for example, cents).
 
-| Method | Path                              | Contract                                                                 |
-| ------ | --------------------------------- | ------------------------------------------------------------------------ |
-| POST   | `/rest/register.do`               | Form `{ planId, orderNumber, currency, amount }`; return `{ orderId }`.  |
-| POST   | `/rest/getOrderStatusExtended.do` | Form `{ orderId }`; return verified numeric status and active challenge. |
-| POST   | `/rest/paymentorder.do`           | Form `{ MDORDER, $PAN, $EXPIRY, $CVC }`; return result or challenge.     |
-| POST   | `/rest/finish3ds.do`              | Form `{ MD, PaRes }`; finish authentication.                             |
-| POST   | `/rest/reverse.do`                | Form `{ orderId }`; cancel an unfinished order.                          |
+| Method | Path                              | What it does                                                                      |
+| ------ | --------------------------------- | --------------------------------------------------------------------------------- |
+| POST   | `/rest/register.do`               | Form `{ planId, orderNumber, currency, amount }`. Returns `{ orderId }`.          |
+| POST   | `/rest/getOrderStatusExtended.do` | Form `{ orderId }`. Returns the checked numeric status and the active bank check. |
+| POST   | `/rest/paymentorder.do`           | Form `{ MDORDER, $PAN, $EXPIRY, $CVC }`. Returns the result or a bank check.      |
+| POST   | `/rest/finish3ds.do`              | Form `{ MD, PaRes }`. Finishes the bank check.                                    |
+| POST   | `/rest/reverse.do`                | Form `{ orderId }`. Cancels an order that is not finished yet.                    |
 
-All requests are form-encoded and include `userName` / `password`. The shown credentials belong only to the simulator. A browser integration must point at a merchant proxy that injects real credentials server-side and validates the request. Never put real acquirer credentials in this config.
+Responses for a payment, order or charge contain `{ id, amount, currency, status, error? }`. Statuses are checkout kit's `PaymentStatus` values. A decline may have `{ code?, message }` in `error`.
 
-Status responses include `errorCode`, `orderStatus`, `amount`, `currency` and optional issuer error fields. While `orderStatus === 5`, the proxy must also include the active `MD`, `acsUrl` and `paReq`, bound to that order; the adapter uses them to recover a challenge after reload and reject another order's evidence. Numeric currencies supported by this example are USD/840, EUR/978 and GBP/826.
+**Login and password.** All requests are sent as form data and contain `userName` / `password`. The values in the example above work **only** with the simulator. In a browser integration, `baseUrl` must point to a proxy on your server. The proxy adds the real login and password on the server side and checks the request. Never put real bank credentials into this config.
 
-The demo synthesizes `PaRes` from a test verdict. A real acquirer requires its authenticated, signed result and its own supported protocol; implement that exchange on your server. Do not forward the demo verdict as proof of payment.
+**Statuses.** Responses contain `errorCode`, `orderStatus`, `amount`, `currency` and optional error fields from the bank. While `orderStatus === 5`, the proxy must also return the active `MD`, `acsUrl` and `paReq` of this order. With them, the adapter can continue the bank check after a page reload and reject step data from another order. This example supports these currency codes: USD/840, EUR/978 and GBP/826.
+
+**The bank check result.** The demo makes up `PaRes` from a test answer. A real bank requires its own signed result and its own protocol; implement this exchange on your server. Never treat the demo answer as proof of payment.
 
 ## Retries and verification
 
-The adapter reads the authoritative order before reopening payment, spending another token or canceling. Successful, declined and canceled orders retain their outcome; processing orders continue to be polled. A retry after a lost reply checks the same order before issuing another mutation.
+Before it reopens a payment, uses another token or cancels, the adapter reads the real order from the server. Successful, declined and canceled orders keep their result. For orders that are still processing, the status keeps being checked. After a lost reply, a retry first checks the same order and only then sends another change.
 
-Creation uses `orderNumber` in the form body for idempotency. Your proxy must make confirmation and authentication settlement atomic for each order; the simulated acquirer is a protocol fixture, not a production gateway.
+**One payment per order.** For creation, the `orderNumber` field in the form protects against duplicates. Your proxy must make confirmation and the end of the bank check atomic for each order. The simulated bank only shows the protocol; it is not a production gateway.
 
-Run this package's contract and regression tests from the repository:
+To run this package's contract and regression tests in the repository:
 
 ```sh
 npm ci

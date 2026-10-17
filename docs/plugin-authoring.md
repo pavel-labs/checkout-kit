@@ -100,7 +100,7 @@ would - it can be declined, and the bank can still ask for authentication.
 
 **`resume`** continues after that step finished. It receives the raw evidence the runner
 collected. **This is where your protocol's meaning lives.** A `transStatus` of `Y`, an
-`orderStatus` of 6, a `PaRes` blob, a wallet token — you read all of that here and nowhere
+`orderStatus` of 6, a `PaRes` value, a wallet token — you read all of that here and nowhere
 else. That is why a bank using 3-D Secure 1 and a processor using 3-D Secure 2 both reach
 the same checkout screen.
 
@@ -147,7 +147,7 @@ instead of running forever. When polling wins you get `{ via: 'poll' }` evidence
 `resume` reads the payment back and says what happened.
 
 Give `value` always: a shopper paying on the same phone they are reading on cannot scan
-their own screen. Add `imageUrl` if your provider renders the QR - the kit ships no QR
+their own screen. Add `imageUrl` if your provider renders the QR - the kit has no QR
 encoder - and `deeplink` if it offers one.
 
 ## Rules that types cannot enforce
@@ -160,12 +160,12 @@ turns that into an error result.
 **Evidence is a hint, not the truth.** What comes back from a redirect or a `postMessage`
 tells you where the browser has been. Only your API knows whether money moved, so ask it.
 The hosted-page plugin ignores `status=success` in the return URL and reads the order again.
-There is an end-to-end test that arrives claiming success without paying, and it lands on the
+There is an end-to-end test that arrives claiming success without paying, and it ends on the
 failure page.
 
 **Return the issuer's message, not your own.** When a card is declined, the shopper may read
 your text out to their bank. `"Your card was declined."` is the issuer speaking.
-`"Unexpected status declined"` is a bug that once shipped here.
+`"Unexpected status declined"` is a bug that was once released here.
 
 **A declined card is not an error.** Some APIs report a refusal as a successful call with a
 status field, others as an HTTP error. Map both to `declined`. Use `error` only when your

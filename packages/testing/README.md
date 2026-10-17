@@ -1,14 +1,14 @@
 # @checkout-kit/testing
 
-Fixtures and simulators for checkout development. These do not call provider accounts or process real payments.
+Test data and simulators for developing a checkout. Nothing here calls real provider accounts or makes real payments.
 
-| Entry point                     | Exports                                                                    |
-| ------------------------------- | -------------------------------------------------------------------------- |
-| `@checkout-kit/testing`         | SCENARIO_CARDS, outcomes and decline copy, without the backend.            |
-| `@checkout-kit/testing/engine`  | createFakeProvider, fakeIntent/action, scripted runners and abort helpers. |
-| `@checkout-kit/testing/backend` | MSW handlers, resetBackend and simulated merchant state.                   |
+| Import                          | What is inside                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| `@checkout-kit/testing`         | `SCENARIO_CARDS` (test cards), outcomes and decline messages. No fake server.       |
+| `@checkout-kit/testing/engine`  | `createFakeProvider`, `fakeIntent` / `fakeAction`, scripted runners, abort helpers. |
+| `@checkout-kit/testing/backend` | MSW request handlers, `resetBackend` and a simulated merchant server state.         |
 
-## Engine fixtures
+## Testing the engine
 
 ```ts
 import { createCheckout } from '@checkout-kit/core'
@@ -28,14 +28,18 @@ const result = await engine.pay({
 console.log(result.status, calls.confirm.length)
 ```
 
-Script confirm/resume outcomes, delay creation/read responses and inspect calls to verify retries, aborts and host lifecycle without a network.
+With the fake provider you can set the results of `confirm` and `resume`, slow down create and read responses, and look at the recorded calls. This lets you check retries, cancels and your app's lifecycle without any network.
 
-## MSW backend
+## Fake server (MSW)
 
-Install MSW 2 only when using /backend. Register its handlers with setupServer in Node or setupWorker explicitly in the demo browser; resetBackend cleans the fixture.
+You need MSW 2 only for the `/backend` import.
 
-Node state is in memory. The browser demo persists simulated state in session storage to survive top redirects. It is still a simulator, not an application database or authenticated merchant server. Scenario cards/tokens never go to real payment APIs.
+- In Node, register its handlers with `setupServer`.
+- In the browser demo, start them explicitly with `setupWorker`.
+- `resetBackend` clears the test state.
 
-The [reference composition](../../apps/demo/src/app/providers/checkout.ts) registers the six protocols. [Testing](https://pavel-labs.github.io/checkout-kit/testing.html) distinguishes fixtures, HTTP integration, browser scenarios and account checks.
+In Node the state lives in memory. The browser demo keeps the simulated state in session storage, so it survives full-page redirects. It is still only a simulator — not an application database and not a real server with logins. Test cards and tokens never go to real payment APIs.
 
-[Русская версия](./README.ru.md) · [Conformance](../conformance/README.md)
+The [demo setup file](https://github.com/pavel-labs/checkout-kit/blob/main/apps/demo/src/app/providers/checkout.ts) registers all six example protocols. The [testing guide](https://pavel-labs.github.io/checkout-kit/testing.html) explains the difference between test data, HTTP integration tests, browser scenarios and checks on a real sandbox account.
+
+[Русская версия](https://github.com/pavel-labs/checkout-kit/blob/main/packages/testing/README.ru.md) · [Conformance](https://github.com/pavel-labs/checkout-kit/blob/main/packages/conformance/README.md)

@@ -2,9 +2,15 @@
 
 > [Русская версия](./ru/runtime.md)
 
-`@checkout-kit/runtime-browser` executes actions. The engine owns the attempt; runners supply evidence; your provider and merchant API establish payment.
+`@checkout-kit/runtime-browser` runs the extra steps (actions) of a payment in the browser: opening the bank page, showing a QR code, starting a provider SDK.
 
-## Wire the browser once
+Who does what:
+
+- the **engine** keeps track of the payment attempt;
+- the **runners** from this package perform the steps and bring back what happened;
+- the **provider and your server** decide whether the payment really succeeded.
+
+## Set it up once {#wire-the-browser-once}
 
 ```ts
 import { createBrowserRuntime } from '@checkout-kit/runtime-browser'
@@ -12,18 +18,21 @@ const runtime = createBrowserRuntime({ returnPath: '/checkout/payment/return' })
 // Give createCheckout runtime.runners, runtime.storage and runtime.returnUrl.
 ```
 
-Include the deployed base path in `returnPath`. It resolves against the current origin. Default engine memory storage cannot survive full-page navigation; use runtime storage.
+- `returnPath` is the page where the shopper comes back after a redirect. If your site lives in a subfolder, include it. The path is added to the current site address.
+- Always pass `runtime.storage` to the engine. The engine's default storage lives in memory and disappears when the browser opens another page.
 
-| Action           | Behavior                                                       | Host setup                                          |
-| ---------------- | -------------------------------------------------------------- | --------------------------------------------------- |
-| `redirect`       | GET/POST in an iframe or top window; preserve URL/form fields. | A mount for iframe; a working return route for top. |
-| `collect_fields` | Provider-owned iframe returns an opaque token by postMessage.  | Mount and exact frame origin.                       |
-| `sdk_handoff`    | Request a registered adapter, optionally load its SDK script.  | Adapter matching `action.sdk`.                      |
-| `display`        | Show QR/code/instructions while the engine polls.              | Mount and optional provider-rendered QR URL.        |
+Which steps are supported, and what you need for each:
 
-A headless host supplies `createMount(element)` to `engine.runPendingAction({ mount })`. React uses `PaymentActionHost`. There is no supplied popup runner; register your own for that surface.
+| Action           | What happens                                                                                           | What your page needs                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `redirect`       | Opens an address (GET or POST) in an iframe or in the whole window. Keeps the address and form fields. | For an iframe: a place to show it. For the whole window: a working return page. |
+| `collect_fields` | The provider's iframe collects the card details and sends back a token (via `postMessage`).            | A place to show it, and the exact origin of the iframe.                         |
+| `sdk_handoff`    | Calls a registered SDK adapter. It can also load the SDK script.                                       | An adapter whose name matches `action.sdk`.                                     |
+| `display`        | Shows a QR code, a payment code or instructions while the engine checks the status.                    | A place to show it. Optionally, a QR image URL from the provider.               |
 
-## SDK lifecycle
+Without React, create the place yourself with `createMount(element)` and pass it to `engine.runPendingAction({ mount })`. In React, use `PaymentActionHost`. There is no ready runner for popup windows; if you need one, register your own.
+
+## Provider SDKs {#sdk-lifecycle}
 
 ```ts
 const runtime = createBrowserRuntime({
@@ -41,48 +50,60 @@ const runtime = createBrowserRuntime({
 })
 ```
 
-Your host implements `walletSdk`. Resolve the payload expected by the provider after the SDK finishes, not when a component mounts. [Stripe](./providers/stripe.md) supplies an SDK adapter; [Adyen](./providers/adyen.md) resolves additional details.
+You write `walletSdk` yourself. Return the result **after the SDK has finished** — not when its component appears on the screen. [Stripe](./providers/stripe.md) comes with a ready SDK adapter. For [Adyen](./providers/adyen.md), the adapter returns the extra details the provider asks for.
 
-Scripts are shared by URL and reject conflicting integrity settings. The runner bounds waits by deadline and abort; the host should also dismiss the SDK UI on abort.
+If two places load the same script address, it is loaded once. If they ask for different integrity hashes, the load is rejected. The runner stops waiting after a deadline or when the payment is canceled. On cancel, your code should also close the SDK's window.
 
-## Restore a redirect
+## Restore after a redirect {#restore-a-redirect}
 
-Recreate the same registrations/storage on the return route:
+On the return page, set up the engine the same way (same providers, same storage) and call:
 
 ```ts
 const result = await engine.hydrate(runtime.readReturnParams())
 ```
 
-Hydration reads saved provider, intent and action, then re-reads the order. Verified final state needs no new confirmation/capture. Evidence is bound to the saved action. A temporary outage preserves metadata: retry hydrate with the original parameters.
+What `hydrate` does:
 
-Serve the app at the exact return path. Keep query parameters and the same session storage until recovery completes. A different tab/system browser requires host-managed recovery.
+1. Reads the saved provider, payment id and step id.
+2. Asks the provider for the real order status.
+3. If the payment is already final, nothing else is sent — no second confirmation, no second capture.
 
-## Attempts, retries and cancellation
+The data from the address is accepted only if it belongs to the saved step. If the server is temporarily unavailable, the saved data is kept: call `hydrate` again later with the same parameters.
 
-| Situation                             | Operation                                                         |
-| ------------------------------------- | ----------------------------------------------------------------- |
-| Lost creation or confirmation reply   | Retry the same attempt/key; reconcile its existing intent.        |
-| Processing                            | Poll the same intent; a timeout remains unresolved.               |
-| Verified decline/cancel               | A next payment may use a fresh intent/key.                        |
-| Start over                            | `reset()` clears local state; it does not cancel a server charge. |
-| Shopper cancellation                  | `abort()` stops work and requests cancellation when supported.    |
-| Payment succeeded during cancellation | Preserve succeeded; UI cannot reverse payment history.            |
+Requirements:
 
-The engine retains a key after an interrupted creation even if no id reached the page, and reuses the existing processing intent. The backend must enforce scoped idempotency and transitions atomically. Fulfillment comes from durable verified state, also after the browser closes.
+- your app must open at exactly the return address;
+- keep the address parameters and the same session storage until recovery is finished;
+- if the shopper comes back in a different tab or in the phone's system browser, the saved data is not there, so your app has to handle recovery itself.
 
-## Storage and message boundaries
+## Attempts, retries and cancel {#attempts-retries-and-cancellation}
 
-Session storage persists resumable metadata without card fields, SDK payloads or client secrets. A custom `StorageAdapter` implements `read`, `write` and `remove`, isolating sessions.
+| Situation                                 | What to do                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| No reply when creating or confirming      | Repeat the same attempt with the same key. The engine finds the payment that already exists.      |
+| The payment is processing                 | Keep checking the same payment. If time runs out, the result stays unknown — do not charge again. |
+| The provider clearly declined or canceled | The next try may create a new payment with a new key.                                             |
+| Start over                                | `reset()` clears the page state. It does **not** cancel a charge on the server.                   |
+| The shopper cancels                       | `abort()` stops the work and asks the provider to cancel, if the provider supports it.            |
+| The payment succeeded while canceling     | Keep "succeeded". The interface cannot undo a real payment.                                       |
 
-Iframe evidence must match sender, origin, type and action id. Copying/scanning a code does not prove payment; display finishes through polling. Clipboard failure supports manual copying, and runner DOM/listeners/timers are cleaned up.
+Even if creation was interrupted before any id reached the page, the engine keeps the key and reuses the payment that is already processing. Your server must make each operation run only once per key, and change states atomically. Deliver the order based on the confirmed status stored on the server — this must work even if the shopper has closed the browser.
 
-[WebView](./webview.md) covers native sessions and deep links. [Troubleshooting](./troubleshooting.md) covers missing mounts, SDKs and recovery.
+## What is stored, and which messages are accepted {#storage-and-message-boundaries}
 
-## URL security defaults
+Session storage keeps only what is needed to continue: ids. It never keeps card fields, SDK data or client secrets. If you write your own `StorageAdapter`, implement `read`, `write` and `remove`, and keep different sessions apart.
 
-Action URLs require HTTPS. Dynamic SDK scripts require explicit `security.scriptOrigins`;
-custom bank app links require `security.deeplinkProtocols`. HTTP is limited to loopback
-with `security.allowInsecureLocalhost: true` for local development. Return URLs must belong
-to the application origin. Import provider SDKs directly where possible.
+A message from an iframe is accepted only if the sender, origin, message type and step id all match. Copying or scanning a code does not prove that the shopper paid: a `display` step finishes only through status checks. If copying to the clipboard fails, the shopper can copy the code by hand. Runners remove their elements, listeners and timers when they finish.
 
-[Configure the policy and migration](./production.md).
+[WebView](./webview.md) covers mobile apps and deep links. [Troubleshooting](./troubleshooting.md) helps when the place to show a step is missing, the SDK does not answer or recovery fails.
+
+## Safety rules for addresses {#url-security-defaults}
+
+- Addresses of steps must use HTTPS.
+- Provider SDK scripts load only from origins you list in `security.scriptOrigins`.
+- Links to banking apps with their own scheme (for example `mybank://`) need `security.deeplinkProtocols`.
+- Plain HTTP is allowed only for `localhost` during development, with `security.allowInsecureLocalhost: true`.
+- The return address must belong to your own site.
+- Where possible, import the provider's SDK as a package instead of loading a script.
+
+[How to configure these rules and update old code](./production.md).

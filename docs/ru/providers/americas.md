@@ -1,7 +1,7 @@
 # Америка: провайдеры и банки
 
-::: info Примеры проектирования
-Эта страница описывает возможные адаптации. Готовые пакеты Stripe, Adyen, PayPal и точные границы перечислены в [каталоге](../packages.md). Региональное название здесь не означает поставляемую интеграцию.
+::: info Это примеры, а не готовые пакеты
+Эта страница показывает, **как можно** самостоятельно подключить этих провайдеров. Готовые пакеты есть только для Stripe, Adyen и PayPal — см. [список пакетов](../packages.md). Если провайдер здесь упомянут, это не значит, что checkout kit уже его поддерживает.
 :::
 
 > English version: [americas.md](../../providers/americas.md)
@@ -12,7 +12,7 @@
 
 США — карточный рынок. Большинство платежей — это карта и ничего больше, и до недавнего
 времени многие из них даже не спрашивали 3-D Secure: эмитенты там полагаются на скоринг, а не
-на челлендж при каждой покупке. Поэтому чекаут только под США часто идёт
+на проверку банком (challenge) при каждой покупке. Поэтому чекаут только под США часто идёт
 `confirm` → `succeeded` вообще без действий, а вся интересная работа — в кошельках и
 сохранённых картах.
 
@@ -21,19 +21,19 @@ Boleto и рассрочка на картах («cuotas»), о которой �
 
 ## Карта
 
-| Провайдер               | Где                  | Схема                         | Действие                   |
-| ----------------------- | -------------------- | ----------------------------- | -------------------------- |
-| Stripe                  | US, CA, LATAM        | PaymentIntent + `next_action` | `redirect` / `sdk_handoff` |
-| Braintree               | US, CA               | client token + nonce          | `sdk_handoff`              |
-| PayPal                  | везде                | order + approve + capture     | `sdk_handoff` / `redirect` |
-| Square                  | US, CA               | Web Payments SDK + токен      | `sdk_handoff`              |
-| Authorize.Net           | US, давние продавцы  | токен Accept.js               | `sdk_handoff`              |
-| Adyen                   | крупный бизнес       | объект `action`               | `redirect` / `sdk_handoff` |
-| Cybersource             | крупный бизнес, Visa | host-to-host + 3-D Secure     | `redirect`                 |
-| Worldpay / FIS          | крупный бизнес       | hosted page или host-to-host  | `redirect`                 |
-| Fiserv, Global Payments | их перепродают банки | hosted page                   | `redirect`                 |
-| dLocal, EBANX           | LATAM                | платёж + редирект или ваучер  | `redirect` / показ кода    |
-| Mercado Pago            | LATAM                | preference + init point       | `redirect` / `sdk_handoff` |
+| Провайдер               | Где                  | Схема                               | Действие                   |
+| ----------------------- | -------------------- | ----------------------------------- | -------------------------- |
+| Stripe                  | US, CA, LATAM        | PaymentIntent + `next_action`       | `redirect` / `sdk_handoff` |
+| Braintree               | US, CA               | client token + nonce                | `sdk_handoff`              |
+| PayPal                  | везде                | order + approve + capture           | `sdk_handoff` / `redirect` |
+| Square                  | US, CA               | Web Payments SDK + токен            | `sdk_handoff`              |
+| Authorize.Net           | US, давние продавцы  | токен Accept.js                     | `sdk_handoff`              |
+| Adyen                   | крупный бизнес       | объект `action`                     | `redirect` / `sdk_handoff` |
+| Cybersource             | крупный бизнес, Visa | host-to-host + 3-D Secure           | `redirect`                 |
+| Worldpay / FIS          | крупный бизнес       | hosted page или host-to-host        | `redirect`                 |
+| Fiserv, Global Payments | их перепродают банки | hosted page                         | `redirect`                 |
+| dLocal, EBANX           | LATAM                | платёж + перенаправление или ваучер | `redirect` / показ кода    |
+| Mercado Pago            | LATAM                | preference + init point             | `redirect` / `sdk_handoff` |
 
 ## Braintree и Square: сначала токен, потом списание
 
@@ -56,7 +56,7 @@ action: {
 }
 ```
 
-Адаптер создаёт Drop-in, ждёт покупателя и резолвится `{ nonce: payload.nonce }`. Дальше:
+Адаптер создаёт Drop-in, ждёт покупателя и возвращает `{ nonce: payload.nonce }`. Дальше:
 
 ```ts
 resume: async (intentId, evidence, opts) => {
@@ -89,7 +89,7 @@ Apple Pay и Google Pay везде дают один и тот же `sdk_handoff
 
 **PIX (Бразилия)** — мгновенный банковский перевод по QR-коду или строке для копирования.
 Покупатель открывает банковское приложение, платит, и бэкенд узнаёт об этом через секунды.
-Редиректить некуда и собирать нечего: вы показываете код и ждёте. Это действие `display` —
+Перенаправлять некуда и собирать нечего: вы показываете код и ждёте. Это действие `display` —
 см. [«Показать код и ждать»](./asia.md#показать-код-и-ждать), здесь всё один в один, а
 `@checkout-kit/provider-bank-transfer` — готовый плагин ровно такой формы.
 
@@ -101,7 +101,7 @@ Apple Pay и Google Pay везде дают один и тот же `sdk_handoff
 **Рассрочка** на картах LATAM — норма. Число платежей выбирается _до_ создания платежа,
 поэтому ему место в `CreateIntentInput.metadata`, а не в действии.
 
-**dLocal, EBANX и Mercado Pago** агрегируют всё это. Большинство их флоу сводится к
+**dLocal, EBANX и Mercado Pago** агрегируют всё это. Большинство их сценариев сводится к
 `redirect` + `return_url`, исключения — ваучеры и PIX.
 
 ## Банки в США
@@ -113,7 +113,7 @@ Chase Paymentech.
 
 Чего ждать:
 
-- **Hosted payment page** как рекомендуемый путь: создать сессию, редиректнуть, вернуться.
+- **Hosted payment page** как рекомендуемый путь: создать сессию, перенаправить, вернуться.
   `redirect` + `surface: 'top'`.
 - **Host-to-host с подписью.** Старые API подписывают склейку полей общим секретом. Считайте
   подпись на бэкенде — ей нужен секрет.
@@ -123,7 +123,7 @@ Chase Paymentech.
 ## Что стоит знать на практике
 
 **3-D Secure в США не обязателен.** Плагин всё равно обязан уметь `requires_action` — эмитент
-может попросить в любой момент, — но не стройте UI из предположения, что челлендж будет
+может попросить в любой момент, — но не стройте UI из предположения, что проверка банком будет
 всегда.
 
 **Проверка адреса значит больше, чем в Европе.** AVS и почтовый индекс — частые причины
