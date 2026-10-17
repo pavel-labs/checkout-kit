@@ -2,19 +2,7 @@
 
 > [English](../../providers/adyen.md)
 
-## Инструмент, SDK и сервер
-
-`@checkout-kit/provider-adyen` реализует Advanced flow. Component onSubmit возвращает state.data; передайте его как `wallet` с walletId `adyen`. Пересылаются paymentMethod, browserInfo, origin; цена/account/reference/return URL принадлежат серверу. Token означает storedPaymentMethodId; raw card запрещён по умолчанию и требует явного allowRawCardData с проверкой разрешений мерчанта.
-
-Настройки server: `ADYEN_API_KEY`, `ADYEN_MERCHANT_ACCOUNT`, `ADYEN_WEBHOOK_HMAC_KEY`; browser: `VITE_ADYEN_CLIENT_KEY`. [AdyenFields.tsx](../../../examples/react/AdyenFields.tsx) показывает components и additional details. BaseUrl включает `/api/adyen`.
-
-[AdyenPayment](../../../packages/provider-adyen/src/provider.ts) содержит merchant id, integer amount/currency, resultCode, action и refusal fields. Authorised отображается как succeeded: согласуйте capture/fulfillment. Пример не реализует manual capture; Pending/Received остаются processing.
-
-Поддержаны redirect, threeDS2, threeDS2Fingerprint, threeDS2Challenge. Остальные action shapes требуют реализации. SDK получает params.action и resolve из onAdditionalDetails со state.data; mount не завершает authentication. PaymentData связывает сервер.
-
-Уведомления проверяются official HMAC validator, account, суммой/валютой и порядком. Невалидный batch не применяется частично. Замените process-local state постоянным хранилищем.
-
-## Регистрация
+Этот адаптер работает со схемой **Advanced flow** от Adyen через ваш сервер. Поддерживает перенаправления, шаги 3DS2 в SDK Adyen, сохранённые способы оплаты и зашифрованные данные из компонентов Adyen Web.
 
 ```ts
 import { defineProvider } from '@checkout-kit/core'
@@ -33,26 +21,53 @@ await checkout.pay({
 })
 ```
 
-Импорт config-типа регистрирует id; динамический import загружает реализацию. Пример кода использует checkout как созданный вами engine. [React](../react.md) показывает runners, UI и восстановление.
+## Что отправляется и данные карты {#what-is-sent}
 
-## Точный API-контракт
+Из данных компонента на ваш сервер уходят только `paymentMethod`, `browserInfo` и `origin`. Сумму, валюту, аккаунт мерчанта, номер заказа и адрес возврата задаёт ваш сервер.
 
-Маршруты ниже относительны baseUrl; цена и ownership проверяются мерчантом. DTO названия сохранены из протокола:
+Инструмент `token` означает сохранённый способ оплаты (`storedPaymentMethodId`).
 
-| Merchant endpoint                               | Operation                                                           |
-| ----------------------------------------------- | ------------------------------------------------------------------- |
-| `POST /payments/sessions` with `{ planId }`     | Reserve a merchant order (not Adyen's Sessions API)                 |
-| `POST /payments/:id`                            | Call Adyen `/payments` with merchant-owned price and component data |
-| `POST /payments/:id/details` with `{ details }` | Call `/payments/details`, binding merchant-stored paymentData       |
-| `GET /payments/:id`                             | Read authoritative merchant state, updated by verified webhooks     |
-| `POST /payments/:id/cancel`                     | Cancel using the provider reference when one exists                 |
+Данные карты в открытом виде **по умолчанию запрещены**: инструмент `card` и `number`/`cvc` внутри данных компонента отклоняются. Ставьте `allowRawCardData: true`, только если ваш аккаунт Adyen и ваши договорённости по соответствию требованиям прямо это разрешают. Этот флаг — не сертификация PCI. Пример сервера всегда отклоняет данные карты в открытом виде.
 
-Проверяйте конечное состояние перед мутацией; cancel не переписывает paid. Сервер атомарно обеспечивает scoped-idempotency; callback не доказывает оплату. Установите runtime storage и hydrate на return route.
+## Что должен делать ваш сервер {#what-your-server-must-do}
 
-## Проверка аккаунта
+| Ваш маршрут                                  | Что делает                                                                      |
+| -------------------------------------------- | ------------------------------------------------------------------------------- |
+| `POST /payments/sessions` с `{ planId }`     | Резервирует заказ на вашей стороне. (Это **не** Sessions API от Adyen.)         |
+| `POST /payments/:id`                         | Вызывает `/payments` в Adyen с ценой сервера и данными компонента.              |
+| `POST /payments/:id/details` с `{ details }` | Вызывает `/payments/details`, добавляя `paymentData`, сохранённый на сервере.   |
+| `GET /payments/:id`                          | Читает настоящее состояние на вашем сервере. Его обновляют проверенные вебхуки. |
+| `POST /payments/:id/cancel`                  | Отменяет платёж по ссылке провайдера, если она есть.                            |
 
-Fixtures проверяют код; отдельно проверьте sandbox collection, authentication/approval, processing, redirect, потерянный ответ, buyer isolation и уведомления. [Merchant server](../merchant-integration.md) описывает постоянное состояние и выдачу заказа.
+Возвращайте только безопасную часть данных: `AdyenPayment`.
 
-[Восстановление](../runtime.md) · [Тестирование](../testing.md) · [README пакета](../../../packages/provider-adyen/README.md)
+## Дополнительные шаги {#extra-steps}
 
-Raw `card` и `number`/`cvc` в component data запрещены по умолчанию. `allowRawCardData: true` требует отдельной проверки PCI scope и разрешения Adyen; пример сервера raw data не принимает.
+- Адреса перенаправления и поля форм передаются без изменений.
+- Полный шаг 3DS2 передаётся вашему адаптеру SDK как `params.action`.
+- Адаптер должен показать компонент Adyen и вернуть `state.data` из `onAdditionalDetails`. **Не** возвращайте результат, когда компонент только появился на экране.
+- Плагин распаковывает `details`. Он не доверяет `paymentData`, присланному из браузера.
+
+Поддерживаемые типы шагов: `redirect`, `threeDS2`, `threeDS2Fingerprint`, `threeDS2Challenge`. Другие виды (региональные способы, QR-коды, другие SDK) требуют доработки. Не рассчитывайте, что поддерживаются все способы оплаты вашего аккаунта. Неизвестные шаги завершаются понятной ошибкой, а не делают вид, что работают.
+
+Установите и подключите официальный SDK Adyen Web в своём приложении. `scriptUrl` необязателен — для приложений, которые уже сами загружают скрипт.
+
+## Статусы и вебхуки {#statuses-and-webhooks}
+
+Движок связывает результат каждого шага с этим шагом. Ваш сервер тоже должен связывать его с заказом и покупателем.
+
+- `Authorised` означает «успешно». Списание и выдачу заказа настройте в соответствии с этим. Ручного списания в примере нет.
+- `Pending` и `Received` остаются «в обработке».
+- Способам оплаты, которые завершаются позже, нужен вебхук. Этот пакет не придумывает адрес для проверки статуса, которого нет в API Adyen.
+
+Храните `paymentData` на сервере. Сервер проверяет подпись HMAC у вебхука, аккаунт, сумму, валюту и порядок событий. Замените хранение в памяти из примера на базу данных.
+
+## Настройка и тестирование {#component-and-action-integration}
+
+Для тестового аккаунта укажите серверные переменные `ADYEN_API_KEY`, `ADYEN_MERCHANT_ACCOUNT`, `ADYEN_WEBHOOK_HMAC_KEY` и браузерную `VITE_ADYEN_CLIENT_KEY`. [AdyenFields.tsx](../../../examples/react/AdyenFields.tsx) собирает данные компонента и возвращает дополнительные данные.
+
+Ваш сервер возвращает [AdyenPayment](../../../packages/provider-adyen/src/provider.ts): ваш собственный id платежа, сумму целым числом, валюту, `resultCode`, необязательный шаг и безопасную причину отказа.
+
+Тесты контракта и формата запросов/ответов работают на сохранённых тестовых данных, а не на настоящем аккаунте Adyen. Серверная часть описана в [README пакета](../../../packages/provider-adyen/README.md) и в разделе [тестирование](../testing.md).
+
+[Сервер мерчанта](../merchant-integration.md) · [Восстановление](../runtime.md) · [Adyen Advanced flow](https://docs.adyen.com/online-payments/web-drop-in/advanced-flow)

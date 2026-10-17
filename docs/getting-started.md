@@ -2,11 +2,17 @@
 
 > [Русская версия](./ru/getting-started.md)
 
-Run a complete flow, then connect the same client to your merchant API. The headless engine handles attempts, actions and recovery; SDKs collect the instrument and your server verifies payment.
+This page has three parts:
 
-## Run a complete local flow
+1. Run a ready example on your computer. No accounts or keys are needed.
+2. Install the packages into your own project.
+3. Connect a real test account (sandbox) of Stripe, Adyen or PayPal.
 
-Use Node.js 24 and npm:
+How the work is split: the engine runs the payment steps, retries and recovery. The provider's SDK collects the card details. Your server checks whether the payment really went through. If a word is unfamiliar, see the [glossary](./glossary.md).
+
+## Run the example on your computer {#run-a-complete-local-flow}
+
+You need Node.js 24 and npm:
 
 ```sh
 git clone https://github.com/pavel-labs/checkout-kit.git
@@ -15,42 +21,50 @@ npm ci
 npm run dev:integration
 ```
 
-Open `http://localhost:5173`. The command starts React and the HTTP merchant server in explicit **local simulator** mode, without account keys. Select Stripe, Adyen or PayPal. The server determines price from `planId`.
+Open `http://localhost:5173`. The command starts a React page and a test server. Instead of the real providers, a **local simulator** answers, so no keys are needed. Choose Stripe, Adyen or PayPal. The price is set by the server from `planId`, not by the browser.
 
-| Scenario                  | Stripe / Adyen mock instrument | PayPal                                    |
-| ------------------------- | ------------------------------ | ----------------------------------------- |
-| Paid                      | `pm_mock_approve`              | Approve on the local page.                |
-| Declined                  | `pm_mock_decline`              | Decline on the local page.                |
-| Authentication / redirect | `pm_mock_challenge`            | Approval leaves the checkout and returns. |
-| Processing                | `pm_mock_processing`           | Pending capture is tested by fixtures.    |
+Try different outcomes:
 
-Refresh on the return route to exercise recovery. A callback supplies evidence; the merchant API still determines the result. Mock identifiers only belong to this mode.
+| What to test                       | Stripe / Adyen: type this value | PayPal                                      |
+| ---------------------------------- | ------------------------------- | ------------------------------------------- |
+| Successful payment                 | `pm_mock_approve`               | Approve on the test page.                   |
+| Declined payment                   | `pm_mock_decline`               | Decline on the test page.                   |
+| Extra check by the bank / redirect | `pm_mock_challenge`             | Approval opens another page and comes back. |
+| Payment still processing           | `pm_mock_processing`            | Covered by automated tests only.            |
 
-The [site demo](/demo/) exercises six reference protocols with an in-browser MSW backend. The local integration above exercises three named adapters with an HTTP server. [Testing](./testing.md) describes both.
+To see recovery in action, reload the page while you are on the return page. The data that came back in the address only says that the shopper went through the step. The real result still comes from the server. The `pm_mock_*` values work only with the simulator.
 
-## Install package archives
+There are two demos:
 
-Download `checkout-kit-0.2.0.tar.gz` from [the GitHub release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0), then extract it. The release contains all 16 packages, an integrity manifest, checksums and a standalone installer. No clone or registry token is needed.
+- the [site demo](/demo/) shows six example protocols. Its fake server runs right in the browser (MSW);
+- the local example above shows the three real adapters (Stripe, Adyen, PayPal) with a real HTTP server.
 
-Bundle **0.2.0** includes `@checkout-kit/ui@0.2.0` and the other 15 packages at `0.1.0`. Package versions are independent; the installer reads the manifest to choose their archives.
+[Testing](./testing.md) describes both.
 
-Run the installer **from your app's directory**:
+## Install the packages {#install-package-archives}
+
+1. Download `checkout-kit-0.2.0.tar.gz` from [the GitHub release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0) and unpack it. Inside are all 16 packages, a list of file hashes, checksums and an installer. You do not need to clone the repository or get a registry token.
+2. Go to **your application's folder** and run the installer with the packages you need:
 
 ```sh
 node /path/to/checkout-kit-0.2.0/install.mjs runtime-browser provider-paypal react ui
 ```
 
-It verifies each selected archive and adds required checkout-kit peers automatically, including core. npm resolves external peers such as React 19 normally. Keep your app's `react-dom` compatible with React. Replace `provider-paypal` with `provider-stripe` or `provider-adyen` for those adapters.
+The installer checks every archive. It also adds the other checkout-kit packages they depend on, including `core`. Other dependencies, such as React 19, are installed by npm as usual. Your app's `react-dom` must match your React version. For Stripe or Adyen, write `provider-stripe` or `provider-adyen` instead of `provider-paypal`.
 
 ```sh
-# Inspect the available packages or verify a selection without installing:
+# Show the available packages, or check your choice without installing:
 node /path/to/checkout-kit-0.2.0/install.mjs --list
 node /path/to/checkout-kit-0.2.0/install.mjs provider-paypal react ui --dry-run
 ```
 
-For a host without React, select `runtime-browser` and your provider. Individual `.tgz` assets can also be installed with `npm install`; include their checkout-kit peers in the same command.
+If your app does not use React, choose only `runtime-browser` and a provider. You can also install single `.tgz` files with `npm install`, but then list their checkout-kit dependencies in the same command.
 
-To build development archives from a clone:
+About versions: bundle **0.2.0** contains `@checkout-kit/ui@0.2.0`, and the other 15 packages are `0.1.0`. Each package has its own version. The installer reads the manifest and picks the right archives.
+
+### Build the packages yourself
+
+You can build archives from the current source:
 
 ```sh
 npm run pack:packages
@@ -58,13 +72,13 @@ npm run pack:packages
 node /path/to/checkout-kit/artifacts/packages/install.mjs runtime-browser provider-paypal react ui
 ```
 
-Successful [CI runs](https://github.com/pavel-labs/checkout-kit/actions/workflows/ci.yml) also provide the `checkout-kit-packages` development artifact. Tagged release assets stay available beyond CI artifact retention. Registry publication remains separately configured.
+Every successful [CI run](https://github.com/pavel-labs/checkout-kit/actions/workflows/ci.yml) also saves these archives as `checkout-kit-packages`. CI files are deleted after a while, but files attached to a release stay. Publishing to a package registry is set up separately.
 
-The packages are ESM with declarations. [The catalog](./packages.md) covers all 16. See [Releasing](../RELEASING.md) for versioning, archive releases and registry setup.
+The packages are ESM modules with TypeScript types. [The package list](./packages.md) describes all 16. [Releasing](../RELEASING.md) explains versions, release archives and registry setup.
 
-## Connect your app
+## Connect your app {#connect-your-app}
 
-Copy the two checked modules from [the React guide](./react.md#complete-example), then hydrate at the browser composition root:
+Copy the two files from [the React guide](./react.md#complete-example). Then, in the file where your app starts, restore any unfinished payment and render the screen:
 
 ```tsx
 import { createRoot } from 'react-dom/client'
@@ -78,15 +92,21 @@ if (!root) throw new Error('Missing checkout root')
 createRoot(root).render(<PayPalCheckout engine={engine} planId="1id" pay={pay} />)
 ```
 
-Create one engine per checkout. Serve the same app on its return route. `baseUrl` points at your authenticated merchant API.
+Rules:
 
-| Provider | Instrument                                                            | Setup                           |
-| -------- | --------------------------------------------------------------------- | ------------------------------- |
-| Stripe   | Stripe.js PaymentMethod id as a `token`.                              | [Stripe](./providers/stripe.md) |
-| Adyen    | Component `state.data` as an Adyen `wallet` or a stored method token. | [Adyen](./providers/adyen.md)   |
-| PayPal   | `{ kind: 'none' }`; approval on its page.                             | [PayPal](./providers/paypal.md) |
+- create **one** engine for one checkout;
+- the return page (`/payment/return`) must open the same app;
+- `baseUrl` is the address of your server API, and the user must be logged in there.
 
-## Use official sandbox APIs
+What each provider expects as the payment instrument:
+
+| Provider | What to pass                                                                | Setup                           |
+| -------- | --------------------------------------------------------------------------- | ------------------------------- |
+| Stripe   | The PaymentMethod id from Stripe.js, as a `token`.                          | [Stripe](./providers/stripe.md) |
+| Adyen    | `state.data` from the Adyen component as a `wallet`, or a saved card token. | [Adyen](./providers/adyen.md)   |
+| PayPal   | `{ kind: 'none' }`. The shopper approves the payment on PayPal's page.      | [PayPal](./providers/paypal.md) |
+
+## Connect a real test account {#use-official-sandbox-apis}
 
 ```sh
 cp examples/server/.env.example examples/server/.env
@@ -97,17 +117,21 @@ npm run dev:server -w @checkout-kit/examples
 npm run dev:react -w @checkout-kit/examples
 ```
 
-Use the same hostname for app and API. Browser variables are public keys; server variables are secrets. Missing keys disable that provider. [Merchant integration](./merchant-integration.md) lists settings, routes, authentication and durable-state responsibilities.
+- Open the app and the API on the **same host name** (for example, both on `localhost`). Otherwise the login cookie will not work.
+- Keys in the browser `.env` are public keys. Keys in the server `.env` are secrets; never put them in the browser.
+- If a provider has no keys, it is simply turned off.
 
-## Continue your integration
+[Merchant server](./merchant-integration.md) lists all settings, routes, login and what must be stored in a database.
 
-- [React](./react.md): engine lifetime, hooks and actions.
-- [Runtime and recovery](./runtime.md): redirects, retries, polling and cancellation.
-- [Testing](./testing.md): fixtures, browser scenarios and isolated installation.
-- [Troubleshooting](./troubleshooting.md): concrete causes and fixes.
+## What to read next {#continue-your-integration}
 
-`npm run verify:consumer` builds, packs and installs the library in a fresh project, checking exports, strict types, Node checkout and React SSR. Tests and simulators validate code paths; your account's sandbox validates its SDK, notifications and return configuration.
+- [React](./react.md): how long the engine lives, hooks, extra steps.
+- [Browser runtime and recovery](./runtime.md): redirects, retries, status checks, cancel.
+- [Testing](./testing.md): test data, browser scenarios, install check in a clean project.
+- [Troubleshooting](./troubleshooting.md): common problems and fixes.
 
-## Public npm release preparation
+`npm run verify:consumer` builds the packages, installs them into a fresh project and checks exports, strict types, a payment run in Node and server-side rendering in React. Tests and the simulator check the code. Only your own sandbox account can check that provider's SDK, notifications and return settings.
 
-Source targets public npm, but availability still requires verified publication. Use the current archives or source. [Releasing](../RELEASING.md#public-npm-publication) covers dry-run, scope ownership and OIDC. Read the [production guide](./production.md) before real payments; the new security defaults are not in the older 0.2.0 bundle.
+## Public npm release {#public-npm-release-preparation}
+
+The source is prepared for publishing to the public npm registry, but the packages are not available there yet. Until then, use the archives or the source. [Releasing](../RELEASING.md#public-npm-publication) covers the dry run, scope ownership and OIDC. Before real payments, read the [production guide](./production.md). The new safety defaults are not in the older 0.2.0 bundle.

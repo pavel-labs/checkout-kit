@@ -1,6 +1,13 @@
 # @checkout-kit/runtime-browser
 
-Browser runners for redirect, hosted fields, wallet SDK and display actions, plus session-storage persistence. Core decides which action is pending; the runtime executes its browser behavior and returns evidence.
+Browser support for the checkout kit engine. It contains **runners** — the code that performs extra payment steps in the browser:
+
+- redirects (to a bank page, in an iframe or in the whole window);
+- card fields from the provider (hosted fields);
+- wallet and provider SDKs;
+- showing a QR code or a payment code.
+
+It also saves the payment in session storage, so it survives a redirect. The engine (`@checkout-kit/core`) decides which step is needed; this package performs it in the browser and returns what happened.
 
 ```ts
 import { createBrowserRuntime } from '@checkout-kit/runtime-browser'
@@ -23,11 +30,17 @@ const engine = createCheckout({
 await engine.hydrate(runtime.readReturnParams())
 ```
 
-Create this runtime in the browser, not during SSR. `returnPath` includes your deployment's base path. Pass the same storage adapter to the engine; redirect recovery cannot work if the engine uses a fresh in-memory store instead.
+- Create the runtime in the browser, not during server-side rendering (SSR).
+- If your site lives in a subfolder, include it in `returnPath`.
+- Pass the same storage to the engine. If the engine uses its default in-memory storage instead, the payment cannot be restored after a redirect.
 
-## Running actions
+## Running steps
 
-React hosts use `PaymentActionHost`. Other hosts call `engine.runPendingAction({ mount: createMount(element) })`. Iframes and displays need a mount; top-level navigation and SDK handoff use their declared surfaces. The runners remove their DOM, timers and message listeners when the action finishes, times out or is aborted.
+In React, use `PaymentActionHost`. Without React, call `engine.runPendingAction({ mount: createMount(element) })`.
+
+- Iframes and code displays need a place on the page (a mount).
+- A full-page redirect and an SDK step use the surface the step asks for.
+- When a step finishes, times out or is canceled, the runner removes its elements, timers and message listeners.
 
 ```ts
 const runtime = createBrowserRuntime({
@@ -49,19 +62,21 @@ const runtime = createBrowserRuntime({
 })
 ```
 
-SDKs are loaded once per URL and integrity setting. Requests with conflicting integrity settings fail instead of silently reusing an unpinned script. SDK waits are bounded even when the third party ignores `AbortSignal`.
+**SDK scripts.** A script is loaded once per address and integrity setting. If two places ask for the same script with different integrity hashes, the load fails instead of quietly reusing an unchecked script. Waiting for an SDK always has a time limit, even if the third-party code ignores `AbortSignal`.
 
-Hosted-field and redirect messages must match the expected origin, frame sender, message type and action id. These checks establish provenance; the provider and merchant server still verify the outcome. A QR display never treats a button press as payment: the engine polls the backend.
+**Messages.** Messages from hosted fields and redirect frames are accepted only if the origin, the sender frame, the message type and the step id all match. These checks only prove where a message came from. The provider and your server still check the result. A QR code display never treats a button press as a payment: the engine asks the server.
 
-If session storage is blocked, direct flows can still run; navigation recovery needs a durable host-supplied `StorageAdapter`. Storage contains only resumable metadata, not card fields or SDK payment secrets.
+**Storage.** If session storage is blocked, payments without a redirect still work. To restore a payment after navigation, give the engine your own `StorageAdapter` that keeps data. Storage keeps only the ids needed to continue — never card fields or SDK secrets.
 
 [Runtime and recovery](https://pavel-labs.github.io/checkout-kit/runtime.html) · [Installation](https://pavel-labs.github.io/checkout-kit/getting-started.html)
 
-## URL security defaults
+## Safety rules for addresses
 
-Action URLs require HTTPS. Dynamic SDK scripts require explicit `security.scriptOrigins`;
-custom bank app links require `security.deeplinkProtocols`. HTTP is limited to loopback
-with `security.allowInsecureLocalhost: true` for local development. Return URLs must belong
-to the application origin. Import provider SDKs directly where possible.
+- Addresses of steps must use HTTPS.
+- Provider SDK scripts load only from origins listed in `security.scriptOrigins`.
+- Links to banking apps with their own scheme need `security.deeplinkProtocols`.
+- Plain HTTP is allowed only for `localhost` during development, with `security.allowInsecureLocalhost: true`.
+- The return address must belong to your own site.
+- Where possible, import the provider's SDK as a package.
 
-[Configure the policy and migration](https://pavel-labs.github.io/checkout-kit/production.html).
+[How to configure these rules and update old code](https://pavel-labs.github.io/checkout-kit/production.html).

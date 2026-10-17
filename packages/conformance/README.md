@@ -1,6 +1,8 @@
 # @checkout-kit/conformance
 
-Run the public payment-provider contract in Vitest with your provider, configuration, MSW handlers and scenario instruments/evidence. Install with core, testing, MSW 2 and Vitest 5 peers. See [installation](https://pavel-labs.github.io/checkout-kit/getting-started.html).
+A ready test suite (for Vitest) that checks whether a payment provider plugin follows the rules of the checkout kit engine. You give it your provider, its config, MSW request handlers, and what the shopper pays with and what comes back after each step in each test scenario.
+
+Install it together with `@checkout-kit/core`, `@checkout-kit/testing`, MSW 2 and Vitest 5. See [installation](https://pavel-labs.github.io/checkout-kit/getting-started.html).
 
 ```ts
 import { describeProviderContract } from '@checkout-kit/conformance'
@@ -34,18 +36,29 @@ describeProviderContract({
 })
 ```
 
-| Fixture property                 | Purpose                                                                |
-| -------------------------------- | ---------------------------------------------------------------------- |
-| `provider`, `config`, `handlers` | Adapter and merchant fixture.                                          |
-| `instrumentFor(case)`            | approve, decline, challengePass, challengeFail, processing.            |
-| `evidenceFor(action, case)`      | Correlated evidence; may perform provider-side actions asynchronously. |
-| `declineMessage`                 | Expected issuer text.                                                  |
-| `secrets?`                       | Additional sensitive strings that must not appear in results.          |
-| `planId?`                        | Defaults to `1id`.                                                     |
-| `reset?`                         | Sync/async cleanup before each case; defaults to `resetBackend`.       |
+| Option                           | What it is                                                                                           |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `provider`, `config`, `handlers` | Your plugin, its config and the fake server for it.                                                  |
+| `instrumentFor(case)`            | What the shopper pays with in each case: approve, decline, challengePass, challengeFail, processing. |
+| `evidenceFor(action, case)`      | What comes back after a step. Can first perform the provider-side step (async).                      |
+| `declineMessage`                 | The bank's decline text you expect.                                                                  |
+| `secrets?`                       | Extra sensitive strings that must never appear in results.                                           |
+| `planId?`                        | Default: `1id`.                                                                                      |
+| `reset?`                         | Cleanup before each case (sync or async). Default: `resetBackend`.                                   |
 
-The suite checks capabilities, replay, money, declines, processing, error data, supported actions, unknown/foreign evidence, repeated resume and paid confirmation/cancellation. Unhandled MSW requests fail.
+What the suite checks:
 
-Use your own reset for independent state. The merchant must still enforce ownership, price, atomic idempotency and transitions. Verify your configured account separately.
+- the declared capabilities match the real behavior;
+- a repeated request with the same key returns the same result;
+- amounts, declines and the "processing" state are passed through correctly;
+- errors come back as data;
+- only supported steps are returned;
+- unknown step data and data from another order are rejected;
+- a repeated "continue" does not charge twice;
+- "confirm" and "cancel" cannot change a paid payment.
 
-[Testing guide](https://pavel-labs.github.io/checkout-kit/testing.html) · [Provider authoring](https://pavel-labs.github.io/checkout-kit/plugin-authoring.html)
+Any MSW request without a handler fails the test.
+
+If your state is independent from the default fake server, pass your own `reset`. Your server must still check order ownership, prices, make idempotency atomic and allow only valid status changes. Check your real account settings separately.
+
+[Testing guide](https://pavel-labs.github.io/checkout-kit/testing.html) · [Writing a provider](https://pavel-labs.github.io/checkout-kit/plugin-authoring.html)

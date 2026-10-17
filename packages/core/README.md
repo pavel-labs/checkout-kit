@@ -1,6 +1,8 @@
 # @checkout-kit/core
 
-Headless lifecycle, provider registry, immutable store, payment/action/evidence types, recovery and HTTP helpers. No DOM, React or bundler environment.
+The payment engine of checkout kit. It runs a payment step by step, keeps a list of providers, stores the current state, and contains the payment types (payment, instrument, step, step result), recovery and HTTP helpers.
+
+It has no browser code, no React and nothing tied to a specific bundler, so it works in a browser, in Node and in a worker. New to the words used here? See the [glossary](https://pavel-labs.github.io/checkout-kit/glossary.html).
 
 ## Run a checkout
 
@@ -26,18 +28,26 @@ const result = await engine.pay({
 })
 ```
 
-This handles immediate outcomes; register action runners for redirect/SDK/display. Browser runtime assembles runners and session storage. The merchant API owns authenticated buyers, prices and payment truth.
+This code handles payments that finish right away. For extra steps (redirects, provider SDKs, QR codes), register runners. The easiest way is `@checkout-kit/runtime-browser`: it gives you ready runners and session storage. Your server is responsible for logging in buyers, prices and the real payment status.
 
-| Entry point                   | Contents                                                              |
-| ----------------------------- | --------------------------------------------------------------------- |
-| `@checkout-kit/core`          | Engine, registry, store, contracts and helpers.                       |
-| `@checkout-kit/core/engine`   | Orchestration, events, phases, persistence and runner registry.       |
-| `@checkout-kit/core/domain`   | Intents, instruments, actions, evidence, results, money/card helpers. |
-| `@checkout-kit/core/provider` | Provider/context/capability contracts.                                |
-| `@checkout-kit/core/http`     | Encoding, headers/cookies, abort and structured HTTP errors.          |
+| Import                        | What is inside                                                               |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| `@checkout-kit/core`          | The engine, the provider list, the state store, contracts and helpers.       |
+| `@checkout-kit/core/engine`   | Running the payment, events, phases, saving state, the runner list.          |
+| `@checkout-kit/core/domain`   | Payments, instruments, steps, step results, results, money and card helpers. |
+| `@checkout-kit/core/provider` | The contracts a provider plugin implements, and its capabilities.            |
+| `@checkout-kit/core/http`     | Request encoding, headers and cookies, cancel, structured HTTP errors.       |
 
-Pay stops at a pending action; the host calls runPendingAction or resumeWith. Processing polls. Hydrate restores saved metadata and re-reads the order. Retry keeps the same key after a lost create/confirm reply, even without a returned id.
+## How it behaves
 
-Abort requests supported cancellation and preserves verified success. Reset clears local state; it does not cancel/refund a charge. Confirm/resume return error data; the engine also catches third-party exceptions. Server atomicity, ownership, prices and fulfillment remain merchant responsibilities.
+- **`pay` stops at an extra step.** Your app then calls `runPendingAction` or `resumeWith`.
+- **Processing** payments are checked again automatically (polling).
+- **`hydrate`** restores the saved ids after a redirect and reads the order from the server again.
+- **Retry after a lost reply** keeps the same idempotency key, even if no payment id came back.
+- **`abort`** asks the provider to cancel, if it can, and keeps a confirmed success as success.
+- **`reset`** clears only the local state. It does not cancel or refund a charge.
+- **Errors**: `confirm` and `resume` return errors as data; the engine also catches exceptions from third-party plugin code.
+
+Your server must still make operations atomic, check who owns each order, set prices and deliver orders.
 
 [Getting started](https://pavel-labs.github.io/checkout-kit/getting-started.html) · [Recovery](https://pavel-labs.github.io/checkout-kit/runtime.html)

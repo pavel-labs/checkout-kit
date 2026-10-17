@@ -1,8 +1,15 @@
 # @checkout-kit/react
 
-React 19 bindings for a host-owned checkout engine: context, store subscriptions, payment UI states and a DOM mount for pending actions. Create the engine once at the checkout composition root so a re-render does not lose an in-flight payment.
+Connects the checkout kit engine to a React 19 app. It gives you:
 
-Follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html). This package peers with `@checkout-kit/core`, `@checkout-kit/runtime-browser` and React 19.
+- a context provider, so components can reach the engine;
+- hooks that subscribe to the engine state;
+- ready payment UI states;
+- a place on the page (`PaymentActionHost`) where extra steps, such as a bank page, are shown.
+
+Create the engine **once**, where your checkout is set up — not inside a component that re-renders. Otherwise a re-render can lose a payment that is in progress.
+
+To install, follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html). This package needs `@checkout-kit/core`, `@checkout-kit/runtime-browser` and React 19.
 
 ```tsx
 import { CheckoutProvider, PaymentActionHost, useCheckout } from '@checkout-kit/react'
@@ -31,17 +38,19 @@ export function Checkout({ engine }: { engine: CheckoutEngine }) {
 }
 ```
 
-Payment submission uses `engine.pay({ input: { planId }, instrument })`. Choose the instrument from your provider's contract: for example a Stripe PaymentMethod token or `{ kind: 'none' }` for PayPal. `PaymentActionHost` starts pending actions and mounts visible ones; place it in a stable part of the checkout. `autoRun={false}` lets the host call `engine.runPendingAction()` itself.
+- To pay, call `engine.pay({ input: { planId }, instrument })`. The instrument depends on the provider: for example, a Stripe PaymentMethod token, or `{ kind: 'none' }` for PayPal.
+- `PaymentActionHost` starts waiting steps and shows the visible ones. Put it in a part of the page that does not disappear during the payment.
+- With `autoRun={false}`, your app calls `engine.runPendingAction()` itself.
 
 ## Hooks
 
-| Hook                                         | Use                                                                      |
+| Hook                                         | What it is for                                                           |
 | -------------------------------------------- | ------------------------------------------------------------------------ |
-| `useCheckoutEngine()`                        | Issue commands without subscribing to state.                             |
-| `useCheckoutSnapshot()`                      | Subscribe to the engine's immutable snapshot.                            |
-| `useCheckout()`                              | Snapshot plus `isBusy`, `isSettled`, `isLocked`.                         |
-| `useCheckoutSelector(selector, isEqual?)`    | Subscribe to a derived value; object selections are cached per snapshot. |
-| `usePaymentState({ isDirty, isValidating })` | Layer form editing/validation over the engine phase.                     |
+| `useCheckoutEngine()`                        | Call engine commands without re-rendering on state changes.              |
+| `useCheckoutSnapshot()`                      | Read the current engine state (an immutable snapshot).                   |
+| `useCheckout()`                              | The state plus the flags `isBusy`, `isSettled`, `isLocked`.              |
+| `useCheckoutSelector(selector, isEqual?)`    | Read only one derived value. Object results are cached per snapshot.     |
+| `usePaymentState({ isDirty, isValidating })` | Combine your form state (edited, being validated) with the engine phase. |
 
 ```tsx
 const summary = useCheckoutSelector(
@@ -50,8 +59,12 @@ const summary = useCheckoutSelector(
 )
 ```
 
-`isLocked` includes terminal phases: use it for editable payment inputs, not for the button that starts a fresh attempt. Reset only when the shopper intentionally starts over. Mounting a component does not itself confirm payment; success comes from the merchant API.
+Things to keep in mind:
 
-`CheckoutRoot` optionally supplies UI theme/platform/density attributes. Import `@checkout-kit/ui/styles.css` when using UI components. The bindings and UI render on the server; create the browser runtime after the browser is available.
+- `isLocked` is also `true` in final phases. Use it to lock payment inputs, but not the button that starts a new attempt.
+- Call `reset` only when the shopper really wants to start over.
+- A component appearing on the screen does not confirm anything. Success comes from your server API.
+
+`CheckoutRoot` (optional) adds the UI theme, platform and density attributes. Import `@checkout-kit/ui/styles.css` when you use UI components. The bindings and the UI can render on the server; create the browser runtime only once the browser is available.
 
 [React guide](https://pavel-labs.github.io/checkout-kit/react.html) · [API](https://pavel-labs.github.io/checkout-kit/api/react/)

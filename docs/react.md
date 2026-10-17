@@ -2,11 +2,11 @@
 
 > [Русская версия](./ru/react.md)
 
-`@checkout-kit/react` binds an application engine to React 19 without owning your merchant API or fields. The optional UI kit supplies visuals; your own design system works with the same bindings.
+`@checkout-kit/react` connects the payment engine to a React 19 app. It does not replace your server API or your form fields. The optional UI kit gives you ready-made visuals, but your own design system works with the same hooks just as well.
 
 ## A complete small example {#complete-example}
 
-Copy these modules as `quickstart-engine.ts` and `quickstart.tsx`. They are checked by the examples TypeScript build. Supply the [PayPal merchant API](./providers/paypal.md), create the engine once in the browser and use [the startup code](./getting-started.md#connect-your-app).
+Copy these two files into your project as `quickstart-engine.ts` and `quickstart.tsx`. They are real files from the repository, and the TypeScript build checks them, so they always work. You also need the [PayPal routes on your server](./providers/paypal.md). Create the engine once in the browser and start the app with [this code](./getting-started.md#connect-your-app).
 
 Engine setup:
 
@@ -16,23 +16,33 @@ React screen:
 
 <<< @/../examples/react/quickstart.tsx
 
-The server derives the price from `planId`. `Money` shows its result; `PaymentActionHost` executes approval. An unresolved failure retries recovery/the same attempt. Start over is available only for a verified final intent, preserving uncertain payment identity.
+How the example works:
 
-## Engine lifetime
+- the server sets the price from `planId`; `Money` only shows it;
+- `PaymentActionHost` runs the PayPal approval step;
+- if the result is unclear (for example, the network failed), the "try again" button repeats recovery or the same attempt, so the shopper is not charged twice;
+- "start over" appears only when the payment has a confirmed final status.
 
-Create one engine per checkout outside the rendering path. A new engine on every render loses subscriptions and in-flight state. Keep the action host mounted while its visible runner executes.
+## How long the engine lives {#engine-lifetime}
 
-`CheckoutProvider` supplies context; `CheckoutRoot` supplies CSS theme, density and platform attributes. A custom UI needs only the provider.
+Create **one** engine per checkout, **outside** of rendering (not inside a component body). If you create a new engine on every render, you lose subscriptions and the payment that is in progress.
 
-## Subscribe to the state you need
+Keep `PaymentActionHost` on the screen while its step is running. If it disappears, the step stops.
 
-| Hook                                         | Returns                                                            |
-| -------------------------------------------- | ------------------------------------------------------------------ |
-| `useCheckoutEngine()`                        | Command API without a state subscription.                          |
-| `useCheckoutSnapshot()`                      | Immutable phase, intent, action, error, provider and capabilities. |
-| `useCheckout()`                              | Snapshot plus engine, `isBusy`, `isSettled` and `isLocked`.        |
-| `useCheckoutSelector(selector, isEqual?)`    | Cached selection, supporting objects and custom equality.          |
-| `usePaymentState({ isDirty, isValidating })` | Form-aware state layered over the engine.                          |
+- `CheckoutProvider` gives the engine to the hooks below it.
+- `CheckoutRoot` adds the CSS theme, density and platform attributes.
+
+If you use your own UI instead of `@checkout-kit/ui`, you only need `CheckoutProvider`.
+
+## Read only the state you need {#subscribe-to-the-state-you-need}
+
+| Hook                                         | What it returns                                                                                     |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `useCheckoutEngine()`                        | The engine's commands. The component does not re-render on state changes.                           |
+| `useCheckoutSnapshot()`                      | The current state: phase, payment, step, error, provider and what it supports.                      |
+| `useCheckout()`                              | The state plus the engine and the flags `isBusy`, `isSettled` and `isLocked`.                       |
+| `useCheckoutSelector(selector, isEqual?)`    | Only the part you choose. Re-renders only when that part changes. You can pass your own comparison. |
+| `usePaymentState({ isDirty, isValidating })` | A state that also knows about your form (changed, being validated).                                 |
 
 ```tsx
 import { useCheckoutSelector } from '@checkout-kit/react'
@@ -42,10 +52,19 @@ const total = useCheckoutSelector(
 )
 ```
 
-Keep selectors pure. `isSettled` means the engine stopped advancing and includes failed/unresolved attempts; it is not payment proof. `isLocked` includes terminal phases. Use a separate recovery or fresh-attempt condition rather than permanently disabling retry.
+Rules and pitfalls:
 
-## Actions and recovery
+- a selector must only read data, without side effects;
+- `isSettled` means "the engine has stopped". This includes failures and unclear results. It does **not** mean "paid";
+- `isLocked` is also `true` in final states. Do not use it alone to disable the retry button forever — add your own condition for recovery or a new attempt.
 
-`PaymentActionHost` defaults to `autoRun`. `surface` can override a supported surface. `onSettled` is a UI/navigation hook; fulfillment belongs to the server. With `autoRun={false}`, call `engine.runPendingAction` and supply a mount.
+## Extra steps and recovery {#actions-and-recovery}
 
-Effects guard repeated execution, including chained actions reusing an id. React/UI can render on the server, but browser runtime must be instantiated on the client. See [runtime](./runtime.md) and [troubleshooting](./troubleshooting.md).
+- `PaymentActionHost` starts the step on its own (`autoRun` is on by default).
+- `surface` lets you choose where to show the step, if the provider supports it.
+- `onSettled` is only for the interface: show a message, go to another page. Delivering the order is the server's job.
+- With `autoRun={false}`, call `engine.runPendingAction` yourself and pass a mount.
+
+The component protects against running the same step twice, even when the provider sends several steps in a row with the same id.
+
+You can render React and UI components on the server (SSR), but create the browser runtime only in the browser. See [runtime](./runtime.md) and [troubleshooting](./troubleshooting.md).

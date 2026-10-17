@@ -1,12 +1,15 @@
 # @checkout-kit/provider-hosted-fields
 
-Reference adapter for **provider fields, inline iframe**. Provider id: `hostedfields`. Instruments: **none**.
+This is an **example adapter** for **card fields from the provider**, shown in an iframe right on your page. Your code never sees the card number; it gets only a token.
 
-This package implements checkout-kit's example merchant protocol. It is useful as an executable integration template and with `@checkout-kit/testing/backend`; it is not a certified adapter for a named bank or payment network. For Stripe, Adyen and PayPal, use their dedicated provider packages.
+- Provider id: `hostedfields`.
+- What the shopper pays with (instrument): none — the provider's frame collects the card.
+
+The package shows checkout kit's example server protocol. Use it as a working template for your own integration, together with the fake server from `@checkout-kit/testing/backend`. It is **not** a certified adapter for any real bank or payment network. For Stripe, Adyen and PayPal, use their own provider packages.
 
 ## Configure
 
-Follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html) for package archives or registry setup.
+To install the packages, follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html).
 
 ```ts
 import { defineProvider } from '@checkout-kit/core'
@@ -26,30 +29,33 @@ const provider = defineProvider({
 // Pass provider to createCheckout({ providers: [provider], ... }).
 ```
 
-`baseUrl` is your merchant API. Optional `headers` carry merchant session or CSRF headers; `credentials` controls cookies. Keep payment-service secrets on the server. The host supplies the browser runtime, return URL and any SDK adapter.
+- `baseUrl` is the address of your server API.
+- `headers` (optional) can carry your session or CSRF headers. `credentials` controls whether cookies are sent.
+- Keep the payment service's secret keys on your server.
+- Your app provides the browser runtime, the return address and an SDK adapter, if one is needed.
 
 ## Merchant API
 
-Paths below are relative to `baseUrl`. Authenticate the shopper, resolve price from `planId`, verify order ownership, and enforce allowed state transitions on the server. Monetary amounts are integers in the currency's minor units.
+The paths below are relative to `baseUrl`. On your server: log in the shopper, take the price from `planId`, check that the order belongs to this shopper, and allow only valid status changes. Amounts are integers in the smallest currency unit (for example, cents).
 
-| Method | Path                                | Contract                                               |
-| ------ | ----------------------------------- | ------------------------------------------------------ |
-| POST   | `/hosted-fields/charges`            | `{ planId }`; return a charge.                         |
-| GET    | `/hosted-fields/charges/:id`        | Authoritative charge.                                  |
-| POST   | `/hosted-fields/charges/:id/pay`    | `{ token }`; exchange the opaque token on your server. |
-| POST   | `/hosted-fields/charges/:id/cancel` | Cancel an unfinished charge.                           |
+| Method | Path                                | What it does                                                  |
+| ------ | ----------------------------------- | ------------------------------------------------------------- |
+| POST   | `/hosted-fields/charges`            | Takes `{ planId }`, returns a charge.                         |
+| GET    | `/hosted-fields/charges/:id`        | Returns the real state of the charge.                         |
+| POST   | `/hosted-fields/charges/:id/pay`    | Takes `{ token }`. Your server exchanges the token for money. |
+| POST   | `/hosted-fields/charges/:id/cancel` | Cancels a charge that is not finished yet.                    |
 
-Intent/order/charge responses include `{ id, amount, currency, status, error? }`. Statuses use checkout-kit's `PaymentStatus`; declines may include `{ code?, message }` in `error`.
+Responses for a payment, order or charge contain `{ id, amount, currency, status, error? }`. Statuses are checkout kit's `PaymentStatus` values. A decline may have `{ code?, message }` in `error`.
 
-The provider frame receives `actionId` and `fields` query parameters. It answers with a `ck-fields-token` postMessage containing that `actionId` and a nonempty opaque `token`. The runtime checks the frame sender and exact origin; the adapter also checks the origin and payment id. The server must verify token ownership and usage.
+**How it works.** The provider's frame gets the query parameters `actionId` and `fields`. It answers with a `ck-fields-token` message (`postMessage`) that contains the same `actionId` and a non-empty `token`. The runtime checks the sender frame and its exact origin. The adapter also checks the origin and the payment id. Your server must check who owns the token and that it was not used before.
 
 ## Retries and verification
 
-The adapter reads the authoritative order before reopening payment, spending another token or canceling. Successful, declined and canceled orders retain their outcome; processing orders continue to be polled. A retry after a lost reply checks the same order before issuing another mutation.
+Before it reopens a payment, uses another token or cancels, the adapter reads the real order from the server. Successful, declined and canceled orders keep their result. For orders that are still processing, the status keeps being checked. After a lost reply, a retry first checks the same order and only then sends another change.
 
-Creation forwards `CallOptions.idempotencyKey` as `Idempotency-Key`. Mutations scope it with an operation and intent id (`:confirm:`, `:resume:`, `:pay:`, `:code:` or `:cancel:` as applicable). Your backend must honor the key and reject a changed payload under the same key; sending a header alone cannot guarantee a single charge.
+**Idempotency.** On creation, `CallOptions.idempotencyKey` is sent as the `Idempotency-Key` header. For other changes, the key is extended with the operation and the payment id (`:confirm:`, `:resume:`, `:pay:`, `:code:` or `:cancel:`). Your server must respect the key and reject a request that has the same key but different data. The header alone does not guarantee a single charge.
 
-Run this package's contract and regression tests from the repository:
+To run this package's contract and regression tests in the repository:
 
 ```sh
 npm ci

@@ -150,7 +150,7 @@ runs _only_ scripts that show the matching password and refuses every other scri
 
 **What it stops — XSS (cross-site scripting).** This is the big one. If an attacker
 manages to inject their own `<script>` into the page, it won't have today's random
-password, so the browser refuses to run it. Their attack is dead on arrival.
+password, so the browser refuses to run it. Their attack fails right away.
 
 ```mermaid
 flowchart TD
@@ -195,7 +195,7 @@ job as `frame-ancestors` (#2a), but from an earlier era of the web.
 **Why we still send it.** Some very old browsers understand `X-Frame-Options` but not
 CSP `frame-ancestors`. Sending both means old and new browsers are all covered.
 
-**Important caveat.** The `ALLOW-FROM` value is basically dead — modern browsers
+**Important caveat.** The `ALLOW-FROM` value is no longer supported — modern browsers
 ignore it entirely and rely on CSP instead. So think of this header as a courtesy for
 legacy browsers, while `frame-ancestors` is the control that actually does the work
 today.
@@ -328,7 +328,7 @@ visit — here it's the challenge session id (`acs_sid`). The extra words after 
 - **`HttpOnly`** — JavaScript on the page cannot read this cookie. Even if an attacker
   slipped in a script, they couldn't steal the session id with it.
 - **`Secure`** — the cookie is only ever sent over HTTPS (encrypted), never plain
-  HTTP. It cannot be sniffed on the wire.
+  HTTP. Nobody on the network can read it.
 - **`SameSite=None`** — this is the tricky one. By default, browsers _refuse_ to send
   cookies to a page living inside a **third-party iframe** (which is exactly our
   situation). `SameSite=None` says "yes, send this cookie even in a cross-site

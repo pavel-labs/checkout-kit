@@ -1,96 +1,102 @@
 # Checkout kit
 
-A headless payment engine with provider adapters, a browser runtime and optional React UI.
-Use one checkout flow for Stripe, Adyen, PayPal or a provider of your own.
+Checkout kit is a set of packages for accepting online payments. It works with Stripe, Adyen, PayPal or your own payment provider, and you write the payment flow only once.
 
-The application supplies the order, collects a payment instrument using the provider's SDK,
-and renders any requested action. The merchant API owns prices, credentials and payment truth.
-The core handles attempts, retries, cancellation, polling and redirect recovery.
+What it does for you:
 
-Browse the [English documentation](https://pavel-labs.github.io/checkout-kit/) or [русскую документацию](https://pavel-labs.github.io/checkout-kit/ru/). Start with the [package catalog](https://pavel-labs.github.io/checkout-kit/packages.html), then follow provider, React, recovery and merchant-server guides.
+- runs the payment step by step: create the payment, send the payment details, handle extra steps (such as 3-D Secure), get the result;
+- repeats a request safely if the network fails, so the shopper is not charged twice;
+- restores the payment after the shopper comes back from the bank's page or reloads the tab;
+- checks the real payment status with the provider instead of trusting what the browser says.
 
-## Try a complete checkout
+What stays with you:
 
-Requires Node.js 24 and npm.
+- **your interface.** The engine draws nothing. Use your own components or the optional `@checkout-kit/ui` package;
+- **your server.** It knows the prices, keeps the secret keys and decides whether an order is paid.
+
+New to payments? Read the [glossary](./docs/glossary.md) first. It explains words like "intent", "instrument", "redirect" and "idempotency key".
+
+Documentation: [English](https://pavel-labs.github.io/checkout-kit/) · [Русский](https://pavel-labs.github.io/checkout-kit/ru/). A good first page is the [package list](https://pavel-labs.github.io/checkout-kit/packages.html).
+
+## Try it in two minutes
+
+You need Node.js 24 and npm.
 
 ```bash
 npm ci
 npm run dev:integration
 ```
 
-Open <http://localhost:5173>, select **Stripe adapter**, **Adyen adapter** or **PayPal adapter**.
-The local merchant server runs at port 4000. No account or API key is needed.
+Open <http://localhost:5173> and choose **Stripe adapter**, **Adyen adapter** or **PayPal adapter**. A local test server starts on port 4000. You do not need an account or API keys: the providers are replaced by a local **simulator**.
 
-For Stripe and Adyen, use `pm_mock_approve`, `pm_mock_decline`, `pm_mock_challenge` or
-`pm_mock_processing` in the payment token field. PayPal opens an approval page. Redirects
-leave the app and return to it, restoring the pending checkout from session storage.
+For Stripe and Adyen, type one of these values into the payment token field:
 
-This command uses an explicit **protocol simulator**. For official sandbox SDK calls,
-Stripe Elements, Adyen encrypted fields and webhooks, follow [the server guide](./examples/server/README.md).
+| Value                | What happens                                |
+| -------------------- | ------------------------------------------- |
+| `pm_mock_approve`    | The payment succeeds.                       |
+| `pm_mock_decline`    | The bank declines the payment.              |
+| `pm_mock_challenge`  | The bank asks for an extra check (3DS).     |
+| `pm_mock_processing` | The payment stays "processing" for a while. |
+
+PayPal opens a test approval page. When a payment leaves the app for another page and comes back, the app restores it from session storage.
+
+The simulator only imitates the providers. To call the real test APIs (sandbox) of Stripe, Adyen or PayPal, follow the [server guide](./examples/server/README.md).
 
 ## Packages
 
-| Package                                              | Purpose                                                                  |
-| ---------------------------------------------------- | ------------------------------------------------------------------------ |
-| `@checkout-kit/core`                                 | Headless engine, payment types, plugin and runner contracts, HTTP client |
-| `@checkout-kit/runtime-browser`                      | Redirects, iframes, SDK handoffs, storage and return URL parsing         |
-| `@checkout-kit/react`                                | Provider, hooks and action host for React 19                             |
-| `@checkout-kit/ui`                                   | Optional accessible checkout components and scoped styles                |
-| `@checkout-kit/provider-stripe`                      | PaymentIntents, PaymentMethod tokens and Stripe.js actions               |
-| `@checkout-kit/provider-adyen`                       | Advanced flow, encrypted component data, 3DS2 and redirects              |
-| `@checkout-kit/provider-paypal`                      | Orders, approval and verified capture status                             |
-| `@checkout-kit/webview-bridge`                       | Native host and web-side checkout messaging                              |
-| `@checkout-kit/testing`, `@checkout-kit/conformance` | Mock API and the executable contract for custom plugins                  |
+| Package                                              | What it is for                                                                     |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `@checkout-kit/core`                                 | The payment engine. No React and no browser code. Also types and an HTTP client.   |
+| `@checkout-kit/runtime-browser`                      | Browser helpers: redirects, iframes, provider SDKs, storage, return page.          |
+| `@checkout-kit/react`                                | React 19 bindings: provider component, hooks, a place to show extra steps.         |
+| `@checkout-kit/ui`                                   | Optional ready-made accessible checkout components with their own styles.          |
+| `@checkout-kit/provider-stripe`                      | Stripe support (PaymentIntents, Stripe.js).                                        |
+| `@checkout-kit/provider-adyen`                       | Adyen support (Advanced flow, encrypted card fields, 3DS2, redirects).             |
+| `@checkout-kit/provider-paypal`                      | PayPal support (Orders, approval, checked capture).                                |
+| `@checkout-kit/webview-bridge`                       | Messages between a native mobile app and the checkout page inside it.              |
+| `@checkout-kit/testing`, `@checkout-kit/conformance` | A fake payment API for tests, and a ready test suite for your own provider plugin. |
 
-Six additional `provider-*` packages demonstrate generic PSP, acquiring, hosted-page,
-hosted-fields, wallet and bank-transfer protocols against the mock API. They are references
-for building your own integration; they do not connect to banks by themselves.
+There are six more `provider-*` packages. They are **examples** of common payment protocols (a JSON API, a bank with forms, a payment page, hosted fields, a wallet, a bank transfer). They work only with the local simulator. Use them as templates when you write support for your own provider; they do not connect to any real bank.
 
-## Why use it
+## When to use it
 
-Keep one lifecycle across providers: preserve attempts after a lost reply, reconcile processing
-payments, run 3DS/redirect/SDK actions and recover after navigation. Use your own interface or
-compose the optional UI. Add `observeCheckout` for categorical metrics without sending payment
-payloads to analytics. For a single hosted payment page, the provider's own SDK may be sufficient.
+Use checkout kit when you want one payment flow for several providers, or when you need reliable retries, 3-D Secure, redirects and recovery after a page reload. You can add `observeCheckout` to collect simple metrics without sending payment data to analytics.
 
-The [production guide](./docs/production.md) explains what the kit guarantees and what your
-merchant server must implement. Browser actions enforce transport/origin rules; dynamic SDK
-scripts need explicit permission. Adyen raw card data is disabled unless expressly enabled.
-These new defaults and telemetry are in source for the next release, not the older `0.2.0` bundle.
+If you only need one provider's ready payment page, that provider's own SDK may be enough.
 
-## Install in another project
+Before real payments, read the [production guide](./docs/production.md). It explains what checkout kit guarantees and what your server must do. A few safety rules are on by default:
 
-Download and extract `checkout-kit-0.2.0.tar.gz` from [GitHub Releases](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0). From your application's directory, select the packages you need:
+- action addresses must use HTTPS;
+- provider scripts load only from addresses you allow;
+- raw card data for Adyen is off unless you turn it on.
+
+These defaults and the telemetry are in the source code now and will ship in the next release. The older `0.2.0` bundle does not have them.
+
+## Install in your project
+
+1. Download `checkout-kit-0.2.0.tar.gz` from [GitHub Releases](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0) and unpack it.
+2. Go to **your application's folder** and run the installer with the packages you need:
 
 ```bash
 node /path/to/checkout-kit-0.2.0/install.mjs runtime-browser provider-stripe react ui
 ```
 
-The installer verifies SHA-512 integrity and includes required checkout-kit peers automatically.
-Use `provider-adyen` or `provider-paypal` for those adapters. Omit `react ui` for a host without
-React. npm resolves external peers normally. `--list` lists packages and `--dry-run` verifies
-without installing. Individual `.tgz` assets can also be installed together with their peers.
+The installer checks each archive (SHA-512) and adds the other checkout-kit packages they need automatically. Other dependencies, such as React, are installed by npm as usual.
 
-To build the current source instead, run `npm run pack:packages` in a clone and use
-`artifacts/packages/install.mjs`. CI uploads the same files as `checkout-kit-packages`.
-`npm run verify:consumer` tests all 16 archives, minimal headless/React installations, strict
-TypeScript, exports, checkout and SSR, and rejection of damaged downloads.
+- Use `provider-adyen` or `provider-paypal` instead of `provider-stripe` for those providers.
+- Leave out `react ui` if your app does not use React.
+- `--list` shows all packages. `--dry-run` checks your choice without installing anything.
+- You can also install single `.tgz` files, but install their checkout-kit dependencies in the same command.
 
-Bundle `0.2.0` includes `@checkout-kit/ui@0.2.0` and the other 15 packages at `0.1.0`.
-Package versions are independent; the installer uses the manifest to select compatible archives.
-This is an early release. GitHub archives need no private registry access. The
-separate registry workflow still requires access to the `@checkout-kit` scope and credentials;
-archive publication does not imply npm publication. See [Releasing](./RELEASING.md).
+To build packages from the current source instead, run `npm run pack:packages` in a clone of this repository and use `artifacts/packages/install.mjs`. CI uploads the same files under the name `checkout-kit-packages`. `npm run verify:consumer` checks all 16 archives in a clean project: installation, strict TypeScript, exports, a checkout run, server-side rendering and the rejection of damaged files.
 
-Public npm release preparation now targets `registry.npmjs.org` with public access and a manual
-OIDC/provenance workflow. Scope ownership, first publication and actual sandbox-account checks
-remain separate release steps. Until npm availability is verified, use the archives above or
-build the current source. The [release guide](./RELEASING.md#public-npm-publication) includes dry-run,
-initial scope setup and the exact trusted publisher settings.
+About versions: bundle `0.2.0` contains `@checkout-kit/ui@0.2.0`, and the other 15 packages are `0.1.0`. Each package has its own version, and the installer picks matching archives from the manifest. This is an early release. GitHub archives need no private registry access.
 
-## Integrate
+About npm: publishing to the public npm registry (`registry.npmjs.org`) is being prepared, but it is not done yet. Until the packages are actually available on npm, use the archives above or build from source. The [release guide](./RELEASING.md#public-npm-publication) describes the dry run, the first scope setup and the trusted publisher settings.
 
-Register the adapter with your merchant API, then give the engine browser runners:
+## Connect it
+
+First, set up the adapter routes on your server (see each provider's guide). Then create the browser runtime and the engine:
 
 ```ts
 import { createCheckout, defineProvider } from '@checkout-kit/core'
@@ -136,34 +142,38 @@ if (result.status === 'requires_action') await engine.runPendingAction()
 await engine.hydrate(runtime.readReturnParams())
 ```
 
-For React, wrap the screen in `CheckoutProvider`, read `useCheckout()` and render
-`PaymentActionHost` for pending actions. The [plain React example](./examples/react/App.tsx)
-shows collection, submission, processing, failure, receipts and return recovery.
+What happens here:
 
-Keep an idempotency key for the same attempt, including a lost response. A declined attempt
-can use a new key. When an intent is still processing, check its status before starting another
-payment. `reset()` clears the local attempt; it does not cancel a charge at the provider.
+1. `pay()` creates the payment and sends the card token. The card itself was collected by Stripe's own fields.
+2. If the bank wants an extra step (`requires_action`), `runPendingAction()` runs it.
+3. If that step took the shopper to another site, they come back to `/payment/return`. There `hydrate()` restores the payment and asks the server for the real result.
 
-The three adapters use different merchant endpoints. Their package READMEs define exact DTOs,
-SDK callbacks and server responsibilities:
-[Stripe](./packages/provider-stripe/README.md), [Adyen](./packages/provider-adyen/README.md),
-[PayPal](./packages/provider-paypal/README.md).
+In React, wrap the screen in `CheckoutProvider`, read the state with `useCheckout()` and render `PaymentActionHost` where extra steps should appear. The [plain React example](./examples/react/App.tsx) shows the full screen: entering details, paying, processing, errors, receipt and return after a redirect.
 
-## Design and verification
+Three rules that prevent double charges:
 
-The engine follows **create → confirm → action/evidence → resume → outcome**. Actions describe
-what the provider needs; runners decide how the host can execute it. A new provider or host
-extends a contract rather than adding provider-specific branches to the core.
+- **Keep the same idempotency key** while you repeat the same attempt, including when a reply was lost. A new key is allowed only after a clear decline.
+- **If a payment is still processing, check its status first.** Do not start a second payment.
+- **`reset()` only clears the page state.** It does not cancel a charge at the provider.
 
-The core has no React or DOM dependency. Provider SDKs belong to the host application and
-merchant server. Return URLs and SDK callbacks are evidence to reconcile with server state;
-they are never proof of payment. Fulfillment, refunds and settlement belong to the merchant.
+Each provider needs different routes on your server. The exact requests, responses and SDK callbacks are in the package READMEs: [Stripe](./packages/provider-stripe/README.md), [Adyen](./packages/provider-adyen/README.md), [PayPal](./packages/provider-paypal/README.md).
 
-CI checks package and example types, unit and conformance tests, payment and UI browser suites, builds,
-package exports and installation outside the monorepo. Tests use fixtures and local simulators.
-Live sandbox verification with your own Stripe, Adyen or PayPal account is a separate step.
-The example server stores orders and replay results in memory: use durable storage and
-application authentication when adapting it for a deployed merchant.
+## How it is built
+
+Every payment goes through the same steps: **create → confirm → extra step (if needed) → check the result → final status**.
+
+- A **provider plugin** describes what the provider needs (for example, "open this bank page").
+- A **runner** decides how to do it in the current app (an iframe, a full-page redirect, an SDK).
+
+To support a new provider or a new kind of app, you add a plugin or a runner. The core does not change.
+
+The core has no React or browser dependencies. Provider SDKs live in your app and on your server. Anything that comes back from the browser — return page parameters, SDK callbacks — is only a hint. It is checked against the server and never counts as proof of payment. Delivering the order, refunds and settlements are your server's job.
+
+## Tests
+
+CI checks types, unit and contract tests, browser tests of payments and UI, builds, package exports and installation outside this repository. All of this uses test data and local simulators. Checking with your own Stripe, Adyen or PayPal test account is a separate step that you do yourself.
+
+The example server keeps orders in memory. For a real shop, replace it with a database and your own user login.
 
 ```bash
 npm test
@@ -173,14 +183,15 @@ npm run test:ui
 npm run verify:consumer
 ```
 
-Explore the [live UI gallery](https://pavel-labs.github.io/checkout-kit/demo/gallery): a composed checkout, light/dark themes, brand variants, mobile frames and component specimens.
+See the [UI gallery](https://pavel-labs.github.io/checkout-kit/demo/gallery): a full checkout, light and dark themes, brand colors, mobile sizes and each component on its own.
 
 ![Checkout preview in the light theme with compact density](./docs/public/checkout-ui.jpg)
 
 ## Guides
 
-English and Russian guides, plus a generated API reference:
+All guides are in English and Russian. There is also a generated API reference on the site.
 
+- Glossary: [English](./docs/glossary.md) / [Русский](./docs/ru/glossary.md)
 - Getting started: [English](./docs/getting-started.md) / [Русский](./docs/ru/getting-started.md)
 - Architecture: [English](./docs/architecture.md) / [Русский](./docs/ru/architecture.md)
 - Writing a provider: [English](./docs/plugin-authoring.md) / [Русский](./docs/ru/plugin-authoring.md)
@@ -188,8 +199,8 @@ English and Russian guides, plus a generated API reference:
 - UI: [English](./docs/ui.md) / [Русский](./docs/ru/ui.md)
 - Payment security: [English](./docs/production.md) / [Русский](./docs/ru/production.md)
 - Safe telemetry: [English](./docs/observability.md) / [Русский](./docs/ru/observability.md)
-- Merchant backend: [English](./docs/backend.md) / [Русский](./docs/ru/backend.md)
-- Native apps: [English](./docs/webview.md) / [Русский](./docs/ru/webview.md)
+- Merchant server: [English](./docs/backend.md) / [Русский](./docs/ru/backend.md)
+- Mobile apps: [English](./docs/webview.md) / [Русский](./docs/ru/webview.md)
 
 [Documentation site](https://pavel-labs.github.io/checkout-kit/) ·
 [Examples](./examples/README.md) · [Release process](./RELEASING.md)
