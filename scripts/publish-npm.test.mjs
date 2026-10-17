@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { verifyNpmArchives } from './publish-npm.mjs'
+import { planNpmPublication, verifyNpmArchives } from './publish-npm.mjs'
 
 const fixture = () => {
   const root = mkdtempSync(join(tmpdir(), 'checkout-npm-'))
@@ -44,4 +44,26 @@ test('the public npm release checks bytes, destination and committed versions', 
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
+})
+
+test('an automatic release uploads only versions that npm does not have yet', () => {
+  const archive = (name, integrity) => ({ name, version: '0.3.0', integrity })
+  const archives = [archive('a', 'sha512-a'), archive('b', 'sha512-b'), archive('c', 'sha512-c')]
+  const published = new Map([
+    ['a', 'sha512-a'],
+    ['b', 'sha512-other'],
+  ])
+  assert.throws(() => planNpmPublication(archives, published), /different contents/)
+  const plan = planNpmPublication(archives, published, { auto: true })
+  assert.deepEqual(
+    plan.upload.map((item) => item.name),
+    ['c'],
+  )
+  assert.deepEqual(
+    plan.skipped.map((item) => [item.archive.name, item.reason]),
+    [
+      ['a', 'already published'],
+      ['b', 'version exists with different contents'],
+    ],
+  )
 })

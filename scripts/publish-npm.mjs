@@ -63,27 +63,58 @@ export const verifyNpmArchives = (root) => {
   return ordered
 }
 
+/**
+ * Decide which archives to upload, given the integrity already on npm for each version
+ * (`undefined` when that version does not exist). A manual release refuses a version that
+ * exists with different bytes; an automatic release on push skips it, because most pushes
+ * change files without bumping versions.
+ */
+export const planNpmPublication = (archives, published, { auto = false } = {}) => {
+  const upload = []
+  const skipped = []
+  for (const archive of archives) {
+    const integrity = published.get(archive.name)
+    if (integrity === undefined) upload.push(archive)
+    else if (integrity === archive.integrity) skipped.push({ archive, reason: 'already published' })
+    else if (auto) skipped.push({ archive, reason: 'version exists with different contents' })
+    else
+      throw new Error(
+        `${archive.name}@${archive.version} already exists with different contents. Bump its version.`,
+      )
+  }
+  return { upload, skipped }
+}
+
 const run = () => {
   const args = process.argv.slice(2)
   let publish = false
+  let auto = false
   let tag = 'next'
   for (let index = 0; index < args.length; index++) {
     if (args[index] === '--publish') publish = true
+    else if (args[index] === '--auto') auto = true
     else if (args[index] === '--tag' && ['next', 'latest'].includes(args[index + 1]))
       tag = args[++index]
-    else throw new Error('Usage: publish-npm.mjs [--publish] [--tag next|latest]')
+    else throw new Error('Usage: publish-npm.mjs [--publish [--auto]] [--tag next|latest]')
   }
+  if (auto && !publish) throw new Error('--auto is only meaningful with --publish.')
   const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
   const archives = verifyNpmArchives(root)
   if (publish) {
     if (process.env.GITHUB_ACTIONS !== 'true' || process.env.GITHUB_REF !== 'refs/heads/main')
-      throw new Error('Use the manual Release workflow on main to publish with provenance.')
+      throw new Error('Use the Release workflow on main to publish with provenance.')
     if (
       readdirSync(join(root, '.changeset')).some(
         (name) => name.endsWith('.md') && name !== 'README.md',
       )
-    )
+    ) {
+      // On push, pending changesets simply mean the next release is not ready yet.
+      if (auto) {
+        console.log('Pending changesets: nothing to publish until versions are applied.')
+        return
+      }
       throw new Error('Apply pending changesets and commit versions before publishing.')
+    }
   }
   const npm = (parameters) => {
     const cli = process.env.npm_execpath
@@ -92,7 +123,7 @@ const run = () => {
       cwd: root,
     })
   }
-  const existing = new Set()
+  const published = new Map()
   if (publish) {
     for (const archive of archives) {
       const view = npm([
@@ -103,22 +134,15 @@ const run = () => {
         '--registry',
         registry,
       ])
-      if (view.status === 0) {
-        if (JSON.parse(view.stdout) !== archive.integrity)
-          throw new Error(
-            `${archive.name}@${archive.version} already exists with different contents. Bump its version.`,
-          )
-        existing.add(archive.name)
-      } else if (!/\bE404\b/.test(view.stdout + view.stderr)) {
+      if (view.status === 0) published.set(archive.name, JSON.parse(view.stdout))
+      else if (!/\bE404\b/.test(view.stdout + view.stderr))
         throw new Error(`Could not check ${archive.name} on npm. No packages were published.`)
-      }
     }
   }
-  for (const archive of archives) {
-    if (existing.has(archive.name)) {
-      console.log(`Already published: ${archive.name}@${archive.version}`)
-      continue
-    }
+  const { upload, skipped } = planNpmPublication(archives, published, { auto })
+  for (const { archive, reason } of skipped)
+    console.log(`Skipped ${archive.name}@${archive.version}: ${reason}`)
+  for (const archive of upload) {
     const result = npm([
       'publish',
       archive.path,
