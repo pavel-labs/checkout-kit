@@ -7,6 +7,16 @@
 | [`server/`](./server/README.md)                      | Server routes, official sandbox SDKs and a separate local simulator.              |
 | [`react-native-checkout/`](./react-native-checkout/) | A mobile app that shows the checkout in a WebView.                                |
 
+## Use the packages in your own app
+
+The packages are published on npm; the repository's workspace setup is only needed to run these examples. For the React/PayPal example:
+
+```bash
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal @checkout-kit/react @checkout-kit/ui react@^19 react-dom@^19
+```
+
+Import `@checkout-kit/ui/styles.css` once. The [installation guide](../docs/getting-started.md#install-from-npm) covers Stripe, Adyen, WebView and testing, and the [catalog](../docs/packages.md) links all 16 packages on npm. Your app still needs its own merchant API.
+
 ## Run the full example without any keys
 
 From the repository root:

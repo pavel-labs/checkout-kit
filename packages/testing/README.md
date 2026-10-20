@@ -2,6 +2,17 @@
 
 Test data and simulators for developing a checkout. Nothing here calls real provider accounts or makes real payments.
 
+## Install from npm
+
+```bash
+npm install @checkout-kit/core
+npm install --save-dev @checkout-kit/testing
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/testing) · [Installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
+
+For the `/backend` import, also install its optional peer: `npm install --save-dev msw@^2.15.0`. The root and `/engine` imports do not need MSW.
+
 | Import                          | What is inside                                                                      |
 | ------------------------------- | ----------------------------------------------------------------------------------- |
 | `@checkout-kit/testing`         | `SCENARIO_CARDS` (test cards), outcomes and decline messages. No fake server.       |

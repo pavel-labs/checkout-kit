@@ -4,6 +4,17 @@ A ready test suite (for Vitest) that checks whether a payment provider plugin fo
 
 Install it together with `@checkout-kit/core`, `@checkout-kit/testing`, MSW 2 and Vitest 5. See [installation](https://pavel-labs.github.io/checkout-kit/getting-started.html).
 
+## Install from npm
+
+```bash
+npm install @checkout-kit/core
+npm install --save-dev @checkout-kit/testing @checkout-kit/conformance msw@^2.15.0 vitest@^5.0.0
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/conformance) · [Installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
+
+The example below uses `@checkout-kit/provider-psp`; add it as a development dependency when running that example.
+
 ```ts
 import { describeProviderContract } from '@checkout-kit/conformance'
 import { paymentIntentHandlers, threeDsHandlers } from '@checkout-kit/testing/backend'

@@ -9,6 +9,16 @@ Browser support for the checkout kit engine. It contains **runners** — the cod
 
 It also saves the payment in session storage, so it survives a redirect. The engine (`@checkout-kit/core`) decides which step is needed; this package performs it in the browser and returns what happened.
 
+## Install from npm
+
+```bash
+npm install @checkout-kit/core @checkout-kit/runtime-browser
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/runtime-browser) · [Installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
+
+The example below uses PayPal; also install `@checkout-kit/provider-paypal`, or choose another provider from the installation guide.
+
 ```ts
 import { createBrowserRuntime } from '@checkout-kit/runtime-browser'
 import { createCheckout, defineProvider } from '@checkout-kit/core'

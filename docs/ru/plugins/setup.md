@@ -35,7 +35,7 @@ npm run dev:bank
 
 ## Установка и настройка {#install-and-configure}
 
-[Установите архивы вместе с зависимостями](../getting-started.md#install-package-archives). Веб-приложению нужны core, браузерный runtime и провайдер. Для React 19 добавьте связку с React и, по желанию, UI. [Список пакетов](../packages.md) описывает все пакеты.
+[Установите пакеты из npm вместе с зависимостями](../getting-started.md#install-from-npm). Веб-приложению нужны core, браузерный runtime и провайдер. Для React 19 добавьте связку с React и, по желанию, UI. [Список пакетов](../packages.md) описывает все пакеты.
 
 Импортируйте `@checkout-kit/ui/styles.css` и оберните оплату в `CheckoutRoot` (или в элемент с классом `.ck-root`). С Tailwind сохраняйте такой порядок слоёв:
 

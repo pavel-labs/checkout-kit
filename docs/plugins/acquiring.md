@@ -9,6 +9,14 @@ This is an **example adapter** for a bank (acquirer) whose API takes HTML form f
 
 The package shows checkout kit's example server protocol. Use it as a working template for your own integration, together with the fake server from `@checkout-kit/testing/backend`. It is **not** a certified adapter for any real bank or payment network. For Stripe, Adyen and PayPal, use their own provider packages.
 
+## Install from npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-acquiring
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/provider-acquiring) · [All installation options](../getting-started.md#install-from-npm)
+
 ## Configure
 
 To install the packages, follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html).

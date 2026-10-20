@@ -2,13 +2,122 @@
 
 > [Русская версия](./ru/getting-started.md)
 
-This page has three parts:
-
-1. Run a ready example on your computer. No accounts or keys are needed.
-2. Install the packages into your own project.
-3. Connect a real test account (sandbox) of Stripe, Adyen or PayPal.
+Install the packages from npm, connect your app, then test against a simulator or your own Stripe, Adyen or PayPal sandbox account. You can also run the complete local example without any keys.
 
 How the work is split: the engine runs the payment steps, retries and recovery. The provider's SDK collects the card details. Your server checks whether the payment really went through. If a word is unfamiliar, see the [glossary](./glossary.md).
+
+<span id="install-package-archives"></span>
+
+## Install from npm {#install-from-npm}
+
+All 16 packages are public on [npm](https://www.npmjs.com/org/checkout-kit). Run these commands in **your application's folder**. You do not need to clone checkout-kit, download archives, sign in to npm or configure a private registry. Use the full `@checkout-kit/*` names, not the unscoped `checkout-kit` name.
+
+### Browser checkout without React
+
+For PayPal, install the engine, browser runtime and provider:
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal
+```
+
+The same packages can be installed with pnpm, Yarn or Bun:
+
+```sh
+pnpm add @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal
+yarn add @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal
+bun add @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal
+```
+
+Choose **one** command for your package manager. All packages ship ESM JavaScript and TypeScript declarations. No build of the library is needed in your app. A provider still needs [routes on your server](./merchant-integration.md).
+
+### React 19 and optional UI
+
+For the complete [React example](./react.md#complete-example), including PayPal and the UI kit:
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal @checkout-kit/react @checkout-kit/ui react@^19 react-dom@^19
+```
+
+Keep React and React DOM on matching versions. If your app already uses compatible React 19 versions, keep them. Leave out `@checkout-kit/ui` when using your own design system, and leave out both React packages and their peers for a headless checkout.
+
+Import the stylesheet once when using UI components:
+
+```ts
+import '@checkout-kit/ui/styles.css'
+```
+
+### Stripe, Adyen or PayPal
+
+Use the command for your provider instead of the PayPal command above. Add the React/UI packages separately if needed.
+
+```sh
+# Stripe: includes Stripe.js for collecting a PaymentMethod and handling SDK steps.
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-stripe @stripe/stripe-js
+
+# Adyen: includes the browser SDK for encrypted fields and 3DS2.
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-adyen @adyen/adyen-web
+
+# PayPal: approval uses a redirect; no browser SDK is needed.
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal
+```
+
+If using Stripe's React Elements wrappers, also install `@stripe/react-stripe-js`. Configure the provider's **server** SDK separately; never put a secret key in the browser. Follow the [Stripe](./providers/stripe.md), [Adyen](./providers/adyen.md) or [PayPal](./providers/paypal.md) guide.
+
+### Mobile WebView bridge
+
+In **both** the web checkout and native host projects:
+
+```sh
+npm install @checkout-kit/core @checkout-kit/webview-bridge
+```
+
+Native code imports `@checkout-kit/webview-bridge/host` and `/protocol`; the checkout web page imports the root entry. Install your native WebView component in the host app separately (for Expo: `npx expo install react-native-webview`). See [WebView](./webview.md).
+
+### Testing and provider conformance
+
+Test data and fake providers need only core and testing:
+
+```sh
+npm install @checkout-kit/core
+npm install --save-dev @checkout-kit/testing
+```
+
+For `@checkout-kit/testing/backend`, add the optional peer `msw@^2.15.0`. To run the provider contract suite, install all its peers:
+
+```sh
+npm install @checkout-kit/core
+npm install --save-dev @checkout-kit/testing @checkout-kit/conformance msw@^2.15.0 vitest@^5.0.0
+```
+
+Keep core as a runtime dependency; the test tools belong in development dependencies. These tools simulate payments; see [testing](./testing.md).
+
+### Reference protocols
+
+These six published packages are **simulator-backed templates**, not real bank integrations. Choose the one you are exploring:
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-psp
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-acquiring
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-hpp
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-hosted-fields
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-wallet
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-bank-transfer
+```
+
+The [package catalog](./packages.md) links all 16 packages to npm and explains which ones to choose. Imports such as `@checkout-kit/core/engine`, `@checkout-kit/testing/backend` and `@checkout-kit/ui/styles.css` are **entry points of their parent package**, not separate packages to install.
+
+### Archives or source builds
+
+For a fixed GitHub archive bundle, follow [Releasing](../RELEASING.md#install-a-tagged-release). To build the current source in a repository clone:
+
+```sh
+npm ci
+npm run pack:packages
+# From your application's directory:
+node /path/to/checkout-kit/artifacts/packages/install.mjs runtime-browser provider-paypal react ui
+```
+
+CI also saves these archives as `checkout-kit-packages`. They are an alternative to npm. The legacy GitHub bundle `0.2.0` contains UI `0.2.0` and the other packages at `0.1.0`; its bundle version is not the version of every npm package.
 
 ## Run the example on your computer {#run-a-complete-local-flow}
 
@@ -40,41 +149,6 @@ There are two demos:
 - the local example above shows the three real adapters (Stripe, Adyen, PayPal) with a real HTTP server.
 
 [Testing](./testing.md) describes both.
-
-## Install the packages {#install-package-archives}
-
-1. Download `checkout-kit-0.2.0.tar.gz` from [the GitHub release](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0) and unpack it. Inside are all 16 packages, a list of file hashes, checksums and an installer. You do not need to clone the repository or get a registry token.
-2. Go to **your application's folder** and run the installer with the packages you need:
-
-```sh
-node /path/to/checkout-kit-0.2.0/install.mjs runtime-browser provider-paypal react ui
-```
-
-The installer checks every archive. It also adds the other checkout-kit packages they depend on, including `core`. Other dependencies, such as React 19, are installed by npm as usual. Your app's `react-dom` must match your React version. For Stripe or Adyen, write `provider-stripe` or `provider-adyen` instead of `provider-paypal`.
-
-```sh
-# Show the available packages, or check your choice without installing:
-node /path/to/checkout-kit-0.2.0/install.mjs --list
-node /path/to/checkout-kit-0.2.0/install.mjs provider-paypal react ui --dry-run
-```
-
-If your app does not use React, choose only `runtime-browser` and a provider. You can also install single `.tgz` files with `npm install`, but then list their checkout-kit dependencies in the same command.
-
-About versions: bundle **0.2.0** contains `@checkout-kit/ui@0.2.0`, and the other 15 packages are `0.1.0`. Each package has its own version. The installer reads the manifest and picks the right archives.
-
-### Build the packages yourself
-
-You can build archives from the current source:
-
-```sh
-npm run pack:packages
-# From your application's directory:
-node /path/to/checkout-kit/artifacts/packages/install.mjs runtime-browser provider-paypal react ui
-```
-
-Every successful [CI run](https://github.com/pavel-labs/checkout-kit/actions/workflows/ci.yml) also saves these archives as `checkout-kit-packages`. CI files are deleted after a while, but files attached to a release stay. Publishing to a package registry is set up separately.
-
-The packages are ESM modules with TypeScript types. [The package list](./packages.md) describes all 16. [Releasing](../RELEASING.md) explains versions, release archives and registry setup.
 
 ## Connect your app {#connect-your-app}
 
@@ -132,6 +206,8 @@ npm run dev:react -w @checkout-kit/examples
 
 `npm run verify:consumer` builds the packages, installs them into a fresh project and checks exports, strict types, a payment run in Node and server-side rendering in React. Tests and the simulator check the code. Only your own sandbox account can check that provider's SDK, notifications and return settings.
 
-## Public npm release {#public-npm-release-preparation}
+## Package versions and updates {#public-npm-release-preparation}
 
-The source is prepared for publishing to the public npm registry, but the packages are not available there yet. Until then, use the archives or the source. [Releasing](../RELEASING.md#public-npm-publication) covers the dry run, scope ownership and OIDC. Before real payments, read the [production guide](./production.md). The new safety defaults are not in the older 0.2.0 bundle.
+The packages are published under `latest`; ordinary install commands use that tag. Package versions are independent: `core`, `runtime-browser` and `provider-adyen` are `0.2.0`, UI is `0.2.1`, and the other packages are `0.1.1`. Check a package with `npm view @checkout-kit/core version` or follow its npm link in the [catalog](./packages.md).
+
+Commit your application's lockfile. To move from archive dependencies (`file:...tgz`) to npm, rerun the relevant install command above with the full package names and check the changes to `package.json` and your lockfile. Review package changelogs and [migration notes](./production.md#a-safe-browser-configuration) when updating from older versions. [Releasing](../RELEASING.md#public-npm-publication) is for maintainers publishing future versions.

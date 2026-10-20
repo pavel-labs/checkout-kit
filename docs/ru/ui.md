@@ -9,6 +9,16 @@
 Обычный CSS и обычный React. Ни фреймворка, ни CSS-in-JS, ни пакета иконок, ни единой
 зависимости во время работы.
 
+## Установка из npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/ui react@^19 react-dom@^19
+```
+
+[Пакет в npm](https://www.npmjs.com/package/@checkout-kit/ui) · [Все варианты установки](./getting-started.md#install-from-npm)
+
+Импортируйте `@checkout-kit/ui/styles.css` один раз. Если используете `CheckoutRoot` из примера ниже, дополнительно установите `@checkout-kit/react` и `@checkout-kit/runtime-browser`.
+
 ```tsx
 import '@checkout-kit/ui/styles.css'
 ```

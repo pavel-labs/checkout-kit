@@ -6,6 +6,16 @@
 
 У пакета три точки входа. Нативная часть импортирует `/host` или `/protocol`. Они работают без браузера и без зависимости от React Native.
 
+## Установка из npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/webview-bridge
+```
+
+[Пакет в npm](https://www.npmjs.com/package/@checkout-kit/webview-bridge) · [Все варианты установки](./getting-started.md#install-from-npm)
+
+Установите пакеты в веб-проекте и нативном хосте. Компонент WebView установите в мобильном приложении отдельно; для Expo используйте `npx expo install react-native-webview`.
+
 | Импорт                                  | Где работает                                                                            |
 | --------------------------------------- | --------------------------------------------------------------------------------------- |
 | `@checkout-kit/webview-bridge`          | На веб-странице: `createWebViewBridge(engine, options)`.                                |

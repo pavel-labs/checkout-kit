@@ -8,6 +8,23 @@ There are three levels of checks, and each finds different problems:
 - **simulators** (fake providers) check that the whole payment flow works in your app;
 - **your sandbox account** at the real provider checks the real SDK and your account settings.
 
+## Install from npm
+
+```sh
+npm install @checkout-kit/core
+npm install --save-dev @checkout-kit/testing
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/testing) · [All installation options](./getting-started.md#install-from-npm)
+
+Add MSW for `/backend`; for provider contract tests, add conformance and Vitest:
+
+```sh
+npm install --save-dev @checkout-kit/conformance msw@^2.15.0 vitest@^5.0.0
+```
+
+[Conformance on npm](https://www.npmjs.com/package/@checkout-kit/conformance)
+
 ## Checks in this repository {#repository-checks}
 
 | Command                                                    | What it checks                                                                                                                                                                                   |

@@ -7,6 +7,18 @@ This example shows a mobile app that opens your existing HTTPS checkout page ins
 - On the native side, import only `@checkout-kit/webview-bridge/host` and `/protocol`.
 - The web page calls `createWebViewBridge(engine)` once.
 
+## Install in your app
+
+Install the published bridge and its core peer in both the web checkout and native host:
+
+```bash
+npm install @checkout-kit/core @checkout-kit/webview-bridge
+```
+
+In an Expo host, also run `npx expo install react-native-webview`. For bare React Native, install `react-native-webview` and complete its native platform setup. Keep your app's existing compatible React and React Native versions.
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/webview-bridge) · [All package installation options](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
+
 ## Setup
 
 1. Set `CHECKOUT_URL` to your checkout page address.

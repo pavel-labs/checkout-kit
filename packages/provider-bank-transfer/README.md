@@ -7,9 +7,15 @@ This is an **example adapter** for a **bank transfer**: the shopper sees a QR co
 
 The package shows checkout kit's example server protocol. Use it as a working template for your own integration, together with the fake server from `@checkout-kit/testing/backend`. It is **not** a certified adapter for any real bank or payment network. For Stripe, Adyen and PayPal, use their own provider packages.
 
-## Configure
+## Install from npm
 
-To install the packages, follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html).
+```bash
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-bank-transfer
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/provider-bank-transfer) · [Installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
+
+## Configure
 
 ```ts
 import { defineProvider } from '@checkout-kit/core'

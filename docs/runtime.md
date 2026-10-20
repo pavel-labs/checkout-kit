@@ -10,6 +10,14 @@ Who does what:
 - the **runners** from this package perform the steps and bring back what happened;
 - the **provider and your server** decide whether the payment really succeeded.
 
+## Install from npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/runtime-browser) · [All installation options](./getting-started.md#install-from-npm)
+
 ## Set it up once {#wire-the-browser-once}
 
 ```ts

@@ -2,6 +2,17 @@
 
 Тестовые данные и симуляторы для разработки оплаты. Ничто здесь не обращается к настоящим аккаунтам провайдеров и не проводит настоящих платежей.
 
+## Установка из npm
+
+```bash
+npm install @checkout-kit/core
+npm install --save-dev @checkout-kit/testing
+```
+
+Для импорта `/backend` дополнительно установите `msw@^2.15.0` через `npm install --save-dev`. Корневому импорту и `/engine` MSW не нужен.
+
+[Пакет в npm](https://www.npmjs.com/package/@checkout-kit/testing) · [Установка](https://pavel-labs.github.io/checkout-kit/ru/getting-started.html#install-from-npm)
+
 | Импорт                          | Что внутри                                                                                             |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `@checkout-kit/testing`         | `SCENARIO_CARDS` (тестовые карты), исходы и тексты отказов. Без поддельного сервера.                   |

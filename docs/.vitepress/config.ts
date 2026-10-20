@@ -13,6 +13,7 @@ import { defineConfig, type DefaultTheme } from 'vitepress'
 // it does not own the content.
 
 const REPO = 'https://github.com/pavel-labs/checkout-kit'
+const NPM = 'https://www.npmjs.com/org/checkout-kit'
 
 // VitePress adds the base. Demo links also need target=_self so its router leaves the
 // documentation application and loads the separately built SPA.
@@ -467,6 +468,7 @@ export default defineConfig({
         nav: [
           { text: 'Guide', link: '/getting-started', activeMatch: '^/(?!ru/|api/|packages)' },
           { text: 'Packages', link: '/packages' },
+          { text: 'npm', link: NPM },
           { text: 'API', link: '/api/', activeMatch: '^/api/' },
           { text: 'Demo', link: DEMO, target: '_self' },
         ],
@@ -494,6 +496,7 @@ export default defineConfig({
         nav: [
           { text: 'Руководство', link: '/ru/getting-started', activeMatch: '^/ru/(?!packages)' },
           { text: 'Пакеты', link: '/ru/packages' },
+          { text: 'npm', link: NPM },
           { text: 'API', link: '/api/' },
           { text: 'Демо', link: DEMO, target: '_self' },
         ],

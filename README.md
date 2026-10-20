@@ -18,11 +18,35 @@ New to payments? Read the [glossary](./docs/glossary.md) first. It explains word
 
 Documentation: [English](https://pavel-labs.github.io/checkout-kit/) · [Русский](https://pavel-labs.github.io/checkout-kit/ru/). A good first page is the [package list](https://pavel-labs.github.io/checkout-kit/packages.html).
 
+## Install in your project
+
+All 16 `@checkout-kit/*` packages are published on [npm](https://www.npmjs.com/org/checkout-kit). Install them from your application's directory; no repository clone, registry token or custom `.npmrc` is needed. The unscoped `checkout-kit` name is not the package to install.
+
+For a browser checkout with Stripe:
+
+```bash
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-stripe @stripe/stripe-js
+```
+
+For React 19, add the bindings and optional UI components:
+
+```bash
+npm install @checkout-kit/react @checkout-kit/ui react@^19 react-dom@^19
+```
+
+Import `@checkout-kit/ui/styles.css` once when using the UI. For Adyen, install `@checkout-kit/provider-adyen` and `@adyen/adyen-web` instead of the Stripe packages. For PayPal, install `@checkout-kit/provider-paypal`; its redirect flow needs no browser SDK.
+
+The [installation guide](./docs/getting-started.md#install-from-npm) includes npm, pnpm, Yarn and Bun commands, headless and React setups, WebView integration and test tools. The [package catalog](./docs/packages.md) links every package to npm and lists its published version. Package versions are independent; your lockfile records the resolved versions.
+
+GitHub release archives and source builds remain available as alternatives; see [Releasing](./RELEASING.md). The legacy `0.2.0` archive bundle predates the current npm packages.
+
 ## Try it in two minutes
 
 You need Node.js 24 and npm.
 
 ```bash
+git clone https://github.com/pavel-labs/checkout-kit.git
+cd checkout-kit
 npm ci
 npm run dev:integration
 ```
@@ -44,19 +68,26 @@ The simulator only imitates the providers. To call the real test APIs (sandbox) 
 
 ## Packages
 
-| Package                                              | What it is for                                                                     |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `@checkout-kit/core`                                 | The payment engine. No React and no browser code. Also types and an HTTP client.   |
-| `@checkout-kit/runtime-browser`                      | Browser helpers: redirects, iframes, provider SDKs, storage, return page.          |
-| `@checkout-kit/react`                                | React 19 bindings: provider component, hooks, a place to show extra steps.         |
-| `@checkout-kit/ui`                                   | Optional ready-made accessible checkout components with their own styles.          |
-| `@checkout-kit/provider-stripe`                      | Stripe support (PaymentIntents, Stripe.js).                                        |
-| `@checkout-kit/provider-adyen`                       | Adyen support (Advanced flow, encrypted card fields, 3DS2, redirects).             |
-| `@checkout-kit/provider-paypal`                      | PayPal support (Orders, approval, checked capture).                                |
-| `@checkout-kit/webview-bridge`                       | Messages between a native mobile app and the checkout page inside it.              |
-| `@checkout-kit/testing`, `@checkout-kit/conformance` | A fake payment API for tests, and a ready test suite for your own provider plugin. |
+| Package on npm                                                                                               | What it is for                                                   |
+| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| [`@checkout-kit/core`](https://www.npmjs.com/package/@checkout-kit/core)                                     | Payment engine, types and HTTP client. No React or browser code. |
+| [`@checkout-kit/runtime-browser`](https://www.npmjs.com/package/@checkout-kit/runtime-browser)               | Browser runners, storage and return-page recovery.               |
+| [`@checkout-kit/react`](https://www.npmjs.com/package/@checkout-kit/react)                                   | React 19 provider, hooks and action host.                        |
+| [`@checkout-kit/ui`](https://www.npmjs.com/package/@checkout-kit/ui)                                         | Optional accessible checkout components and styles.              |
+| [`@checkout-kit/provider-stripe`](https://www.npmjs.com/package/@checkout-kit/provider-stripe)               | Stripe PaymentIntents and Stripe.js.                             |
+| [`@checkout-kit/provider-adyen`](https://www.npmjs.com/package/@checkout-kit/provider-adyen)                 | Adyen Advanced flow, encrypted fields, 3DS2 and redirects.       |
+| [`@checkout-kit/provider-paypal`](https://www.npmjs.com/package/@checkout-kit/provider-paypal)               | PayPal Orders, approval and checked capture.                     |
+| [`@checkout-kit/webview-bridge`](https://www.npmjs.com/package/@checkout-kit/webview-bridge)                 | Messages between a native app and its checkout web page.         |
+| [`@checkout-kit/testing`](https://www.npmjs.com/package/@checkout-kit/testing)                               | Test data, fake providers and an optional MSW backend.           |
+| [`@checkout-kit/conformance`](https://www.npmjs.com/package/@checkout-kit/conformance)                       | Vitest contract suite for provider authors.                      |
+| [`@checkout-kit/provider-psp`](https://www.npmjs.com/package/@checkout-kit/provider-psp)                     | Reference JSON API protocol; local simulator only.               |
+| [`@checkout-kit/provider-acquiring`](https://www.npmjs.com/package/@checkout-kit/provider-acquiring)         | Reference form-based bank protocol; local simulator only.        |
+| [`@checkout-kit/provider-hpp`](https://www.npmjs.com/package/@checkout-kit/provider-hpp)                     | Reference hosted payment page; local simulator only.             |
+| [`@checkout-kit/provider-hosted-fields`](https://www.npmjs.com/package/@checkout-kit/provider-hosted-fields) | Reference hosted card fields; local simulator only.              |
+| [`@checkout-kit/provider-wallet`](https://www.npmjs.com/package/@checkout-kit/provider-wallet)               | Reference wallet SDK protocol; local simulator only.             |
+| [`@checkout-kit/provider-bank-transfer`](https://www.npmjs.com/package/@checkout-kit/provider-bank-transfer) | Reference transfer/QR protocol; local simulator only.            |
 
-There are six more `provider-*` packages. They are **examples** of common payment protocols (a JSON API, a bank with forms, a payment page, hosted fields, a wallet, a bank transfer). They work only with the local simulator. Use them as templates when you write support for your own provider; they do not connect to any real bank.
+The six reference protocols are working templates for your own adapters. They do not connect to a real bank or wallet.
 
 ## When to use it
 
@@ -70,29 +101,7 @@ Before real payments, read the [production guide](./docs/production.md). It expl
 - provider scripts load only from addresses you allow;
 - raw card data for Adyen is off unless you turn it on.
 
-These defaults and the telemetry are in the source code now and will ship in the next release. The older `0.2.0` bundle does not have them.
-
-## Install in your project
-
-1. Download `checkout-kit-0.2.0.tar.gz` from [GitHub Releases](https://github.com/pavel-labs/checkout-kit/releases/tag/v0.2.0) and unpack it.
-2. Go to **your application's folder** and run the installer with the packages you need:
-
-```bash
-node /path/to/checkout-kit-0.2.0/install.mjs runtime-browser provider-stripe react ui
-```
-
-The installer checks each archive (SHA-512) and adds the other checkout-kit packages they need automatically. Other dependencies, such as React, are installed by npm as usual.
-
-- Use `provider-adyen` or `provider-paypal` instead of `provider-stripe` for those providers.
-- Leave out `react ui` if your app does not use React.
-- `--list` shows all packages. `--dry-run` checks your choice without installing anything.
-- You can also install single `.tgz` files, but install their checkout-kit dependencies in the same command.
-
-To build packages from the current source instead, run `npm run pack:packages` in a clone of this repository and use `artifacts/packages/install.mjs`. CI uploads the same files under the name `checkout-kit-packages`. `npm run verify:consumer` checks all 16 archives in a clean project: installation, strict TypeScript, exports, a checkout run, server-side rendering and the rejection of damaged files.
-
-About versions: bundle `0.2.0` contains `@checkout-kit/ui@0.2.0`, and the other 15 packages are `0.1.0`. Each package has its own version, and the installer picks matching archives from the manifest. This is an early release. GitHub archives need no private registry access.
-
-About npm: publishing to the public npm registry (`registry.npmjs.org`) is being prepared, but it is not done yet. Until the packages are actually available on npm, use the archives above or build from source. The [release guide](./RELEASING.md#public-npm-publication) describes the dry run, the first scope setup and the trusted publisher settings.
+These defaults and telemetry are included in the npm releases of `core@0.2.0`, `runtime-browser@0.2.0` and `provider-adyen@0.2.0`. The legacy GitHub archive bundle `0.2.0` contains older package versions.
 
 ## Connect it
 

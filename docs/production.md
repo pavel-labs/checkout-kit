@@ -6,7 +6,7 @@ Checkout kit runs the steps of a payment for different providers and different k
 
 If you only need one provider's ready payment page and nothing custom, that provider's own checkout may be enough.
 
-**Note about versions.** The safety defaults and telemetry on this page are in the current source code and will ship in the next release. The older `0.2.0` archive does not have them. Until the next release, build the packages from source.
+**Note about versions.** The npm releases of `@checkout-kit/core@0.2.0`, `@checkout-kit/runtime-browser@0.2.0` and `@checkout-kit/provider-adyen@0.2.0` include the safety defaults and telemetry described here. Use the [npm installation guide](./getting-started.md#install-from-npm). The legacy GitHub archive bundle `0.2.0` contains older packages without these changes.
 
 ## What the library does and what you must do {#what-you-receive}
 
@@ -120,7 +120,7 @@ The [example server](../examples/server/README.md) keeps records in memory and u
 - Fix security advisories in the dependencies of the shipped packages.
 - Apply pending changesets, choose the bundle version and write down the sandbox account review.
 
-Only after that call an integration production-ready. [Releasing](../RELEASING.md) covers npm scope ownership, the first publication and OIDC. Check separately that the packages are really available on npm; GitHub archives being available does not mean that.
+Only after that call an integration production-ready. The packages are already available on npm; installation alone does not verify your provider account. [Releasing](../RELEASING.md) covers publishing future versions and OIDC.
 
 [Stripe PaymentIntents security](https://docs.stripe.com/payments/payment-intents) ·
 [Adyen Web integration security](https://docs.adyen.com/online-payments/web-best-practices/) ·

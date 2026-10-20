@@ -9,7 +9,15 @@ Connects the checkout kit engine to a React 19 app. It gives you:
 
 Create the engine **once**, where your checkout is set up — not inside a component that re-renders. Otherwise a re-render can lose a payment that is in progress.
 
-To install, follow the [installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html). This package needs `@checkout-kit/core`, `@checkout-kit/runtime-browser` and React 19.
+This package needs `@checkout-kit/core`, `@checkout-kit/runtime-browser` and React 19.
+
+## Install from npm
+
+```bash
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/react react@^19 react-dom@^19
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/react) · [Installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
 
 ```tsx
 import { CheckoutProvider, PaymentActionHost, useCheckout } from '@checkout-kit/react'

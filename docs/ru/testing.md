@@ -8,6 +8,23 @@
 - **симуляторы** (поддельные провайдеры) проверяют, что весь сценарий оплаты работает в вашем приложении;
 - **ваш тестовый аккаунт** у настоящего провайдера (песочница) проверяет настоящий SDK и настройки аккаунта.
 
+## Установка из npm
+
+```sh
+npm install @checkout-kit/core
+npm install --save-dev @checkout-kit/testing
+```
+
+[Пакет в npm](https://www.npmjs.com/package/@checkout-kit/testing) · [Все варианты установки](./getting-started.md#install-from-npm)
+
+Для `/backend` добавьте MSW; для контрактных тестов — conformance и Vitest:
+
+```sh
+npm install --save-dev @checkout-kit/conformance msw@^2.15.0 vitest@^5.0.0
+```
+
+[Conformance в npm](https://www.npmjs.com/package/@checkout-kit/conformance)
+
 ## Проверки в этом репозитории {#repository-checks}
 
 | Команда                                                    | Что проверяет                                                                                                                                                                           |

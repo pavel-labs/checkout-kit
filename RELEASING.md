@@ -1,10 +1,8 @@
 # Releasing
 
-Checkout kit has two independent distribution paths: public GitHub release archives and
-an optional package-registry release. Archive installation needs no registry credentials.
-Bundle `0.2.0` includes UI `0.2.0` and the other 15 packages at `0.1.0`.
-Package versions are independent. This is an early release; fixture/simulator coverage and provider account verification
-are documented separately.
+All 16 public `@checkout-kit/*` packages are published on [npm](https://www.npmjs.com/org/checkout-kit). Applications should use the [npm installation guide](./docs/getting-started.md#install-from-npm); the [catalog](./docs/packages.md) links every package and lists its independent version. The private root package `checkout-kit` is not published.
+
+Checkout kit also distributes GitHub release archives. Their bundle version is independent of npm package versions. The legacy bundle `0.2.0` includes UI `0.2.0` and the other 15 packages at `0.1.0`; current npm versions include the later security and telemetry changes.
 
 ## Install a tagged release
 
@@ -99,15 +97,9 @@ publication is unrelated to this workflow.
 
 ## Public npm publication
 
-The source now targets `https://registry.npmjs.org` with `access=public`, including
-all package manifests, `.npmrc` and Changesets. This prepares a public release; it does
-not establish that the `@checkout-kit` npm scope is owned by this repository's owner or
-that any version has been published there. GitHub archives remain usable today.
+All public package manifests, `.npmrc` and Changesets target `https://registry.npmjs.org` with `access=public`. The initial publication is complete and every package is available under `latest`. Keep npm publication separate from GitHub archive publication; success in one does not publish the other.
 
-Before the first public release, apply pending changesets, commit package/peer versions
-and lockfile, and decide the next archive bundle version. Review the [production gate](./docs/production.md),
-including actual provider account sandbox checks and security reporting. New security defaults
-and telemetry in the source are not included in the older `0.2.0` archive bundle.
+For future releases, apply pending changesets, commit package/peer versions and the lockfile, and decide the next archive bundle version. Review the [production gate](./docs/production.md), including actual provider-account sandbox checks. Consumer documentation and links can be updated on GitHub and the documentation site without a package release; README changes appear on npm when the containing package is published in a new version.
 
 ### Verify without credentials
 
@@ -125,11 +117,9 @@ a write token or prove scope ownership. The manual **Release** workflow defaults
 verification, plus types, tests, lint, build, declarations and a clean generated-file check.
 `npm run release` remains a local verification command; real publication uses the workflow.
 
-### Establish the npm scope and first versions
+### Adding a package to the existing npm scope
 
-The npm account/organization must own `@checkout-kit` and have permission to publish each package.
-Repository ownership is separate. If the scope is unavailable, choose an owned scope and update
-package names, imports, peer ranges, examples, docs and installer selection together.
+The existing `@checkout-kit` scope contains the 16 published packages. Publishing a new package requires permission in that npm organization; repository ownership alone does not grant npm access. Existing versions are immutable, so changes to a published package need a new version.
 
 A new package needs an initial authenticated publication before its package settings can be used
 to configure a trusted publisher. Use the verified archives, publish dependencies/peers first,

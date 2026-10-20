@@ -55,6 +55,14 @@
 }
 ---
 
+## Install from npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal
+```
+
+Run this in your own app. All 16 packages are published on public npm; no token or private registry is needed. The [catalog](./packages.md) links each package, and [Getting started](./getting-started.md#install-from-npm) covers Stripe, Adyen, React, UI, WebView and test tools.
+
 ## Start with a working example
 
 ```sh
@@ -82,4 +90,4 @@ The engine creates a payment, sends the payment details, runs any extra steps (f
 - The **runner** shows the extra step in your app (iframe, redirect, SDK).
 - **Your server** knows the prices, knows the buyer and decides whether the order is paid.
 
-All 16 packages come with JavaScript (ESM), TypeScript types, API docs and tests. The example plugins show common protocols; they are not certified for any real bank. Checking with your own test account and publishing to npm are separate steps. [Merchant server](./merchant-integration.md) lists what your server must do. [Troubleshooting](./troubleshooting.md) helps when something fails.
+All 16 packages come with JavaScript (ESM), TypeScript types, API docs and tests. The example plugins show common protocols; they are not certified for any real bank. All packages are available on npm. Checking with your own provider test account is still required for your integration. [Merchant server](./merchant-integration.md) lists what your server must do. [Troubleshooting](./troubleshooting.md) helps when something fails.

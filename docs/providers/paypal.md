@@ -4,6 +4,14 @@
 
 This adapter works with PayPal Orders v2. The shopper approves the payment on PayPal's page, and then **your server** captures the money. The fact that the shopper came back to your page does not prove the payment.
 
+## Install from npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/provider-paypal) · [All installation options](../getting-started.md#install-from-npm)
+
 ```ts
 import { defineProvider } from '@checkout-kit/core'
 import type { PayPalConfig } from '@checkout-kit/provider-paypal'

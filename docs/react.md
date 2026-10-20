@@ -4,6 +4,14 @@
 
 `@checkout-kit/react` connects the payment engine to a React 19 app. It does not replace your server API or your form fields. The optional UI kit gives you ready-made visuals, but your own design system works with the same hooks just as well.
 
+## Install from npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal @checkout-kit/react @checkout-kit/ui react@^19 react-dom@^19
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/react) · [All installation options](./getting-started.md#install-from-npm)
+
 ## A complete small example {#complete-example}
 
 Copy these two files into your project as `quickstart-engine.ts` and `quickstart.tsx`. They are real files from the repository, and the TypeScript build checks them, so they always work. You also need the [PayPal routes on your server](./providers/paypal.md). Create the engine once in the browser and start the app with [this code](./getting-started.md#connect-your-app).

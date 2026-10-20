@@ -4,6 +4,16 @@ Ready-made checkout components for React 19. Take only what you need: buttons an
 
 The components only **show** the payment state your app gives them. They do not take money and do not load prices.
 
+## Install from npm
+
+```bash
+npm install @checkout-kit/core @checkout-kit/ui react@^19 react-dom@^19
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/ui) · [Installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
+
+For the `CheckoutRoot` example below, also install `@checkout-kit/react` and `@checkout-kit/runtime-browser`. The UI components can also be used without the bindings. Import `@checkout-kit/ui/styles.css` once.
+
 ```tsx
 import '@checkout-kit/ui/styles.css'
 import { Button, Money, Panel, appearanceToStyle } from '@checkout-kit/ui'

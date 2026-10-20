@@ -35,7 +35,7 @@ In the payment page and wallet examples, you choose the result in the simulator 
 
 ## Install and configure {#install-and-configure}
 
-[Install the archives together with their dependencies](../getting-started.md#install-package-archives). A web app needs core, the browser runtime and a provider. With React 19, add the React bindings and, if you like, the UI. [The package list](../packages.md) describes all packages.
+[Install the packages from npm with their dependencies](../getting-started.md#install-from-npm). A web app needs core, the browser runtime and a provider. With React 19, add the React bindings and, if you like, the UI. [The package list](../packages.md) describes all packages.
 
 Import `@checkout-kit/ui/styles.css` and wrap the checkout in `CheckoutRoot` (or an element with the `.ck-root` class). With Tailwind, keep this layer order:
 

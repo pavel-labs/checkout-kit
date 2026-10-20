@@ -4,6 +4,16 @@ The payment engine of checkout kit. It runs a payment step by step, keeps a list
 
 It has no browser code, no React and nothing tied to a specific bundler, so it works in a browser, in Node and in a worker. New to the words used here? See the [glossary](https://pavel-labs.github.io/checkout-kit/glossary.html).
 
+## Install from npm
+
+```bash
+npm install @checkout-kit/core
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/core) · [Installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
+
+The example below also uses `@checkout-kit/provider-stripe`; install it and the browser runtime as shown in the installation guide.
+
 ## Run a checkout
 
 ```ts
