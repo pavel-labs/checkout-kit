@@ -4,6 +4,14 @@
 
 Этот адаптер работает со Stripe PaymentIntents через **ваш** сервер. Карту принимает Stripe.js (поля самого Stripe) и возвращает id PaymentMethod. Вы передаёте только этот id. Данные карты через адаптер никогда не проходят.
 
+## Установка из npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-stripe @stripe/stripe-js
+```
+
+[Пакет в npm](https://www.npmjs.com/package/@checkout-kit/provider-stripe) · [Все варианты установки](../getting-started.md#install-from-npm)
+
 ```ts
 import { defineProvider } from '@checkout-kit/core'
 import type { StripeConfig } from '@checkout-kit/provider-stripe'

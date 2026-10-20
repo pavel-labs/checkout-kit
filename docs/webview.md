@@ -6,6 +6,16 @@ A mobile app can show the checkout web page inside a WebView (a browser componen
 
 The package has three entry points. The native side imports `/host` or `/protocol`. These work without a browser and without a React Native dependency.
 
+## Install from npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/webview-bridge
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/webview-bridge) · [All installation options](./getting-started.md#install-from-npm)
+
+Install these packages in both the web project and native host. Add the WebView component separately in your mobile app; for Expo use `npx expo install react-native-webview`.
+
 | Import                                  | Where it runs                                                                    |
 | --------------------------------------- | -------------------------------------------------------------------------------- |
 | `@checkout-kit/webview-bridge`          | On the web page: `createWebViewBridge(engine, options)`.                         |

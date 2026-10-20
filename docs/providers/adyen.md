@@ -4,6 +4,14 @@
 
 This adapter works with Adyen's **Advanced flow** through your server. It supports redirects, 3DS2 steps in the Adyen SDK, saved payment methods and encrypted data from Adyen Web components.
 
+## Install from npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-adyen @adyen/adyen-web
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/provider-adyen) · [All installation options](../getting-started.md#install-from-npm)
+
 ```ts
 import { defineProvider } from '@checkout-kit/core'
 import type { AdyenConfig } from '@checkout-kit/provider-adyen'

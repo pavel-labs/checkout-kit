@@ -4,6 +4,14 @@
 
 Этот адаптер работает с PayPal Orders v2. Покупатель подтверждает оплату на странице PayPal, а потом **ваш сервер** списывает деньги. То, что покупатель вернулся на вашу страницу, оплату не доказывает.
 
+## Установка из npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal
+```
+
+[Пакет в npm](https://www.npmjs.com/package/@checkout-kit/provider-paypal) · [Все варианты установки](../getting-started.md#install-from-npm)
+
 ```ts
 import { defineProvider } from '@checkout-kit/core'
 import type { PayPalConfig } from '@checkout-kit/provider-paypal'

@@ -4,6 +4,14 @@
 
 `@checkout-kit/react` подключает платёжный движок к приложению на React 19. Он не заменяет API вашего сервера и ваши поля формы. Необязательный UI-кит даёт готовое оформление, но ваша собственная дизайн-система так же хорошо работает с теми же хуками.
 
+## Установка из npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-paypal @checkout-kit/react @checkout-kit/ui react@^19 react-dom@^19
+```
+
+[Пакет в npm](https://www.npmjs.com/package/@checkout-kit/react) · [Все варианты установки](./getting-started.md#install-from-npm)
+
 ## Полный небольшой пример {#complete-example}
 
 Скопируйте два файла в свой проект под именами `quickstart-engine.ts` и `quickstart.tsx`. Это настоящие файлы из репозитория, их проверяет сборка TypeScript, поэтому они всегда рабочие. Ещё понадобятся [маршруты PayPal на вашем сервере](./providers/paypal.md). Создайте движок один раз в браузере и запустите приложение [этим кодом](./getting-started.md#connect-your-app).

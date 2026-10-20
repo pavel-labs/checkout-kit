@@ -10,6 +10,14 @@
 - **раннеры** из этого пакета выполняют шаги и сообщают, что произошло;
 - **провайдер и ваш сервер** решают, прошла ли оплата на самом деле.
 
+## Установка из npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser
+```
+
+[Пакет в npm](https://www.npmjs.com/package/@checkout-kit/runtime-browser) · [Все варианты установки](./getting-started.md#install-from-npm)
+
 ## Настройка один раз {#wire-the-browser-once}
 
 ```ts

@@ -4,6 +4,16 @@ A mobile app can show the checkout web page inside a WebView (a browser componen
 
 The package has three entry points. The native side imports `/host` or `/protocol`. These work without a browser and without a React Native dependency.
 
+## Install from npm
+
+```bash
+npm install @checkout-kit/core @checkout-kit/webview-bridge
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/webview-bridge) · [Installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
+
+Install the bridge in both the web checkout and the native host projects. Native code imports `/host` and `/protocol`; your app supplies its WebView component.
+
 | Import                                  | Where it runs                                                                    |
 | --------------------------------------- | -------------------------------------------------------------------------------- |
 | `@checkout-kit/webview-bridge`          | On the web page: `createWebViewBridge(engine, options)`.                         |

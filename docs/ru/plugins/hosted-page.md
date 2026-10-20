@@ -9,9 +9,17 @@
 
 Пакет показывает протокол сервера из примеров checkout kit. Используйте его как рабочий шаблон для своей интеграции вместе с поддельным сервером из `@checkout-kit/testing/backend`. Это **не** сертифицированный адаптер для какого-либо настоящего банка или платёжной системы. Для Stripe, Adyen и PayPal используйте их собственные пакеты.
 
+## Установка из npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-hpp
+```
+
+[Пакет в npm](https://www.npmjs.com/package/@checkout-kit/provider-hpp) · [Все варианты установки](../getting-started.md#install-from-npm)
+
 ## Настройка {#configure}
 
-Как установить пакеты, описано в [быстром старте](../getting-started.md#install-package-archives).
+Как установить пакеты, описано в [быстром старте](../getting-started.md#install-from-npm).
 
 ```ts
 import { defineProvider } from '@checkout-kit/core'

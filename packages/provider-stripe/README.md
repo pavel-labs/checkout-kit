@@ -2,6 +2,14 @@
 
 This adapter works with Stripe PaymentIntents through **your** server. The card is collected by Stripe.js (Stripe's own fields), which gives you a PaymentMethod id. You pass only that id. Raw card data never goes through this adapter.
 
+## Install from npm
+
+```bash
+npm install @checkout-kit/core @checkout-kit/runtime-browser @checkout-kit/provider-stripe @stripe/stripe-js
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/provider-stripe) · [Installation guide](https://pavel-labs.github.io/checkout-kit/getting-started.html#install-from-npm)
+
 ```ts
 import { defineProvider } from '@checkout-kit/core'
 import type { StripeConfig } from '@checkout-kit/provider-stripe'

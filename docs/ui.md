@@ -9,6 +9,16 @@ product rather than like a library.
 It is plain CSS and plain React. No framework, no CSS-in-JS, no icon package, no runtime
 dependencies at all.
 
+## Install from npm
+
+```sh
+npm install @checkout-kit/core @checkout-kit/ui react@^19 react-dom@^19
+```
+
+[npm package](https://www.npmjs.com/package/@checkout-kit/ui) · [All installation options](./getting-started.md#install-from-npm)
+
+Import `@checkout-kit/ui/styles.css` once. For `CheckoutRoot` in the example below, also install `@checkout-kit/react` and `@checkout-kit/runtime-browser`.
+
 ```tsx
 import '@checkout-kit/ui/styles.css'
 ```
