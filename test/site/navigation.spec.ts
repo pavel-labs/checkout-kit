@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 for (const locale of [
-  { path: '', hero: 'Try the demo', nav: 'Demo' },
-  { path: 'ru/', hero: 'Попробовать демо', nav: 'Демо' },
+  { path: '', hero: 'Try the demo', nav: 'Demo', gallery: 'Explore UI Gallery' },
+  { path: 'ru/', hero: 'Попробовать демо', nav: 'Демо', gallery: 'Открыть UI Gallery' },
 ]) {
   for (const name of [locale.hero, locale.nav]) {
     test(`${locale.path || 'en'} ${name} leaves the documentation router`, async ({ page }) => {
@@ -17,6 +17,23 @@ for (const locale of [
       await expect(page).toHaveURL(/\/checkout-kit\/demo\/$/)
       await expect(page.locator('#root')).toBeVisible()
       await expect(page.getByText('PAGE NOT FOUND', { exact: true })).toHaveCount(0)
+    })
+  }
+
+  for (const name of [locale.gallery, 'UI Gallery']) {
+    test(`${locale.path || 'en'} ${name} opens the gallery beside the demo`, async ({ page }) => {
+      await page.goto(`/checkout-kit/${locale.path}`)
+      await page.getByRole('button', { name: 'Search', exact: true }).click()
+      await expect(page.getByRole('searchbox')).toBeVisible()
+      await page.keyboard.press('Escape')
+      const link = page.getByRole('link', { name, exact: true })
+      await expect(link).toHaveAttribute('target', '_self')
+      await expect(link).toHaveAttribute('href', '/checkout-kit/demo/gallery/')
+      await link.click()
+      await expect(page).toHaveURL(/\/checkout-kit\/demo\/gallery\/?$/)
+      await expect(
+        page.getByRole('heading', { name: 'Checkout UI, down to the details.' }),
+      ).toBeVisible()
     })
   }
 }

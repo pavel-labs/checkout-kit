@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
-import { Button, Input, Section } from '@/shared/ui'
+import { Button, Field, Input, TrustStrip } from '@checkout-kit/ui'
 
 // The bank's payment page, standing in for a different site.
 //
@@ -49,18 +49,23 @@ function HostedPage() {
   }
 
   return (
-    <Section>
+    <div className="demo-bank-panel">
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-4">
-        <h2 className="text-xl text-white">Acme Bank — secure payment</h2>
+        <h1>Acme Bank — secure payment</h1>
         <p className="text-sm text-muted">
           You are on your bank&apos;s page. The shop never sees these details.
         </p>
-        <Input
-          placeholder="0000 0000 0000 0000"
-          aria-label="Card number"
-          value={cardNumber}
-          onChange={(event) => setCardNumber(event.target.value)}
-        />
+        <Field label="Card number">
+          {(control) => (
+            <Input
+              {...control}
+              placeholder="0000 0000 0000 0000"
+              aria-label="Card number"
+              value={cardNumber}
+              onChange={(event) => setCardNumber(event.target.value)}
+            />
+          )}
+        </Field>
         <Button type="submit" disabled={busy}>
           Pay
         </Button>
@@ -71,7 +76,8 @@ function HostedPage() {
         >
           Cancel and return to the shop
         </button>
+        <TrustStrip>Simulated bank page · No money is charged</TrustStrip>
       </form>
-    </Section>
+    </div>
   )
 }

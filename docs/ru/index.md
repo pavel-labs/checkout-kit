@@ -11,6 +11,12 @@
           { 'theme': 'brand', 'text': 'Начать', 'link': '/ru/getting-started' },
           { 'theme': 'alt', 'text': 'Выбрать пакеты', 'link': '/ru/packages' },
           { 'theme': 'alt', 'text': 'Попробовать демо', 'link': '/demo/', 'target': '_self' },
+          {
+            'theme': 'alt',
+            'text': 'Открыть UI Gallery',
+            'link': '/demo/gallery/',
+            'target': '_self',
+          },
         ],
     },
   'features':

@@ -1,10 +1,12 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form'
+import { FormProvider, useForm, useWatch, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { PaymentActionHost, useCheckoutEngine } from '@checkout-kit/react'
 import {
   ActionFrame,
+  Badge,
+  Button,
   CheckoutForm,
   CheckoutLayout,
   ErrorText,
@@ -12,8 +14,11 @@ import {
   PaymentStatus,
   Section,
   StickyActions,
+  TrustStrip,
+  Disclosure,
 } from '@checkout-kit/ui'
 import type { Plan } from '@/entities/plan'
+import { formatMoney } from '@checkout-kit/core'
 import type { PaymentResult } from '@/entities/payment'
 import { checkoutSchemaFor, type CheckoutFormInput, type CheckoutFormSchema } from '../model/schema'
 import { formDefaultValues } from '../model/default-values'
@@ -25,14 +30,15 @@ import {
   useCheckoutState,
 } from '../store/checkout.selectors'
 import { CardDetails } from './card-fields'
-import { BillingFields } from './billing-fields'
-import { PlanSelector } from './plan-selector'
+import { BillingFields, ContactEmail } from './billing-fields'
 import { OrderSummary } from './order-summary'
 import { SimulateBankApp } from './simulate-bank-app'
+import { DemoFixtures } from './demo-fixtures'
+import { CheckoutIcon } from '@/shared/ui/icons/checkout'
 
 interface PaymentFormProps {
   plans: Plan[]
-  /** Rendered above the form, in the same column. */
+  /** Demo controls, separate from the shopper's payment form. */
   header?: ReactNode
 }
 
@@ -111,36 +117,83 @@ export const PaymentForm = ({ plans, header }: PaymentFormProps) => {
   }
 
   const uiState = methods.formState.isSubmitting ? 'submitting' : state
+  const planId = useWatch({ control: methods.control, name: 'planId' })
+  const selectedPlan = plans.find((plan) => plan.id === planId)
+  const amount = selectedPlan
+    ? formatMoney(
+        { amount: Math.round(selectedPlan.priceNumeric * 100), currency: selectedPlan.currencyISO },
+        { locale: 'en-US' },
+      )
+    : undefined
 
   return (
     <FormProvider {...methods}>
-      <CheckoutLayout aside={<OrderSummary plans={plans} />}>
-        {header}
-
+      <div className="demo-checkout-heading">
+        <div>
+          <p className="demo-eyebrow">The example store</p>
+          <h1>A little more room to create.</h1>
+          <p>One thoughtful checkout. Every step, taken care of.</p>
+        </div>
+        <Badge tone="accent">Interactive demo</Badge>
+      </div>
+      {header ? (
+        <section className="demo-workbench" aria-label="Demo controls">
+          <div className="demo-workbench__heading">
+            <span className="demo-eyebrow">Explore a payment flow</span>
+            <span>Simulated providers · Test details only</span>
+          </div>
+          {header}
+          {import.meta.env.VITE_ENABLE_MSW === 'true' ? (
+            <DemoFixtures collectsCard={collectsCard} disabled={isLocked} />
+          ) : null}
+        </section>
+      ) : null}
+      <CheckoutLayout className="demo-checkout" aside={<OrderSummary plans={plans} />}>
         <CheckoutForm
+          className="demo-payment-form"
           // Returning the promise is what makes RHF track the submission - and what makes its
           // own re-entrancy guard work.
           onSubmit={(event) => void methods.handleSubmit(pay)(event)}
           actions={
-            <StickyActions>
+            <StickyActions className="demo-payment-actions">
               {/* One announcement each: the status region carries progress, the alert
                 carries the issuer wording. Both saying it would read it out twice. */}
               {uiState === 'failure' ? null : <PaymentStatus state={uiState} />}
               <ErrorText>{error?.message}</ErrorText>
-              <PaymentButton state={uiState} disabled={isLocked}>
+              {uiState === 'failure' ? (
+                <Button type="button" variant="secondary" onClick={() => engine.reset()}>
+                  Try again
+                </Button>
+              ) : null}
+              <PaymentButton
+                state={uiState}
+                disabled={isLocked}
+                amount={amount}
+                rightIcon={<CheckoutIcon name="arrow" />}
+              >
                 Continue payment
               </PaymentButton>
+              <TrustStrip icon={<CheckoutIcon name="lock" />}>
+                Test mode · No money is charged
+              </TrustStrip>
             </StickyActions>
           }
         >
-          <Section>
-            <PlanSelector plans={plans} />
+          <Section title="Payment details" description="A few details, and you’re ready to go.">
+            <ContactEmail />
           </Section>
 
           {collectsCard ? (
             <Section>
               <CardDetails />
             </Section>
+          ) : null}
+
+          {!collectsCard && !action ? (
+            <div className="demo-payment-handoff">
+              <CheckoutIcon name="bank" />
+              <p>Your payment provider will guide you through the next step.</p>
+            </div>
           ) : null}
 
           {action?.surface === 'inline' ? (
@@ -155,6 +208,10 @@ export const PaymentForm = ({ plans, header }: PaymentFormProps) => {
           <Section>
             <BillingFields />
           </Section>
+          <Disclosure summary="What happens after I continue?">
+            This is a simulated checkout. You can complete a payment, try a bank challenge or
+            explore a decline. No real payment or subscription is created.
+          </Disclosure>
         </CheckoutForm>
       </CheckoutLayout>
     </FormProvider>

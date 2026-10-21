@@ -11,6 +11,12 @@
           { 'theme': 'brand', 'text': 'Get started', 'link': '/getting-started' },
           { 'theme': 'alt', 'text': 'Choose packages', 'link': '/packages' },
           { 'theme': 'alt', 'text': 'Try the demo', 'link': '/demo/', 'target': '_self' },
+          {
+            'theme': 'alt',
+            'text': 'Explore UI Gallery',
+            'link': '/demo/gallery/',
+            'target': '_self',
+          },
         ],
     },
   'features':

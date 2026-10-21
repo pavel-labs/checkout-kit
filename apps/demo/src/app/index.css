@@ -10,9 +10,9 @@
 :root {
   --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
-  color-scheme: dark;
-  color: #b9c0ce;
-  background-color: #0b101a;
+  color-scheme: light;
+  color: #111827;
+  background-color: #f7f8fa;
   font: 16px / 1.5 var(--font-sans);
   letter-spacing: 0;
   font-synthesis: none;
@@ -55,7 +55,7 @@
 
   /* On the root element, not in <Main>: the router renders its pending component
      before <Main> mounts, and a gradient scoped there would flash in afterwards. */
-  background: #0b101a;
+  background: #f7f8fa;
 }
 
 @layer base {

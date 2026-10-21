@@ -1,10 +1,10 @@
-import { createRootRouteWithContext, Link, Outlet, useRouterState } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { createRootRouteWithContext, Outlet, useRouterState } from '@tanstack/react-router'
 import { CheckoutProvider } from '@checkout-kit/react'
 import type { CheckoutEngine } from '@checkout-kit/core'
 import { Main } from '@/shared/ui'
-import { Merchant, MerchantProvider, type MerchantConfig } from '@/entities/merchant'
+import { MerchantProvider, type MerchantConfig } from '@/entities/merchant'
 import type { Plan } from '@/entities/plan'
+import { StoreShell } from '@/demo-store/store-shell'
 
 // Dependencies the composition root (app/providers/router) injects. Routes name
 // what they need and depend on this shape only — never on a concrete adapter, so
@@ -25,29 +25,24 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootComponent() {
-  const isGallery = useRouterState({
-    select: (state) => state.location.pathname.endsWith('/gallery'),
-  })
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const isGallery = pathname.replace(/\/$/, '').endsWith('/gallery')
+  const isEmbedded = pathname.replace(/\/$/, '').endsWith('/hosted-fields')
   const merchant = Route.useLoaderData()
   const { checkout } = Route.useRouteContext()
 
   return (
     <CheckoutProvider engine={checkout}>
       <MerchantProvider value={merchant}>
-        <Main>
-          {!isGallery ? (
-            <div className="flex items-baseline justify-between gap-4">
-              <Merchant />
-              {/* The kit's own showcase. Deployed with the demo, so it can be looked at
-                without cloning anything. */}
-              <Link to="/gallery" className="text-sm text-muted underline-offset-2 hover:underline">
-                UI kit
-              </Link>
-            </div>
-          ) : null}
-          <Outlet />
-          {import.meta.env.DEV && !isGallery && <TanStackRouterDevtools />}
-        </Main>
+        {isGallery ? (
+          <Main>
+            <Outlet />
+          </Main>
+        ) : (
+          <StoreShell embedded={isEmbedded}>
+            <Outlet />
+          </StoreShell>
+        )}
       </MerchantProvider>
     </CheckoutProvider>
   )
