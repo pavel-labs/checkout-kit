@@ -18,6 +18,8 @@ const NPM = 'https://www.npmjs.com/org/checkout-kit'
 // VitePress adds the base. Demo links also need target=_self so its router leaves the
 // documentation application and loads the separately built SPA.
 const DEMO = '/demo/'
+// The trailing slash keeps VitePress from adding .html to this SPA route.
+const UI_GALLERY = '/demo/gallery/'
 
 // The reference is generated into docs/api by `npm run docs:api`, which also writes one
 // typedoc-sidebar.json per package. It is not committed, so the site still builds without it -
@@ -400,7 +402,7 @@ export default defineConfig({
 
   // The demo is served from the same site but built separately - there is no page here for
   // the link checker to find.
-  ignoreDeadLinks: [/^\/demo\/(?:index(?:\.html)?)?$/],
+  ignoreDeadLinks: [/^\/demo\/(?:index(?:\.html)?|gallery\/?)?$/],
 
   markdown: {
     config(md) {
@@ -471,6 +473,7 @@ export default defineConfig({
           { text: 'npm', link: NPM },
           { text: 'API', link: '/api/', activeMatch: '^/api/' },
           { text: 'Demo', link: DEMO, target: '_self' },
+          { text: 'UI Gallery', link: UI_GALLERY, target: '_self' },
         ],
         sidebar: {
           '/api/': apiSidebar(),
@@ -499,6 +502,7 @@ export default defineConfig({
           { text: 'npm', link: NPM },
           { text: 'API', link: '/api/' },
           { text: 'Демо', link: DEMO, target: '_self' },
+          { text: 'UI Gallery', link: UI_GALLERY, target: '_self' },
         ],
         sidebar: { '/ru/': ruSidebar() },
         editLink: {

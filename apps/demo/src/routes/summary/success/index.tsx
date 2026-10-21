@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { SuccessState } from '@checkout-kit/ui'
-import { Success } from '@/shared/ui'
 import { TransactionDetails } from '@/entities/transaction'
 import { DownloadReceipt } from '@/features/download-receipt'
 import { ReturnToStoreButton } from '@/features/return-to-store'
@@ -54,7 +53,6 @@ function SuccessPage() {
 
   return (
     <SuccessState
-      icon={<Success />}
       details={<TransactionDetails transaction={transaction} />}
       actions={
         <>
@@ -63,7 +61,7 @@ function SuccessPage() {
         </>
       }
     >
-      Thank you. Your payment has gone through and a receipt is on its way.
+      Your payment is confirmed. Your receipt is ready to download.
     </SuccessState>
   )
 }

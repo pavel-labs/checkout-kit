@@ -1,16 +1,15 @@
 import { useFormContext } from 'react-hook-form'
-import { Field, FieldGroup, FieldRow, Input } from '@checkout-kit/ui'
+import { Field, FieldGroup, FieldRow, Input, InputGroup, Select } from '@checkout-kit/ui'
+import { CheckoutIcon } from '@/shared/ui/icons/checkout'
 import { COUNTRIES } from '../model/countries'
 import type { CheckoutFormInput } from '../model/schema'
 
-export const BillingFields = () => {
+export const ContactEmail = () => {
   const { register, formState } = useFormContext<CheckoutFormInput>()
-  const errors = formState.errors
-
   return (
-    <FieldGroup legend="Billing address" hint="Your bank checks this against your card.">
-      <Field label="Email" error={errors.email?.message} required>
-        {(control) => (
+    <Field label="Email" error={formState.errors.email?.message} required>
+      {(control) => (
+        <InputGroup leading={<CheckoutIcon name="mail" />}>
           <Input
             {...control}
             {...register('email')}
@@ -19,20 +18,29 @@ export const BillingFields = () => {
             autoComplete="email"
             placeholder="you@example.com"
           />
-        )}
-      </Field>
+        </InputGroup>
+      )}
+    </Field>
+  )
+}
 
+export const BillingFields = () => {
+  const { register, formState } = useFormContext<CheckoutFormInput>()
+  const errors = formState.errors
+
+  return (
+    <FieldGroup legend="Billing address" hint="Your bank may use this to verify your payment.">
       <FieldRow>
         <Field label="Country" error={errors.billing?.country?.message} required>
           {(control) => (
-            <select {...control} {...register('billing.country')} className="ck-input">
+            <Select {...control} {...register('billing.country')} autoComplete="country">
               <option value="">Choose a country</option>
               {COUNTRIES.map((country) => (
                 <option key={country.code} value={country.code}>
                   {country.name}
                 </option>
               ))}
-            </select>
+            </Select>
           )}
         </Field>
 

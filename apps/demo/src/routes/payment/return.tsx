@@ -43,7 +43,7 @@ export const Route = createFileRoute('/payment/return')({
 function ThreeDSReturnPage() {
   return (
     <Center>
-      <p className="text-white">Finishing authentication…</p>
+      <p>Finishing authentication…</p>
     </Center>
   )
 }

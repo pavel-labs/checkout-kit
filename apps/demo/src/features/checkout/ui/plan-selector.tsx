@@ -2,6 +2,7 @@ import { useFormContext, useWatch } from 'react-hook-form'
 import { OptionCard, OptionCardGroup } from '@checkout-kit/ui'
 import type { Plan } from '@/entities/plan'
 import type { CheckoutFormInput } from '../model/schema'
+import { useCheckoutIsLocked } from '../store/checkout.selectors'
 
 interface PlanSelectorProps {
   plans: Plan[]
@@ -10,10 +11,13 @@ interface PlanSelectorProps {
 export const PlanSelector = ({ plans }: PlanSelectorProps) => {
   const { control, setValue } = useFormContext<CheckoutFormInput>()
   const planId = useWatch({ control, name: 'planId' })
+  const isLocked = useCheckoutIsLocked()
 
   return (
     <OptionCardGroup
       label="Choose your plan"
+      className="demo-plans"
+      disabled={isLocked}
       value={planId}
       onChange={(id) =>
         setValue('planId', id, { shouldValidate: true, shouldDirty: true, shouldTouch: true })

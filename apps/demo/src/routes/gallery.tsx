@@ -6,7 +6,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { CheckoutRoot } from '@checkout-kit/react'
 import type { Platform } from '@checkout-kit/runtime-browser'
 import type { PaymentUiState } from '@checkout-kit/core'
@@ -155,6 +155,7 @@ function GalleryPage() {
           <span aria-hidden="true">ck.</span>checkout-kit
         </a>
         <div className="gallery-nav__links">
+          <Link to="/">Demo store</Link>
           <a href="#components">Components</a>
           <a href="https://pavel-labs.github.io/checkout-kit/ui.html">
             Documentation <span aria-hidden="true">↗</span>

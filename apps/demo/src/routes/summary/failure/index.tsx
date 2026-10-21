@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { FailureState } from '@checkout-kit/ui'
-import { Failure } from '@/shared/ui'
 import { TransactionDetails } from '@/entities/transaction'
 import { RetryPayment } from '@/features/retry-payment'
 import { paymentMethodLabel, toTransaction } from '@/features/checkout'
@@ -50,7 +49,6 @@ function FailurePage() {
   return (
     <FailureState
       tone={intent.status === 'canceled' ? 'cancelled' : 'declined'}
-      icon={<Failure />}
       details={<TransactionDetails transaction={transaction} />}
       actions={<RetryPayment />}
     >

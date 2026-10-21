@@ -152,7 +152,10 @@ const run = () => {
       'public',
       '--tag',
       tag,
-      ...(publish ? ['--provenance'] : ['--dry-run']),
+      // npm checks version availability even during a dry-run. CI validates the
+      // archive regardless of whether this version is already on the registry;
+      // actual uploads retain both npm's check and our integrity-based planning.
+      ...(publish ? ['--provenance'] : ['--dry-run', '--force']),
     ])
     if (result.status !== 0)
       throw new Error(result.stderr || result.stdout || 'npm publish failed.')
